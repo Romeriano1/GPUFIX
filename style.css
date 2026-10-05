@@ -517,3 +517,40 @@ color: #111111;
 body.light-theme .formulario-seguimiento input::placeholder {
 color: #777777;
 }
+
+.carrito-vacio {
+max-width: 700px;
+margin: 100px auto;
+padding: 50px;
+background-color: #1c1c1c;
+border: 1px solid #333333;
+border-radius: 12px;
+text-align: center;
+}
+
+.carrito-vacio h2 {
+color: white;
+margin-bottom: 20px;
+}
+
+.carrito-vacio p {
+color: #aaaaaa;
+margin-bottom: 10px;
+}
+
+.carrito-vacio .boton-maps {
+margin-top: 20px;
+}
+
+body.light-theme .carrito-vacio {
+background-color: #ffffff;
+border-color: #cccccc;
+}
+
+body.light-theme .carrito-vacio h2 {
+color: #111111;
+}
+
+body.light-theme .carrito-vacio p {
+color: #555555;
+}

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrito - GPU FIX & STORE</title>
+
+
+<link rel="stylesheet" href="style.css">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+
+</head>
+
+<body>
+
+
+<header>
+
+    <nav class="navbar">
+
+        <div class="navbar-izquierda">
+
+            <a class="navbar-brand" href="index.html">
+                GPU FIX & STORE
+            </a>
+
+            <ul class="navbar-nav">
+
+                <li class="nav-item">
+                    <a class="nav-link" href="index.html">
+                        Inicio
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="productos.html">
+                        Productos
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="reparar.html">
+                        Reparar GPU
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link active" href="carrito.html">
+                        Ver carrito
+                    </a>
+                </li>
+
+            </ul>
+
+        </div>
+
+        <div class="navbar-derecha">
+
+            <button id="themeButton" class="theme-button">
+                ☀️
+            </button>
+
+        </div>
+
+    </nav>
+
+</header>
+
+<main>
+
+    <section class="carrito-vacio">
+
+        <h2>Tu carrito está vacío</h2>
+
+        <p>
+            Todavía no agregaste ningún producto a tu carrito.
+        </p>
+
+        <p>
+            Explorá nuestros productos y encontrá la GPU que estás buscando.
+        </p>
+
+        <a href="productos.html" class="boton-maps">
+            Ver productos
+        </a>
+
+    </section>
+
+</main>
+
+<footer>
+
+    <p>GPU FIX & STORE - Reparación y venta de GPUs</p>
+
+</footer>
+
+<script>
+
+    const themeButton = document.getElementById("themeButton");
+
+    themeButton.addEventListener("click", function() {
+
+        document.body.classList.toggle("light-theme");
+
+        if (document.body.classList.contains("light-theme")) {
+            themeButton.textContent = "🌙";
+        } else {
+            themeButton.textContent = "☀️";
+        }
+
+    });
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+
+</body>
+
+</html>
