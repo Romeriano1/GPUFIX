@@ -312,3 +312,13 @@ body.light-theme .search-form .btn:hover {
     color: white;
     background-color: #008fc4;
 }
+
+#resultados p {
+    color: white;
+    text-align: center;
+    font-size: 18px;
+}
+
+body.light-theme #resultados p {
+    color: #111111;
+}
