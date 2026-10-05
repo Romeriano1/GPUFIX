@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="es">
 
 <head>
@@ -7,179 +6,174 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resultados - GPU FIX & STORE</title>
 
+    <link rel="stylesheet" href="style.css">
 
-<link rel="stylesheet" href="style.css">
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
 <body>
 
+    <header>
 
-<header>
+        <nav class="navbar">
 
-    <nav class="navbar">
+            <div class="navbar-izquierda">
 
-        <div class="navbar-izquierda">
+                <a class="navbar-brand" href="index.html">
+                    GPU FIX & STORE
+                </a>
 
-            <a class="navbar-brand" href="index.html">
-                GPU FIX & STORE
-            </a>
+                <ul class="navbar-nav">
 
-            <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">
+                            Inicio
+                        </a>
+                    </li>
 
-                <li class="nav-item">
-                    <a class="nav-link" href="index.html">
-                        Inicio
-                    </a>
-                </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="productos.html">
+                            Productos
+                        </a>
+                    </li>
 
-                <li class="nav-item">
-                    <a class="nav-link" href="productos.html">
-                        Productos
-                    </a>
-                </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="reparar.html">
+                            Reparar GPU
+                        </a>
+                    </li>
 
-                <li class="nav-item">
-                    <a class="nav-link" href="reparar.html">
-                        Reparar GPU
-                    </a>
-                </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="carrito.html">
+                            Ver carrito
+                        </a>
+                    </li>
 
-                <li class="nav-item">
-                    <a class="nav-link" href="carrito.html">
-                        Ver carrito
-                    </a>
-                </li>
+                </ul>
 
-            </ul>
+            </div>
 
-        </div>
+            <div class="navbar-centro">
 
-        <div class="navbar-centro">
+                <form class="search-form" action="busqueda.html" method="GET" role="search">
 
-            <form class="search-form" action="busqueda.html" method="GET" role="search">
+                    <input
+                        class="form-control"
+                        type="search"
+                        name="buscar"
+                        placeholder="Buscar GPU"
+                        aria-label="Buscar GPU">
 
-                <input
-                    class="form-control"
-                    type="search"
-                    name="buscar"
-                    placeholder="Buscar GPU"
-                    aria-label="Buscar GPU">
+                    <button class="btn" type="submit">
+                        Buscar
+                    </button>
 
-                <button class="btn" type="submit">
-                    Buscar
+                </form>
+
+            </div>
+
+            <div class="navbar-derecha">
+
+                <button id="themeButton" class="theme-button">
+                    ☀️
                 </button>
 
-            </form>
+            </div>
 
-        </div>
+        </nav>
 
-        <div class="navbar-derecha">
+    </header>
 
-            <button id="themeButton" class="theme-button">
-                ☀️
-            </button>
+    <main>
 
-        </div>
+        <section class="buscados">
 
-    </nav>
+            <h2 id="tituloResultados">
+                Resultados de búsqueda
+            </h2>
 
-</header>
+            <div class="productos" id="resultados"></div>
 
-<main>
+        </section>
 
-    <section class="buscados">
+    </main>
 
-        <h2 id="tituloResultados">
-            Resultados de búsqueda
-        </h2>
+    <footer>
 
-        <div class="productos" id="resultados"></div>
+        <p>GPU FIX & STORE - Reparación y venta de GPUs</p>
 
-    </section>
+    </footer>
 
-</main>
+    <script>
 
-<footer>
+        const productos = [
+            {
+                nombre: "RX 7600",
+                imagen: "img/rx7600.png",
+                pagina: "rx7600.html"
+            },
+            {
+                nombre: "RX 9070",
+                imagen: "img/rx9070.png",
+                pagina: "rx9070.html"
+            }
+        ];
 
-    <p>GPU FIX & STORE - Reparación y venta de GPUs</p>
+        const parametros = new URLSearchParams(window.location.search);
+        const busqueda = parametros.get("buscar") || "";
+        const termino = busqueda.toLowerCase().trim();
 
-</footer>
+        const resultados = productos.filter(function(producto) {
+            return producto.nombre.toLowerCase().includes(termino);
+        });
 
-<script>
+        const tituloResultados = document.getElementById("tituloResultados");
+        const contenedor = document.getElementById("resultados");
 
-    const productos = [
-        {
-            nombre: "RTX 3090",
-            imagen: "img/3090.jpg",
-            pagina: "3090.html"
-        },
-        {
-            nombre: "RTX 2080",
-            imagen: "img/2080.jpg",
-            pagina: "2080.html"
+        if (termino === "") {
+            tituloResultados.textContent = "Buscá una GPU";
+        } else {
+            tituloResultados.textContent = "Resultados para: " + busqueda;
         }
-    ];
 
-    const parametros = new URLSearchParams(window.location.search);
-    const busqueda = parametros.get("buscar") || "";
-    const termino = busqueda.toLowerCase().trim();
+        if (resultados.length === 0 && termino !== "") {
 
-    const resultados = productos.filter(function(producto) {
-        return producto.nombre.toLowerCase().includes(termino);
-    });
+            contenedor.innerHTML = "<p>No se encontraron productos.</p>";
 
-    const tituloResultados = document.getElementById("tituloResultados");
-    const contenedor = document.getElementById("resultados");
+        } else {
 
-    if (termino === "") {
-        tituloResultados.textContent = "Buscá una GPU";
-    } else {
-        tituloResultados.textContent = "Resultados para: " + busqueda;
-    }
+            resultados.forEach(function(producto) {
 
-    if (resultados.length === 0 && termino !== "") {
+                contenedor.innerHTML += `
+                    <div class="producto">
+                        <a href="${producto.pagina}">
+                            <img src="${producto.imagen}" alt="${producto.nombre}">
+                        </a>
+                        <h3>${producto.nombre}</h3>
+                    </div>
+                `;
 
-        contenedor.innerHTML = "<p>No se encontraron productos.</p>";
+            });
 
-    } else {
+        }
 
-        resultados.forEach(function(producto) {
+        const themeButton = document.getElementById("themeButton");
 
-            contenedor.innerHTML += `
-                <div class="producto">
-                    <a href="${producto.pagina}">
-                        <img src="${producto.imagen}" alt="${producto.nombre}">
-                    </a>
-                    <h3>${producto.nombre}</h3>
-                </div>
-            `;
+        themeButton.addEventListener("click", function() {
+
+            document.body.classList.toggle("light-theme");
+
+            if (document.body.classList.contains("light-theme")) {
+                themeButton.textContent = "🌙";
+            } else {
+                themeButton.textContent = "☀️";
+            }
 
         });
 
-    }
+    </script>
 
-    const themeButton = document.getElementById("themeButton");
-
-    themeButton.addEventListener("click", function() {
-
-        document.body.classList.toggle("light-theme");
-
-        if (document.body.classList.contains("light-theme")) {
-            themeButton.textContent = "🌙";
-        } else {
-            themeButton.textContent = "☀️";
-        }
-
-    });
-
-</script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 
