@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="es">
 
 <head>
@@ -7,129 +6,143 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Productos - GPU FIX & STORE</title>
 
+    <link rel="stylesheet" href="style.css">
 
-<link rel="stylesheet" href="style.css">
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
 <body>
 
+    <header>
 
-<header>
+        <nav class="navbar">
 
-    <nav class="navbar">
+            <div class="navbar-izquierda">
 
-        <div class="navbar-izquierda">
-
-            <a class="navbar-brand" href="index.html">
-                GPU FIX & STORE
-            </a>
-
-            <ul class="navbar-nav">
-
-                <li class="nav-item">
-                    <a class="nav-link" href="index.html">
-                        Inicio
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link active" href="productos.html">
-                        Productos
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link" href="reparar.html">
-                        Reparar GPU
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link" href="carrito.html">
-                        Ver carrito
-                    </a>
-                </li>
-
-            </ul>
-
-        </div>
-
-        <div class="navbar-derecha">
-
-            <button id="themeButton" class="theme-button">
-                ☀️
-            </button>
-
-        </div>
-
-    </nav>
-
-</header>
-
-<main>
-
-    <section class="buscados">
-
-        <h2>Todos nuestros productos</h2>
-
-        <div class="productos">
-
-            <div class="producto">
-
-                <a href="rx7600.html">
-                    <img src="img/rx7600.png" alt="RX 7600">
+                <a class="navbar-brand" href="index.html">
+                    GPU FIX & STORE
                 </a>
 
-                <h3>PLACA DE VIDEO RADEON RX 7600 8GB SAPPHIRE PULSE OC</h3>
+                <ul class="navbar-nav">
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">
+                            Inicio
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link active" href="productos.html">
+                            Productos
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="reparar.html">
+                            Reparar GPU
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="carrito.html">
+                            Ver carrito
+                        </a>
+                    </li>
+
+                </ul>
 
             </div>
 
-            <div class="producto">
+            <div class="navbar-centro">
 
-                <a href="rx9070.html">
-                    <img src="img/rx9070.png" alt="RX 9070">
-                </a>
+                <form class="search-form" action="busqueda.html" method="GET" role="search">
 
-                <h3>PLACA DE VIDEO RADEON RX 9070 16GB GIGABYTE GAMING OC</h3>
+                    <input
+                        class="form-control"
+                        type="search"
+                        name="buscar"
+                        placeholder="Buscar GPU"
+                        aria-label="Buscar GPU">
+
+                    <button class="btn" type="submit">
+                        Buscar
+                    </button>
+
+                </form>
 
             </div>
 
-        </div>
+            <div class="navbar-derecha">
 
-    </section>
+                <button id="themeButton" class="theme-button">
+                    ☀️
+                </button>
 
-</main>
+            </div>
 
-<footer>
+        </nav>
 
-    <p>GPU FIX & STORE - Reparación y venta de GPUs</p>
+    </header>
 
-</footer>
+    <main>
 
-<script>
+        <section class="buscados">
 
-    const themeButton = document.getElementById("themeButton");
+            <h2>Todos nuestros productos</h2>
 
-    themeButton.addEventListener("click", function() {
+            <div class="productos">
 
-        document.body.classList.toggle("light-theme");
+                <div class="producto">
 
-        if (document.body.classList.contains("light-theme")) {
-            themeButton.textContent = "🌙";
-        } else {
-            themeButton.textContent = "☀️";
-        }
+                    <a href="rx7600.html">
+                        <img src="img/rx7600.png" alt="RX 7600">
+                    </a>
 
-    });
+                    <h3>RX 7600</h3>
 
-</script>
+                </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+                <div class="producto">
 
+                    <a href="rx9070.html">
+                        <img src="img/rx9070.png" alt="RX 9070">
+                    </a>
+
+                    <h3>RX 9070</h3>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer>
+
+        <p>GPU FIX & STORE - Reparación y venta de GPUs</p>
+
+    </footer>
+
+    <script>
+
+        const themeButton = document.getElementById("themeButton");
+
+        themeButton.addEventListener("click", function() {
+
+            document.body.classList.toggle("light-theme");
+
+            if (document.body.classList.contains("light-theme")) {
+                themeButton.textContent = "🌙";
+            } else {
+                themeButton.textContent = "☀️";
+            }
+
+        });
+
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 
