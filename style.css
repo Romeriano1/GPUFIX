@@ -1,8 +1,10 @@
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  }
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+}
+
+/* ESTILOS GENERALES */
 
 html {
 background-color: #111111;
@@ -22,6 +24,28 @@ background-color: #181818 !important;
 border-bottom: 2px solid #333333;
 transition: background-color 0.4s;
 }
+
+main {
+width: 90%;
+max-width: 1200px;
+margin: 50px auto;
+}
+
+footer {
+margin-top: 80px;
+padding: 25px;
+text-align: center;
+background-color: #181818;
+border-top: 2px solid #333333;
+transition: background-color 0.4s;
+}
+
+footer p {
+color: #aaaaaa;
+}
+
+
+/* NAVBAR */
 
 .navbar {
 width: 100%;
@@ -70,6 +94,28 @@ color: #00bfff !important;
 color: white !important;
 }
 
+.navbar-derecha {
+justify-self: end;
+}
+
+.theme-button {
+padding: 7px 12px;
+border: 1px solid #555555;
+border-radius: 8px;
+background-color: white;
+color: #222222;
+cursor: pointer;
+font-size: 18px;
+transition: 0.3s;
+}
+
+.theme-button:hover {
+background-color: #333333;
+}
+
+
+/* BUSCADOR */
+
 .navbar-centro {
 position: absolute;
 left: 50%;
@@ -112,30 +158,8 @@ color: white;
 background-color: #00bfff;
 }
 
-.navbar-derecha {
-justify-self: end;
-}
 
-.theme-button {
-padding: 7px 12px;
-border: 1px solid #555555;
-border-radius: 8px;
-background-color: white;
-color: #222222;
-cursor: pointer;
-font-size: 18px;
-transition: 0.3s;
-}
-
-.theme-button:hover {
-background-color: #333333;
-}
-
-main {
-width: 90%;
-max-width: 1200px;
-margin: 50px auto;
-}
+/* PÁGINA INICIO */
 
 .buscados h2 {
 text-align: center;
@@ -181,6 +205,9 @@ width: 10%;
 width: 35px;
 height: 35px;
 }
+
+
+/* PRODUCTOS */
 
 .productos {
 display: flex;
@@ -235,122 +262,17 @@ margin-bottom: 15px;
 color: white;
 }
 
+
+/* PÁGINA DE BÚSQUEDA */
+
 #resultados p {
 color: white;
 text-align: center;
 font-size: 18px;
 }
 
-footer {
-margin-top: 80px;
-padding: 25px;
-text-align: center;
-background-color: #181818;
-border-top: 2px solid #333333;
-transition: background-color 0.4s;
-}
 
-footer p {
-color: #aaaaaa;
-}
-
-body.light-theme {
-background-color: #f2f2f2 !important;
-color: #111111;
-}
-
-body.light-theme header {
-background-color: #ffffff !important;
-border-bottom: 2px solid #cccccc;
-}
-
-body.light-theme .navbar {
-background-color: #ffffff !important;
-}
-
-body.light-theme .navbar-brand {
-color: #111111 !important;
-}
-
-body.light-theme .navbar .nav-link {
-color: #111111 !important;
-}
-
-body.light-theme .navbar-brand:hover,
-body.light-theme .navbar .nav-link:hover {
-color: #008fc4 !important;
-}
-
-body.light-theme .buscados h2 {
-color: #111111;
-}
-
-body.light-theme #carruselProductos {
-background-color: #ffffff;
-border-color: #cccccc;
-}
-
-body.light-theme .carousel-item h3 {
-color: #111111;
-}
-
-body.light-theme .producto {
-background-color: #ffffff;
-border-color: #cccccc;
-}
-
-body.light-theme .producto h3 {
-color: #111111;
-}
-
-body.light-theme footer {
-background-color: #ffffff;
-border-top-color: #cccccc;
-}
-
-body.light-theme footer p {
-color: #555555;
-}
-
-body.light-theme .theme-button {
-background-color: black !important;
-color: white !important;
-border-color: #555555;
-}
-
-body.light-theme .theme-button:hover {
-background-color: #333333;
-}
-
-body.light-theme .search-form .form-control {
-background-color: #ffffff;
-border-color: #cccccc;
-color: #111111;
-}
-
-body.light-theme .search-form .form-control::placeholder {
-color: #777777;
-}
-
-body.light-theme .search-form .form-control:focus {
-background-color: #ffffff;
-color: #111111;
-border-color: #008fc4;
-}
-
-body.light-theme .search-form .btn {
-color: #008fc4;
-border-color: #008fc4;
-}
-
-body.light-theme .search-form .btn:hover {
-color: white;
-background-color: #008fc4;
-}
-
-body.light-theme #resultados p {
-color: #111111;
-}
+/* PÁGINA REPARAR */
 
 .reparaciones,
 .seguimiento {
@@ -467,6 +389,140 @@ background-color: #00bfff;
 color: white;
 }
 
+
+/* PÁGINA CARRITO */
+
+.carrito-vacio {
+max-width: 700px;
+margin: 100px auto;
+padding: 50px;
+background-color: #1c1c1c;
+border: 1px solid #333333;
+border-radius: 12px;
+text-align: center;
+}
+
+.carrito-vacio h2 {
+color: white;
+margin-bottom: 20px;
+}
+
+.carrito-vacio p {
+color: #aaaaaa;
+margin-bottom: 10px;
+}
+
+.carrito-vacio .boton-maps {
+margin-top: 20px;
+}
+
+
+/* MODO CLARO */
+
+body.light-theme {
+background-color: #f2f2f2 !important;
+color: #111111;
+}
+
+body.light-theme header {
+background-color: #ffffff !important;
+border-bottom: 2px solid #cccccc;
+}
+
+body.light-theme .navbar {
+background-color: #ffffff !important;
+}
+
+body.light-theme .navbar-brand {
+color: #111111 !important;
+}
+
+body.light-theme .navbar .nav-link {
+color: #111111 !important;
+}
+
+body.light-theme .navbar-brand:hover,
+body.light-theme .navbar .nav-link:hover {
+color: #008fc4 !important;
+}
+
+body.light-theme .buscados h2 {
+color: #111111;
+}
+
+body.light-theme #carruselProductos {
+background-color: #ffffff;
+border-color: #cccccc;
+}
+
+body.light-theme .carousel-item h3 {
+color: #111111;
+}
+
+body.light-theme .producto {
+background-color: #ffffff;
+border-color: #cccccc;
+}
+
+body.light-theme .producto h3 {
+color: #111111;
+}
+
+body.light-theme footer {
+background-color: #ffffff;
+border-top-color: #cccccc;
+}
+
+body.light-theme footer p {
+color: #555555;
+}
+
+body.light-theme .theme-button {
+background-color: black !important;
+color: white !important;
+border-color: #555555;
+}
+
+body.light-theme .theme-button:hover {
+background-color: #333333;
+}
+
+
+/* MODO CLARO - BUSCADOR */
+
+body.light-theme .search-form .form-control {
+background-color: #ffffff;
+border-color: #cccccc;
+color: #111111;
+}
+
+body.light-theme .search-form .form-control::placeholder {
+color: #777777;
+}
+
+body.light-theme .search-form .form-control:focus {
+background-color: #ffffff;
+color: #111111;
+border-color: #008fc4;
+}
+
+body.light-theme .search-form .btn {
+color: #008fc4;
+border-color: #008fc4;
+}
+
+body.light-theme .search-form .btn:hover {
+color: white;
+background-color: #008fc4;
+}
+
+body.light-theme #resultados p {
+color: #111111;
+}
+
+
+/* MODO CLARO - REPARAR */
+
 body.light-theme .reparaciones,
 body.light-theme .seguimiento {
 color: #111111;
@@ -495,19 +551,6 @@ body.light-theme .sucursal p {
 color: #555555;
 }
 
-body.light-theme .estado-reparacion {
-background-color: #ffffff;
-border-color: #cccccc;
-}
-
-body.light-theme .estado-reparacion h3 {
-color: #111111;
-}
-
-body.light-theme .estado-reparacion p {
-color: #555555;
-}
-
 body.light-theme .formulario-seguimiento input {
 background-color: #ffffff;
 border-color: #cccccc;
@@ -518,29 +561,8 @@ body.light-theme .formulario-seguimiento input::placeholder {
 color: #777777;
 }
 
-.carrito-vacio {
-max-width: 700px;
-margin: 100px auto;
-padding: 50px;
-background-color: #1c1c1c;
-border: 1px solid #333333;
-border-radius: 12px;
-text-align: center;
-}
 
-.carrito-vacio h2 {
-color: white;
-margin-bottom: 20px;
-}
-
-.carrito-vacio p {
-color: #aaaaaa;
-margin-bottom: 10px;
-}
-
-.carrito-vacio .boton-maps {
-margin-top: 20px;
-}
+/* MODO CLARO - CARRITO */
 
 body.light-theme .carrito-vacio {
 background-color: #ffffff;
