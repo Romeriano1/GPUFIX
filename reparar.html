@@ -1,102 +1,206 @@
 <!DOCTYPE html>
+
 <html lang="es">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reparar GPU - GPU FIX & STORE</title>
+<head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Reparar GPU - GPU FIX & STORE</title>
 
-    <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
-        crossorigin="anonymous">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
 </head>
 
 <body>
 
-    <header>
+<header>
 
-        <nav class="navbar">
+    <nav class="navbar">
 
-            <div class="navbar-izquierda">
+        <div class="navbar-izquierda">
 
-                <a class="navbar-brand" href="index.html">
-                    GPU FIX & STORE
+            <a class="navbar-brand" href="index.html">
+                GPU FIX & STORE
+            </a>
+
+            <ul class="navbar-nav">
+
+                <li class="nav-item">
+                    <a class="nav-link" href="index.html">
+                        Inicio
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link active" href="reparar.html">
+                        Reparar GPU
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="carrito.html">
+                        Ver carrito
+                    </a>
+                </li>
+
+            </ul>
+
+        </div>
+
+        <div class="navbar-derecha">
+
+            <button id="themeButton" class="theme-button">
+                ☀️
+            </button>
+
+        </div>
+
+    </nav>
+
+</header>
+
+<main>
+
+    <section class="reparaciones">
+
+        <h2>Reparación de GPU</h2>
+
+        <p class="reparaciones-intro">
+            Para solicitar una reparación, acercate personalmente a cualquiera de nuestras sucursales.
+            Allí recibiremos tu GPU y te entregaremos un código de seguimiento para que puedas consultar
+            el estado de la reparación desde nuestra página.
+        </p>
+
+        <h2 class="titulo-sucursales">
+            Nuestras sucursales
+        </h2>
+
+        <div class="sucursales">
+
+            <article class="sucursal">
+
+                <h3>Sucursal Rivadavia</h3>
+
+                <p>
+                    Av. Rivadavia 5376, Local 4
+                </p>
+
+                <div class="mapa">
+
+                    <iframe
+                        src="https://www.google.com/maps?q=Av.+Rivadavia+5376,+Buenos+Aires,+Argentina&output=embed"
+                        loading="lazy"
+                        allowfullscreen
+                        referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+
+                </div>
+
+                <a class="boton-maps"
+                    href="https://www.google.com/maps/search/?api=1&query=Av.+Rivadavia+5376,+Buenos+Aires,+Argentina"
+                    target="_blank">
+                    Ver en Google Maps
                 </a>
 
-                <ul class="navbar-nav">
+            </article>
 
-                    <li class="nav-item">
-                        <a class="nav-link" href="index.html">
-                            Inicio
-                        </a>
-                    </li>
+            <article class="sucursal">
 
-                    <li class="nav-item">
-                        <a class="nav-link active" href="reparar.html">
-                            Reparar GPU
-                        </a>
-                    </li>
+                <h3>Sucursal Florida</h3>
 
-                    <li class="nav-item">
-                        <a class="nav-link" href="carrito.html">
-                            Ver carrito
-                        </a>
-                    </li>
+                <p>
+                    Florida 537, CABA
+                </p>
 
-                </ul>
+                <div class="mapa">
 
-            </div>
+                    <iframe
+                        src="https://www.google.com/maps?q=Florida+537,+Buenos+Aires,+Argentina&output=embed"
+                        loading="lazy"
+                        allowfullscreen
+                        referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
 
-            <div class="navbar-derecha">
+                </div>
 
-                <button id="themeButton" class="theme-button">
-                    ☀️
-                </button>
+                <a class="boton-maps"
+                    href="https://www.google.com/maps/search/?api=1&query=Florida+537,+Buenos+Aires,+Argentina"
+                    target="_blank">
+                    Ver en Google Maps
+                </a>
 
-            </div>
+            </article>
 
-        </nav>
+        </div>
 
-    </header>
+    </section>
 
-    <main>
+    <section class="seguimiento">
 
-    </main>
+        <h2>Seguimiento de reparación</h2>
 
-    <footer>
+        <p>
+            Ingresá el código de seguimiento que recibiste en nuestra sucursal.
+        </p>
 
-        <p>GPU FIX & STORE - Reparación y venta de GPUs</p>
+        <form class="formulario-seguimiento">
 
-    </footer>
+            <input
+                type="text"
+                placeholder="Código de seguimiento"
+                aria-label="Código de seguimiento">
 
-    <script>
+            <button type="submit">
+                Consultar
+            </button>
 
-        const themeButton = document.getElementById("themeButton");
+        </form>
 
-        themeButton.addEventListener("click", function() {
+        <div class="estado-reparacion">
 
-            document.body.classList.toggle("light-theme");
+            <h3>Estado de la reparación</h3>
 
-            if (document.body.classList.contains("light-theme")) {
-                themeButton.textContent = "🌙";
-            } else {
-                themeButton.textContent = "☀️";
-            }
+            <p>
+                Ingresá tu código para consultar el estado.
+            </p>
 
-        });
+        </div>
 
-    </script>
+    </section>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-FKyoEForCGlyvwxH9j09JcYn3nv7wiPVlz7YYwJrVVcXK/BmnVDxM+D2scQbITxI"
-        crossorigin="anonymous"></script>
+</main>
+
+<footer>
+
+    <p>GPU FIX & STORE - Reparación y venta de GPUs</p>
+
+</footer>
+
+<script>
+
+    const themeButton = document.getElementById("themeButton");
+
+    themeButton.addEventListener("click", function() {
+
+        document.body.classList.toggle("light-theme");
+
+        if (document.body.classList.contains("light-theme")) {
+            themeButton.textContent = "🌙";
+        } else {
+            themeButton.textContent = "☀️";
+        }
+
+    });
+
+    const formularioSeguimiento = document.querySelector(".formulario-seguimiento");
+
+    formularioSeguimiento.addEventListener("submit", function(event) {
+        event.preventDefault();
+    });
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 
 </html>
-
-
-
-
