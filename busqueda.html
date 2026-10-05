@@ -37,6 +37,12 @@
                 </li>
 
                 <li class="nav-item">
+                    <a class="nav-link" href="productos.html">
+                        Productos
+                    </a>
+                </li>
+
+                <li class="nav-item">
                     <a class="nav-link" href="reparar.html">
                         Reparar GPU
                     </a>
@@ -56,7 +62,8 @@
 
             <form class="search-form" action="busqueda.html" method="GET" role="search">
 
-                <input class="form-control"
+                <input
+                    class="form-control"
                     type="search"
                     name="buscar"
                     placeholder="Buscar GPU"
@@ -90,8 +97,7 @@
             Resultados de búsqueda
         </h2>
 
-        <div class="productos" id="resultados">
-        </div>
+        <div class="productos" id="resultados"></div>
 
     </section>
 
@@ -119,9 +125,7 @@
     ];
 
     const parametros = new URLSearchParams(window.location.search);
-
     const busqueda = parametros.get("buscar") || "";
-
     const termino = busqueda.toLowerCase().trim();
 
     const resultados = productos.filter(function(producto) {
@@ -129,17 +133,12 @@
     });
 
     const tituloResultados = document.getElementById("tituloResultados");
-
     const contenedor = document.getElementById("resultados");
 
     if (termino === "") {
-
         tituloResultados.textContent = "Buscá una GPU";
-
     } else {
-
         tituloResultados.textContent = "Resultados para: " + busqueda;
-
     }
 
     if (resultados.length === 0 && termino !== "") {
@@ -152,13 +151,10 @@
 
             contenedor.innerHTML += `
                 <div class="producto">
-
                     <a href="${producto.pagina}">
                         <img src="${producto.imagen}" alt="${producto.nombre}">
                     </a>
-
                     <h3>${producto.nombre}</h3>
-
                 </div>
             `;
 

@@ -2,11 +2,16 @@
 
 <html lang="es">
 
-<head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Reparar GPU - GPU FIX & STORE</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reparar GPU - GPU FIX & STORE</title>
+
 
 <link rel="stylesheet" href="style.css">
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
 
 </head>
 
@@ -27,6 +32,12 @@
                 <li class="nav-item">
                     <a class="nav-link" href="index.html">
                         Inicio
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="productos.html">
+                        Productos
                     </a>
                 </li>
 
@@ -69,6 +80,33 @@
             Allí recibiremos tu GPU y te entregaremos un código de seguimiento para que puedas consultar
             el estado de la reparación desde nuestra página.
         </p>
+
+    </section>
+
+    <section class="seguimiento">
+
+        <h2>Seguimiento de reparación</h2>
+
+        <p>
+            Ingresá el código de seguimiento que recibiste en nuestra sucursal.
+        </p>
+
+        <form class="formulario-seguimiento">
+
+            <input
+                type="text"
+                placeholder="Código de seguimiento"
+                aria-label="Código de seguimiento">
+
+            <button type="submit">
+                Consultar
+            </button>
+
+        </form>
+
+    </section>
+
+    <section class="reparaciones">
 
         <h2 class="titulo-sucursales">
             Nuestras sucursales
@@ -134,39 +172,6 @@
 
     </section>
 
-    <section class="seguimiento">
-
-        <h2>Seguimiento de reparación</h2>
-
-        <p>
-            Ingresá el código de seguimiento que recibiste en nuestra sucursal.
-        </p>
-
-        <form class="formulario-seguimiento">
-
-            <input
-                type="text"
-                placeholder="Código de seguimiento"
-                aria-label="Código de seguimiento">
-
-            <button type="submit">
-                Consultar
-            </button>
-
-        </form>
-
-        <div class="estado-reparacion">
-
-            <h3>Estado de la reparación</h3>
-
-            <p>
-                Ingresá tu código para consultar el estado.
-            </p>
-
-        </div>
-
-    </section>
-
 </main>
 
 <footer>
@@ -189,12 +194,6 @@
             themeButton.textContent = "☀️";
         }
 
-    });
-
-    const formularioSeguimiento = document.querySelector(".formulario-seguimiento");
-
-    formularioSeguimiento.addEventListener("submit", function(event) {
-        event.preventDefault();
     });
 
 </script>

@@ -10,7 +10,9 @@
 
 <link rel="stylesheet" href="style.css">
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+    crossorigin="anonymous">
 
 
 </head>
@@ -37,6 +39,12 @@
                 </li>
 
                 <li class="nav-item">
+                    <a class="nav-link" href="productos.html">
+                        Productos
+                    </a>
+                </li>
+
+                <li class="nav-item">
                     <a class="nav-link" href="reparar.html">
                         Reparar GPU
                     </a>
@@ -56,7 +64,8 @@
 
             <form class="search-form" action="busqueda.html" method="GET" role="search">
 
-                <input class="form-control"
+                <input
+                    class="form-control"
                     type="search"
                     name="buscar"
                     placeholder="Buscar GPU"
@@ -95,9 +104,7 @@
                 <div class="carousel-item active">
 
                     <a href="3090.html">
-                        <img src="img/3090.jpg"
-                            class="d-block carrusel-imagen"
-                            alt="NVIDIA GeForce RTX 3090">
+                        <img src="img/3090.jpg" class="carrusel-imagen" alt="RTX 3090">
                     </a>
 
                     <h3>RTX 3090</h3>
@@ -107,9 +114,7 @@
                 <div class="carousel-item">
 
                     <a href="2080.html">
-                        <img src="img/2080.jpg"
-                            class="d-block carrusel-imagen"
-                            alt="NVIDIA GeForce RTX 2080">
+                        <img src="img/2080.jpg" class="carrusel-imagen" alt="RTX 2080">
                     </a>
 
                     <h3>RTX 2080</h3>
@@ -118,29 +123,19 @@
 
             </div>
 
-            <button class="carousel-control-prev"
-                type="button"
-                data-bs-target="#carruselProductos"
-                data-bs-slide="prev">
+            <button class="carousel-control-prev" type="button"
+                data-bs-target="#carruselProductos" data-bs-slide="prev">
 
-                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-
-                <span class="visually-hidden">
-                    Anterior
-                </span>
+                <span class="carousel-control-prev-icon"></span>
+                <span class="visually-hidden">Anterior</span>
 
             </button>
 
-            <button class="carousel-control-next"
-                type="button"
-                data-bs-target="#carruselProductos"
-                data-bs-slide="next">
+            <button class="carousel-control-next" type="button"
+                data-bs-target="#carruselProductos" data-bs-slide="next">
 
-                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-
-                <span class="visually-hidden">
-                    Siguiente
-                </span>
+                <span class="carousel-control-next-icon"></span>
+                <span class="visually-hidden">Siguiente</span>
 
             </button>
 
@@ -155,8 +150,6 @@
     <p>GPU FIX & STORE - Reparación y venta de GPUs</p>
 
 </footer>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
 
@@ -175,6 +168,8 @@
     });
 
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
 
 </body>
