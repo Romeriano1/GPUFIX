@@ -416,6 +416,121 @@ margin-bottom: 10px;
 margin-top: 20px;
 }
 
+/* PÁGINA PRODUCTO */
+
+.producto-detalle {
+display: grid;
+grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.8fr);
+gap: 50px;
+align-items: center;
+}
+
+.producto-imagen {
+display: flex;
+justify-content: center;
+align-items: center;
+}
+
+.producto-imagen img {
+width: 100%;
+max-width: 650px;
+height: 550px;
+object-fit: contain;
+}
+
+.producto-informacion {
+max-width: 400px;
+}
+
+.producto-informacion h1 {
+font-size: 22px;
+line-height: 1.3;
+margin-bottom: 8px;
+color: white;
+}
+
+.producto-id {
+font-size: 12px;
+color: #888888;
+margin-bottom: 22px;
+}
+
+.precio p {
+font-size: 14px;
+margin-bottom: 3px;
+color: white;
+}
+
+.precio strong {
+font-size: 25px;
+color: white;
+}
+
+.forma-pago {
+font-size: 11px;
+color: #aaaaaa;
+margin-top: 6px;
+margin-bottom: 18px;
+}
+
+.precio-sin-impuestos p {
+font-size: 11px;
+color: #aaaaaa;
+margin-bottom: 2px;
+}
+
+.precio-sin-impuestos strong {
+font-size: 17px;
+color: white;
+}
+
+.stock {
+margin-top: 20px;
+margin-bottom: 12px;
+padding: 8px 12px;
+border: 1px solid #333333;
+border-radius: 7px;
+background-color: #1c1c1c;
+font-size: 13px;
+color: #55cc66;
+}
+
+.boton-comprar {
+width: 100%;
+padding: 10px;
+border: 0;
+border-radius: 7px;
+background-color: #00bfff;
+color: white;
+font-size: 14px;
+cursor: pointer;
+transition: 0.3s;
+}
+
+.boton-comprar:hover {
+background-color: #008fc4;
+}
+
+.producto-extra {
+display: flex;
+gap: 25px;
+margin-top: 20px;
+}
+
+.producto-extra > div {
+flex: 1;
+}
+
+.producto-extra strong {
+font-size: 13px;
+color: white;
+}
+
+.producto-extra p {
+font-size: 11px;
+color: #aaaaaa;
+margin-top: 4px;
+}
 
 /* MODO CLARO */
 
@@ -575,4 +690,29 @@ color: #111111;
 
 body.light-theme .carrito-vacio p {
 color: #555555;
+}
+
+/* MODO CLARO - PÁGINA RX7600 */
+
+body.light-theme .producto-informacion h1,
+body.light-theme .precio p,
+body.light-theme .precio strong,
+body.light-theme .producto-extra strong {
+color: #111111;
+}
+
+body.light-theme .producto-id,
+body.light-theme .forma-pago,
+body.light-theme .precio-sin-impuestos p,
+body.light-theme .producto-extra p {
+color: #555555;
+}
+
+body.light-theme .precio-sin-impuestos strong {
+color: #111111;
+}
+
+body.light-theme .stock {
+background-color: #ffffff;
+border-color: #cccccc;
 }
