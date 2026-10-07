@@ -532,6 +532,38 @@ color: #aaaaaa;
 margin-top: 4px;
 }
 
+/* INFORMACIÓN DEL PRODUCTO */
+
+.informacion-producto {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 25px;
+margin-top: 60px;
+}
+
+.bloque-informacion {
+padding: 25px;
+background-color: #1c1c1c;
+border: 1px solid #333333;
+border-radius: 12px;
+}
+
+.bloque-informacion h2 {
+font-size: 19px;
+margin-bottom: 20px;
+color: white;
+}
+
+.bloque-informacion p {
+font-size: 13px;
+line-height: 1.5;
+margin-bottom: 10px;
+color: #aaaaaa;
+}
+
+.bloque-informacion strong {
+color: white;
+}
 /* MODO CLARO */
 
 body.light-theme {
@@ -715,4 +747,20 @@ color: #111111;
 body.light-theme .stock {
 background-color: #ffffff;
 border-color: #cccccc;
+}
+
+/* MODO CLARO - INFORMACIÓN DEL PRODUCTO */
+
+body.light-theme .bloque-informacion {
+background-color: #ffffff;
+border-color: #cccccc;
+}
+
+body.light-theme .bloque-informacion h2,
+body.light-theme .bloque-informacion strong {
+color: #111111;
+}
+
+body.light-theme .bloque-informacion p {
+color: #555555;
 }
