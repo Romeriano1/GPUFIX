@@ -1,0 +1,115 @@
+<?php
+session_start();
+
+if (isset($_SESSION["usuario_id"])) {
+    header("Location: mi-cuenta.php");
+    exit;
+}
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar sesión - GPU FIX & STORE</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+    <nav class="navbar">
+        <div class="navbar-izquierda">
+            <a class="navbar-brand" href="index.html">GPU FIX & STORE</a>
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>
+                <li class="nav-item"><a class="nav-link" href="productos.html">Productos</a></li>
+                <li class="nav-item"><a class="nav-link" href="reparar.html">Reparar GPU</a></li>
+                <li class="nav-item"><a class="nav-link" href="carrito.html">Ver carrito</a></li>
+            </ul>
+        </div>
+
+        <div class="navbar-centro">
+            <form class="search-form" action="busqueda.html" method="GET" role="search">
+                <input class="form-control" type="search" name="buscar" placeholder="Buscar GPU" aria-label="Buscar GPU">
+                <button class="btn" type="submit">Buscar</button>
+            </form>
+        </div>
+
+        <div class="navbar-derecha">
+            <button id="themeButton" class="theme-button" type="button" aria-label="Cambiar tema">☀️</button>
+            <div class="cuenta-contenedor">
+                <button id="cuentaButton" class="cuenta-button" type="button" aria-label="Abrir menú de usuario" aria-expanded="false">👤</button>
+                <div id="cuentaMenu" class="cuenta-menu">
+                    <a href="login.php">Iniciar sesión</a>
+                    <a href="registro.php">Crear cuenta</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<main>
+    <section class="login-contenedor">
+        <div class="login-formulario">
+            <h2>Iniciar sesión</h2>
+            <p class="login-descripcion">Ingresá a tu cuenta de GPU FIX & STORE</p>
+
+            <?php if (isset($_GET["error"])): ?>
+                <div class="login-error">
+                    <?php
+                    if ($_GET["error"] === "datos") {
+                        echo "Completá todos los campos.";
+                    } elseif ($_GET["error"] === "credenciales") {
+                        echo "El correo o la contraseña son incorrectos.";
+                    } else {
+                        echo "No se pudo iniciar sesión.";
+                    }
+                    ?>
+                </div>
+            <?php endif; ?>
+
+            <form action="login.php" method="POST">
+                <label for="correo">Correo electrónico</label>
+                <input type="email" id="correo" name="correo" placeholder="Ingresá tu correo" autocomplete="email" required>
+
+                <label for="contrasena">Contraseña</label>
+                <input type="password" id="contrasena" name="contrasena" placeholder="Ingresá tu contraseña" autocomplete="current-password" required>
+
+                <button class="login-boton" type="submit">Ingresar</button>
+            </form>
+
+            <div class="login-enlaces">
+                <p>¿Todavía no tenés una cuenta?</p>
+                <a href="registro.php">Crear una cuenta</a>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <p>GPU FIX & STORE - Reparación y venta de GPUs</p>
+</footer>
+
+<script src="script.js"></script>
+<script>
+const cuentaButton = document.getElementById("cuentaButton");
+const cuentaMenu = document.getElementById("cuentaMenu");
+
+cuentaButton.addEventListener("click", function(event) {
+    event.stopPropagation();
+    const abierto = cuentaMenu.classList.toggle("visible");
+    cuentaButton.setAttribute("aria-expanded", abierto);
+});
+
+document.addEventListener("click", function(event) {
+    if (!event.target.closest(".cuenta-contenedor")) {
+        cuentaMenu.classList.remove("visible");
+        cuentaButton.setAttribute("aria-expanded", "false");
+    }
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

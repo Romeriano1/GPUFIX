@@ -4,8 +4,6 @@
     box-sizing: border-box;
 }
 
-/* ESTILOS GENERALES */
-
 html {
     background-color: #111111;
 }
@@ -44,8 +42,6 @@ footer p {
     color: #aaaaaa;
 }
 
-/* MODO CLARO - ESTILOS GENERALES */
-
 body.light-theme {
     background-color: #f2f2f2 !important;
     color: #111111;
@@ -64,8 +60,6 @@ body.light-theme footer {
 body.light-theme footer p {
     color: #555555;
 }
-
-/* NAVBAR */
 
 .navbar {
     width: 100%;
@@ -138,8 +132,6 @@ body.light-theme .navbar .nav-link:hover {
     color: #008fc4 !important;
 }
 
-/* BOTÓN DE TEMA */
-
 .theme-button {
     padding: 7px 12px;
     border: 1px solid #555555;
@@ -164,8 +156,6 @@ body.light-theme .theme-button {
 body.light-theme .theme-button:hover {
     background-color: #333333;
 }
-
-/* MENÚ DE CUENTA */
 
 .cuenta-contenedor {
     position: relative;
@@ -225,8 +215,6 @@ body.light-theme .theme-button:hover {
     color: #00bfff;
 }
 
-/* MODO CLARO - MENÚ DE CUENTA */
-
 body.light-theme .cuenta-button {
     background-color: #ffffff;
     color: #111111;
@@ -252,8 +240,6 @@ body.light-theme .cuenta-menu a:hover {
     background-color: #eeeeee;
     color: #008fc4;
 }
-
-/* BUSCADOR */
 
 .navbar-centro {
     position: absolute;
@@ -297,8 +283,6 @@ body.light-theme .cuenta-menu a:hover {
     background-color: #00bfff;
 }
 
-/* MODO CLARO - BUSCADOR */
-
 body.light-theme .search-form .form-control {
     background-color: #ffffff;
     border-color: #cccccc;
@@ -324,8 +308,6 @@ body.light-theme .search-form .btn:hover {
     color: white;
     background-color: #008fc4;
 }
-
-/* PÁGINA INICIO */
 
 .buscados h2 {
     text-align: center;
@@ -372,8 +354,6 @@ body.light-theme .search-form .btn:hover {
     height: 35px;
 }
 
-/* MODO CLARO - PÁGINA INICIO */
-
 body.light-theme .buscados h2 {
     color: #111111;
 }
@@ -386,8 +366,6 @@ body.light-theme #carruselProductos {
 body.light-theme .carousel-item h3 {
     color: #111111;
 }
-
-/* PRODUCTOS */
 
 .productos {
     display: flex;
@@ -442,8 +420,6 @@ body.light-theme .carousel-item h3 {
     color: white;
 }
 
-/* MODO CLARO - PRODUCTOS */
-
 body.light-theme .producto {
     background-color: #ffffff;
     border-color: #cccccc;
@@ -453,21 +429,15 @@ body.light-theme .producto h3 {
     color: #111111;
 }
 
-/* PÁGINA DE BÚSQUEDA */
-
 #resultados p {
     color: white;
     text-align: center;
     font-size: 18px;
 }
 
-/* MODO CLARO - PÁGINA DE BÚSQUEDA */
-
 body.light-theme #resultados p {
     color: #111111;
 }
-
-/* PÁGINA REPARAR */
 
 .reparaciones,
 .seguimiento {
@@ -546,8 +516,6 @@ body.light-theme #resultados p {
     color: white;
 }
 
-/* SEGUIMIENTO DE REPARACIONES */
-
 .seguimiento {
     margin-top: 70px;
 }
@@ -585,8 +553,6 @@ body.light-theme #resultados p {
     background-color: #00bfff;
     color: white;
 }
-
-/* MODO CLARO - REPARAR */
 
 body.light-theme .reparaciones,
 body.light-theme .seguimiento {
@@ -626,8 +592,6 @@ body.light-theme .formulario-seguimiento input::placeholder {
     color: #777777;
 }
 
-/* PÁGINA CARRITO */
-
 .carrito-vacio {
     max-width: 700px;
     margin: 100px auto;
@@ -652,8 +616,6 @@ body.light-theme .formulario-seguimiento input::placeholder {
     margin-top: 20px;
 }
 
-/* MODO CLARO - CARRITO */
-
 body.light-theme .carrito-vacio {
     background-color: #ffffff;
     border-color: #cccccc;
@@ -666,8 +628,6 @@ body.light-theme .carrito-vacio h2 {
 body.light-theme .carrito-vacio p {
     color: #555555;
 }
-
-/* PÁGINA DE PRODUCTO */
 
 .producto-detalle {
     display: grid;
@@ -746,8 +706,6 @@ body.light-theme .carrito-vacio p {
     color: #55cc66;
 }
 
-/* MODO CLARO - INFORMACIÓN DEL PRODUCTO */
-
 body.light-theme .producto-informacion h1,
 body.light-theme .precio p,
 body.light-theme .precio strong,
@@ -771,8 +729,6 @@ body.light-theme .stock {
     background-color: #ffffff;
     border-color: #cccccc;
 }
-
-/* SELECTOR DE CANTIDAD */
 
 .cantidad {
     margin-bottom: 10px;
@@ -814,8 +770,6 @@ body.light-theme .stock {
     color: white;
 }
 
-/* MODO CLARO - SELECTOR DE CANTIDAD */
-
 body.light-theme .selector-cantidad {
     border-color: #cccccc;
 }
@@ -832,8 +786,6 @@ body.light-theme .selector-cantidad button:hover {
 body.light-theme .selector-cantidad span {
     color: #111111;
 }
-
-/* BOTONES DE COMPRA */
 
 .boton-comprar,
 .boton-carrito {
@@ -867,8 +819,6 @@ body.light-theme .selector-cantidad span {
     color: white;
 }
 
-/* INFORMACIÓN EXTRA DEL PRODUCTO */
-
 .producto-extra {
     display: flex;
     gap: 25px;
@@ -889,8 +839,6 @@ body.light-theme .selector-cantidad span {
     color: #aaaaaa;
     margin-top: 4px;
 }
-
-/* INFORMACIÓN DETALLADA DEL PRODUCTO */
 
 .informacion-producto {
     display: grid;
@@ -923,8 +871,6 @@ body.light-theme .selector-cantidad span {
     color: white;
 }
 
-/* MODO CLARO - INFORMACIÓN DETALLADA DEL PRODUCTO */
-
 body.light-theme .bloque-informacion {
     background-color: #ffffff;
     border-color: #cccccc;
@@ -937,4 +883,312 @@ body.light-theme .bloque-informacion strong {
 
 body.light-theme .bloque-informacion p {
     color: #555555;
+}
+
+.login-contenedor {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 600px;
+    padding: 50px 20px;
+}
+
+.login-formulario {
+    position: relative;
+    width: 100%;
+    max-width: 470px;
+    padding: 42px;
+    overflow: hidden;
+    background: linear-gradient(145deg, #202020, #111111);
+    color: #ffffff !important;
+    border: 1px solid #444444;
+    border-radius: 16px;
+    box-shadow: 0 0 18px rgba(255, 0, 0, 0.12);
+    transition: box-shadow 0.3s, border-color 0.3s;
+}
+
+.login-formulario:hover {
+    animation: rgbPanel 4s linear infinite;
+}
+
+@keyframes rgbPanel {
+    0%, 100% {
+        border-color: #ff3333;
+        box-shadow: 0 0 18px rgba(255, 0, 0, 0.25);
+    }
+
+    33% {
+        border-color: #33ff66;
+        box-shadow: 0 0 18px rgba(0, 255, 0, 0.25);
+    }
+
+    66% {
+        border-color: #3399ff;
+        box-shadow: 0 0 18px rgba(0, 100, 255, 0.25);
+    }
+}
+
+.login-formulario::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #ff3333, #33ff66, #3399ff, #ff3333);
+    background-size: 300% 100%;
+    animation: rgbLinea 4s linear infinite;
+}
+
+@keyframes rgbLinea {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 300% 50%;
+    }
+}
+
+.login-formulario h2 {
+    margin: 8px 0 12px;
+    color: #ffffff !important;
+    text-align: center;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+.login-formulario .login-descripcion {
+    margin-bottom: 32px;
+    color: #c3c3c3 !important;
+    text-align: center;
+    font-size: 14px;
+}
+
+.login-formulario label {
+    display: block;
+    margin-bottom: 9px;
+    color: #ffffff !important;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.login-formulario input {
+    display: block;
+    width: 100%;
+    height: 50px;
+    margin-bottom: 23px;
+    padding: 12px 16px;
+    background: #101010 !important;
+    color: #ffffff !important;
+    border: 1px solid #444444;
+    border-radius: 12px;
+    font-family: Arial, sans-serif;
+    font-size: 15px;
+    outline: none;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.45);
+    transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+}
+
+.login-formulario input::placeholder {
+    color: #999999 !important;
+    opacity: 1;
+    -webkit-text-fill-color: #999999 !important;
+}
+
+
+.login-formulario input:hover {
+    border-color: #444444;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+.login-formulario input:focus {
+    background: #151515 !important;
+    color: #ffffff !important;
+    animation: rgbInput 3s linear infinite;
+}
+
+
+@keyframes rgbInput {
+    0%, 100% {
+        border-color: #ff3333;
+        box-shadow: 0 0 5px #ff3333, 0 0 12px rgba(255, 0, 0, 0.3);
+    }
+
+    33% {
+        border-color: #33ff66;
+        box-shadow: 0 0 5px #33ff66, 0 0 12px rgba(0, 255, 0, 0.3);
+    }
+
+    66% {
+        border-color: #3399ff;
+        box-shadow: 0 0 5px #3399ff, 0 0 12px rgba(0, 100, 255, 0.3);
+    }
+}
+
+.login-formulario input:-webkit-autofill,
+.login-formulario input:-webkit-autofill:hover,
+.login-formulario input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #ffffff !important;
+    caret-color: #ffffff;
+    box-shadow: 0 0 0 1000px #101010 inset;
+}
+
+.login-formulario .login-boton {
+    display: block;
+    width: 100%;
+    min-height: 48px;
+    margin-top: 8px;
+    padding: 12px;
+    background: #d6d6d6;
+    color: #151515 !important;
+    border: 1px solid #eeeeee;
+    border-radius: 8px;
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.login-formulario .login-boton:hover {
+    background: #eeeeee;
+    color: #111111 !important;
+    transform: translateY(-2px);
+    animation: rgbBoton 3s linear infinite;
+}
+
+@keyframes rgbBoton {
+    0%, 100% {
+        border-color: #ff3333;
+        box-shadow: 0 0 8px rgba(255, 0, 0, 0.55);
+    }
+
+    33% {
+        border-color: #33ff66;
+        box-shadow: 0 0 8px rgba(0, 255, 0, 0.55);
+    }
+
+    66% {
+        border-color: #3399ff;
+        box-shadow: 0 0 8px rgba(0, 100, 255, 0.55);
+    }
+}
+
+.login-formulario .login-boton:active {
+    transform: translateY(0);
+}
+
+.login-enlaces {
+    margin-top: 28px;
+    padding-top: 22px;
+    border-top: 1px solid #444444;
+    text-align: center;
+}
+
+.login-formulario .login-enlaces p {
+    margin-bottom: 9px;
+    color: #c3c3c3 !important;
+    font-size: 14px;
+}
+
+.login-formulario .login-enlaces a {
+    color: #3399ff !important;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.login-formulario .login-enlaces a:hover {
+    color: #33ff66 !important;
+    text-decoration: underline;
+    text-shadow: 0 0 8px rgba(51, 255, 102, 0.4);
+}
+
+.login-formulario .login-error {
+    margin-bottom: 20px;
+    padding: 12px;
+    background: #421f27;
+    color: #ffb9c3 !important;
+    border: 1px solid #793342;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 14px;
+}
+
+body.light-theme .login-formulario {
+    background: linear-gradient(145deg, #ffffff, #eeeeee);
+    color: #111111 !important;
+    border-color: #cccccc;
+    box-shadow: 0 0 18px rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .login-formulario h2,
+body.light-theme .login-formulario label {
+    color: #111111 !important;
+}
+
+body.light-theme .login-formulario .login-descripcion,
+body.light-theme .login-formulario .login-enlaces p {
+    color: #555555 !important;
+}
+
+body.light-theme .login-formulario input {
+    background: #f4f4f4 !important;
+    color: #111111 !important;
+    border-color: #cccccc;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+body.light-theme .login-formulario input::placeholder {
+    color: #747474 !important;
+    -webkit-text-fill-color: #747474 !important;
+}
+
+body.light-theme .login-formulario input:hover {
+    border-color: #ff3333;
+}
+
+body.light-theme .login-formulario input:focus {
+    background: #ffffff !important;
+    color: #111111 !important;
+}
+
+body.light-theme .login-formulario input:-webkit-autofill,
+body.light-theme .login-formulario input:-webkit-autofill:hover,
+body.light-theme .login-formulario input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #111111 !important;
+    caret-color: #111111;
+    box-shadow: 0 0 0 1000px #f4f4f4 inset;
+}
+
+body.light-theme .login-formulario .login-boton {
+    background: #333333;
+    color: #ffffff !important;
+    border-color: #444444;
+}
+
+body.light-theme .login-formulario .login-boton:hover {
+    background: #222222;
+    color: #ffffff !important;
+}
+
+body.light-theme .login-enlaces {
+    border-top-color: #cccccc;
+}
+
+body.light-theme .login-formulario .login-enlaces a {
+    color: #005f99 !important;
+}
+
+body.light-theme .login-formulario .login-enlaces a:hover {
+    color: #178b36 !important;
+}
+
+body.light-theme .login-formulario .login-error {
+    background: #fff0f1;
+    color: #a32135 !important;
+    border-color: #f1c2c9;
 }
