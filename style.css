@@ -1041,9 +1041,9 @@ body.light-theme .bloque-informacion p {
     min-height: 48px;
     margin-top: 8px;
     padding: 12px;
-    background: #d6d6d6;
-    color: #151515 !important;
-    border: 1px solid #eeeeee;
+    background: #ffffff;
+    color: #111111 !important;
+    border: 1px solid #ffffff;
     border-radius: 8px;
     font-family: Arial, sans-serif;
     font-size: 16px;
@@ -1167,8 +1167,9 @@ body.light-theme .login-formulario input:-webkit-autofill:focus {
 body.light-theme .login-formulario .login-boton {
     background: #333333;
     color: #ffffff !important;
-    border-color: #444444;
+    border-color: #333333;
 }
+
 
 body.light-theme .login-formulario .login-boton:hover {
     background: #222222;

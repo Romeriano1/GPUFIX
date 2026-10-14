@@ -69,12 +69,14 @@ if (isset($_SESSION["usuario_id"])) {
                 </div>
             <?php endif; ?>
 
-            <form action="login.php" method="POST">
+            <form id="loginForm" action="login.php" method="POST" novalidate>
                 <label for="correo">Correo electrónico</label>
-                <input type="email" id="correo" name="correo" placeholder="Ingresá tu correo" autocomplete="email" required>
+                <input type="email" id="correo" name="correo" placeholder="Ingresá tu correo" autocomplete="email" aria-describedby="correoError">
+                <span id="correoError" class="login-error-campo" role="alert"></span>
 
                 <label for="contrasena">Contraseña</label>
-                <input type="password" id="contrasena" name="contrasena" placeholder="Ingresá tu contraseña" autocomplete="current-password" required>
+                <input type="password" id="contrasena" name="contrasena" placeholder="Ingresá tu contraseña" autocomplete="current-password" aria-describedby="contrasenaError">
+                <span id="contrasenaError" class="login-error-campo" role="alert"></span>
 
                 <button class="login-boton" type="submit">Ingresar</button>
             </form>
@@ -108,7 +110,38 @@ document.addEventListener("click", function(event) {
         cuentaButton.setAttribute("aria-expanded", "false");
     }
 });
+
+const loginForm = document.getElementById("loginForm");
+const correo = document.getElementById("correo");
+const contrasena = document.getElementById("contrasena");
+const correoError = document.getElementById("correoError");
+const contrasenaError = document.getElementById("contrasenaError");
+
+loginForm.addEventListener("submit", function(event) {
+    let hayErrores = false;
+
+    correoError.textContent = "";
+    contrasenaError.textContent = "";
+
+    if (correo.value.trim() === "") {
+        correoError.textContent = "Ingresá tu correo electrónico.";
+        hayErrores = true;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo.value.trim())) {
+        correoError.textContent = "Ingresá un correo electrónico válido.";
+        hayErrores = true;
+    }
+
+    if (contrasena.value === "") {
+        contrasenaError.textContent = "Ingresá tu contraseña.";
+        hayErrores = true;
+    }
+
+    if (hayErrores) {
+        event.preventDefault();
+    }
+});
 </script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
