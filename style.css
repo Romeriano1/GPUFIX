@@ -923,7 +923,6 @@ body.light-theme .bloque-informacion p {
     align-items: center;
     padding: 40px 0;
 }
-
 .login-formulario {
     width: 100%;
     max-width: 450px;
@@ -932,21 +931,33 @@ body.light-theme .bloque-informacion p {
     border-radius: 12px;
     position: relative;
     overflow: hidden;
-    animation: rgbPanel 5s linear infinite;
 }
 
-@keyframes rgbPanel {
+.login-formulario:hover {
+    animation: brilloPanel 4s linear infinite;
+}
+
+@keyframes brilloPanel {
     0% {
-        box-shadow: 0 0 12px red;
+        box-shadow: 0 0 14px rgba(255, 23, 68, 0.55);
+    }
+    17% {
+        box-shadow: 0 0 14px rgba(255, 145, 0, 0.55);
     }
     33% {
-        box-shadow: 0 0 12px lime;
+        box-shadow: 0 0 14px rgba(255, 234, 0, 0.55);
     }
-    66% {
-        box-shadow: 0 0 12px blue;
+    50% {
+        box-shadow: 0 0 14px rgba(0, 230, 118, 0.55);
+    }
+    67% {
+        box-shadow: 0 0 14px rgba(0, 229, 255, 0.55);
+    }
+    83% {
+        box-shadow: 0 0 14px rgba(41, 121, 255, 0.55);
     }
     100% {
-        box-shadow: 0 0 12px red;
+        box-shadow: 0 0 14px rgba(213, 0, 249, 0.55);
     }
 }
 
@@ -954,28 +965,30 @@ body.light-theme .bloque-informacion p {
     content: "";
     position: absolute;
     top: 0;
-    left: -100%;
+    left: 0;
     width: 100%;
-    height: 3px;
-    animation: rgbLinea 5s linear infinite;
+    height: 2px;
+    background: linear-gradient(
+        90deg,
+        #ff1744,
+        #ff9100,
+        #ffea00,
+        #00e676,
+        #00e5ff,
+        #2979ff,
+        #d500f9,
+        #ff1744
+    );
+    background-size: 300% 100%;
+    animation: lineaArcoiris 3s linear infinite;
 }
 
-@keyframes rgbLinea {
-    0% {
-        left: -100%;
-        background-color: red;
+@keyframes lineaArcoiris {
+    from {
+        background-position: 0% 50%;
     }
-    33% {
-        left: 0;
-        background-color: lime;
-    }
-    66% {
-        left: 100%;
-        background-color: blue;
-    }
-    100% {
-        left: -100%;
-        background-color: red;
+    to {
+        background-position: 100% 50%;
     }
 }
 
@@ -1015,34 +1028,11 @@ body.light-theme .bloque-informacion p {
 
 .login-formulario input:hover {
     border-color: #777;
+    animation: rgbInputSuave 5s linear infinite;
 }
 
 .login-formulario input:focus {
     border-color: #00aaff;
-    animation: rgbInput 5s linear infinite;
-}
-
-@keyframes rgbInput {
-    0% {
-        box-shadow: 0 0 5px red;
-    }
-    33% {
-        box-shadow: 0 0 5px lime;
-    }
-    66% {
-        box-shadow: 0 0 5px blue;
-    }
-    100% {
-        box-shadow: 0 0 5px red;
-    }
-}
-
-.login-formulario input:-webkit-autofill,
-.login-formulario input:-webkit-autofill:hover,
-.login-formulario input:-webkit-autofill:focus {
-    -webkit-text-fill-color: white;
-    -webkit-box-shadow: 0 0 0 1000px #111 inset;
-    transition: background-color 5000s ease-in-out 0s;
 }
 
 .login-boton {
@@ -1054,26 +1044,41 @@ body.light-theme .bloque-informacion p {
     font-weight: bold;
     cursor: pointer;
     background-color: #222;
-    animation: rgbBoton 5s linear infinite;
     transition: transform 0.2s;
 }
 
 .login-boton:hover {
     transform: scale(1.03);
+    animation: rgb 5s linear infinite;
 }
 
-@keyframes rgbBoton {
+@keyframes rgbInputSuave {
     0% {
-        box-shadow: 0 0 8px red;
+        box-shadow: 0 0 6px rgba(255, 0, 0, 0.3);
     }
     33% {
-        box-shadow: 0 0 8px lime;
+        box-shadow: 0 0 6px rgba(0, 255, 0, 0.3);
     }
     66% {
-        box-shadow: 0 0 8px blue;
+        box-shadow: 0 0 6px rgba(0, 0, 255, 0.3);
     }
     100% {
-        box-shadow: 0 0 8px red;
+        box-shadow: 0 0 6px rgba(255, 0, 0, 0.3);
+    }
+}
+
+@keyframes rgb {
+    0% {
+        box-shadow: 0 8px 25px rgba(255, 0, 0, 0.7);
+    }
+    33% {
+        box-shadow: 0 8px 25px rgba(0, 255, 0, 0.7);
+    }
+    66% {
+        box-shadow: 0 8px 25px rgba(0, 0, 255, 0.7);
+    }
+    100% {
+        box-shadow: 0 8px 25px rgba(255, 0, 0, 0.7);
     }
 }
 
@@ -1112,9 +1117,15 @@ body.light-theme .bloque-informacion p {
     margin-top: -15px;
     margin-bottom: 15px;
 }
+body.light-theme {
+    background-color: #e9edf2;
+    color: #111;
+}
 
 body.light-theme .login-formulario {
-    background-color: #f5f5f5;
+    background-color: #fff;
+    border: 1px solid #aeb5bf;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 body.light-theme .login-formulario h2,
@@ -1124,17 +1135,17 @@ body.light-theme .login-formulario label {
 
 body.light-theme .login-formulario .login-descripcion,
 body.light-theme .login-enlaces p {
-    color: #444;
+    color: #333;
 }
 
 body.light-theme .login-formulario input {
     background-color: #fff;
-    border-color: #ccc;
+    border: 1px solid #555;
     color: #111;
 }
 
 body.light-theme .login-formulario input::placeholder {
-    color: #777;
+    color: #555;
 }
 
 body.light-theme .login-formulario input:-webkit-autofill,
@@ -1145,11 +1156,15 @@ body.light-theme .login-formulario input:-webkit-autofill:focus {
 }
 
 body.light-theme .login-boton {
-    background-color: #ddd;
-    color: #111;
+    background-color: #111;
+    color: #fff;
+}
+
+body.light-theme .login-enlaces a {
+    color: #004a99;
 }
 
 body.light-theme .login-error,
 body.light-theme .login-error-campo {
-    color: #d00000;
+    color: #b00020;
 }
