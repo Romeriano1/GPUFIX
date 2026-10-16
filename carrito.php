@@ -18,32 +18,32 @@
 
             <div class="navbar-izquierda">
 
-                <a class="navbar-brand" href="index.html">
+                <a class="navbar-brand" href="index.php">
                     GPU FIX & STORE
                 </a>
 
                 <ul class="navbar-nav">
 
                     <li class="nav-item">
-                        <a class="nav-link" href="index.html">
+                        <a class="nav-link" href="index.php">
                             Inicio
                         </a>
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link" href="productos.html">
+                        <a class="nav-link" href="productos.php">
                             Productos
                         </a>
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link" href="reparar.html">
+                        <a class="nav-link" href="reparar.php">
                             Reparar GPU
                         </a>
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link active" href="carrito.html">
+                        <a class="nav-link active" href="carrito.php">
                             Ver carrito
                         </a>
                     </li>
@@ -60,18 +60,9 @@
 
                 <div class="cuenta-contenedor">
 
-                    <button
-                        id="cuentaButton"
-                        class="cuenta-button"
-                        type="button"
-                        aria-label="Abrir menú de usuario"
-                        aria-expanded="false">
+                    <a href="login.php" class="cuenta-button" aria-label="Iniciar sesión">
                         👤
-                    </button>
-
-                    <div id="cuentaMenu" class="cuenta-menu">
-                        <a href="login.html">Iniciar sesión</a>
-                    </div>
+                    </a>
 
                 </div>
 
@@ -95,7 +86,7 @@
                 Explorá nuestros productos y encontrá la GPU que estás buscando.
             </p>
 
-            <a href="productos.html" class="boton-maps">
+            <a href="productos.php" class="boton-maps">
                 Ver productos
             </a>
 
@@ -110,25 +101,6 @@
     </footer>
 
     <script src="script.js"></script>
-
-    <script>
-        const cuentaButton = document.getElementById("cuentaButton");
-        const cuentaMenu = document.getElementById("cuentaMenu");
-
-        cuentaButton.addEventListener("click", function(event) {
-            event.stopPropagation();
-
-            const abierto = cuentaMenu.classList.toggle("visible");
-            cuentaButton.setAttribute("aria-expanded", abierto);
-        });
-
-        document.addEventListener("click", function(event) {
-            if (!event.target.closest(".cuenta-contenedor")) {
-                cuentaMenu.classList.remove("visible");
-                cuentaButton.setAttribute("aria-expanded", "false");
-            }
-        });
-    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 

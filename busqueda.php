@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -19,32 +20,32 @@
 
             <div class="navbar-izquierda">
 
-                <a class="navbar-brand" href="index.html">
+                <a class="navbar-brand" href="index.php">
                     GPU FIX & STORE
                 </a>
 
                 <ul class="navbar-nav">
 
                     <li class="nav-item">
-                        <a class="nav-link" href="index.html">
+                        <a class="nav-link" href="index.php">
                             Inicio
                         </a>
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link" href="productos.html">
+                        <a class="nav-link" href="productos.php">
                             Productos
                         </a>
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link" href="reparar.html">
+                        <a class="nav-link" href="reparar.php">
                             Reparar GPU
                         </a>
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link" href="carrito.html">
+                        <a class="nav-link" href="carrito.php">
                             Ver carrito
                         </a>
                     </li>
@@ -55,7 +56,7 @@
 
             <div class="navbar-centro">
 
-                <form class="search-form" action="busqueda.html" method="GET" role="search">
+                <form class="search-form" action="busqueda.php" method="GET" role="search">
 
                     <input
                         class="form-control"
@@ -114,12 +115,12 @@
             {
                 nombre: "PLACA DE VIDEO RADEON RX 7600 8GB SAPPHIRE PULSE OC",
                 imagen: "img/rx7600.png",
-                pagina: "rx7600.html"
+                pagina: "rx7600.php"
             },
             {
                 nombre: "PLACA DE VIDEO RADEON RX 9070 16GB GIGABYTE GAMING OC",
                 imagen: "img/rx9070.png",
-                pagina: "rx9070.html"
+                pagina: "rx9070.php"
             }
         ];
 

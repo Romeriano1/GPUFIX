@@ -15,13 +15,13 @@
         <nav class="navbar">
 
             <div class="navbar-izquierda">
-                <a class="navbar-brand" href="index.html">GPU FIX & STORE</a>
+                <a class="navbar-brand" href="index.php">GPU FIX & STORE</a>
 
                 <div class="navbar-nav">
-                    <a class="nav-link" href="index.html">Inicio</a>
-                    <a class="nav-link" href="productos.html">Productos</a>
-                    <a class="nav-link" href="reparar.html">Reparar GPU</a>
-                    <a class="nav-link" href="carrito.html">Ver carrito</a>
+                    <a class="nav-link" href="index.php">Inicio</a>
+                    <a class="nav-link" href="productos.php">Productos</a>
+                    <a class="nav-link" href="reparar.php">Reparar GPU</a>
+                    <a class="nav-link" href="carrito.php">Ver carrito</a>
                 </div>
             </div>
 
@@ -32,20 +32,9 @@
                 </button>
 
                 <div class="cuenta-contenedor">
-
-                    <button
-                        id="cuentaButton"
-                        class="cuenta-button"
-                        type="button"
-                        aria-label="Abrir menú de usuario"
-                        aria-expanded="false">
+                    <a href="login.php" class="cuenta-button" aria-label="Iniciar sesión">
                         👤
-                    </button>
-
-                    <div id="cuentaMenu" class="cuenta-menu">
-                        <a href="login.html">Iniciar sesión</a>
-                    </div>
-
+                    </a>
                 </div>
 
             </div>
@@ -154,25 +143,6 @@
     </footer>
 
     <script src="script.js"></script>
-
-    <script>
-        const cuentaButton = document.getElementById("cuentaButton");
-        const cuentaMenu = document.getElementById("cuentaMenu");
-
-        cuentaButton.addEventListener("click", function(event) {
-            event.stopPropagation();
-
-            const abierto = cuentaMenu.classList.toggle("visible");
-            cuentaButton.setAttribute("aria-expanded", abierto);
-        });
-
-        document.addEventListener("click", function(event) {
-            if (!event.target.closest(".cuenta-contenedor")) {
-                cuentaMenu.classList.remove("visible");
-                cuentaButton.setAttribute("aria-expanded", "false");
-            }
-        });
-    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
