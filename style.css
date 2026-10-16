@@ -1,3 +1,4 @@
+
 * {
     margin: 0;
     padding: 0;
@@ -883,8 +884,61 @@ body.light-theme .bloque-informacion strong {
 
 body.light-theme .bloque-informacion p {
     color: #555555;
-}.pagina-login .login-header {
+}
+
+.pagina-login .login-header {
     width: 100%;
+}
+
+.acceso-reparaciones {
+    max-width: 700px;
+    margin: 25px auto 0;
+    padding: 30px;
+    background-color: #1c1c1c;
+    border: 1px solid #333333;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.acceso-reparaciones h3 {
+    color: white;
+    font-size: 22px;
+    margin-bottom: 15px;
+}
+
+.acceso-reparaciones p {
+    color: #aaaaaa;
+    line-height: 1.6;
+    margin-bottom: 25px;
+}
+
+.boton-iniciar-sesion {
+    display: inline-block;
+    padding: 10px 20px;
+    border: 1px solid #00bfff;
+    border-radius: 8px;
+    background-color: transparent;
+    color: #00bfff;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.boton-iniciar-sesion:hover {
+    background-color: #00bfff;
+    color: white;
+}
+
+body.light-theme .acceso-reparaciones {
+    background-color: #ffffff;
+    border-color: #cccccc;
+}
+
+body.light-theme .acceso-reparaciones h3 {
+    color: #111111;
+}
+
+body.light-theme .acceso-reparaciones p {
+    color: #555555;
 }
 
 .pagina-login .navbar-login {

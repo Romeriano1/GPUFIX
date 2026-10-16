@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 
@@ -20,17 +21,17 @@ if (isset($_SESSION["usuario_id"])) {
 <header class="login-header">
     <nav class="navbar navbar-login">
         <div class="navbar-izquierda navbar-login-izquierda">
-            <a class="navbar-brand navbar-login-brand" href="index.html">GPU FIX & STORE</a>
+            <a class="navbar-brand navbar-login-brand" href="index.php">GPU FIX & STORE</a>
             <ul class="navbar-nav navbar-login-enlaces">
-                <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>
-                <li class="nav-item"><a class="nav-link" href="productos.html">Productos</a></li>
-                <li class="nav-item"><a class="nav-link" href="reparar.html">Reparar GPU</a></li>
-                <li class="nav-item"><a class="nav-link" href="carrito.html">Ver carrito</a></li>
+                <li class="nav-item"><a class="nav-link" href="index.php">Inicio</a></li>
+                <li class="nav-item"><a class="nav-link" href="productos.php">Productos</a></li>
+                <li class="nav-item"><a class="nav-link" href="reparar.php">Reparar GPU</a></li>
+                <li class="nav-item"><a class="nav-link" href="carrito.php">Ver carrito</a></li>
             </ul>
         </div>
 
         <div class="navbar-centro navbar-login-centro">
-            <form class="search-form" action="busqueda.html" method="GET" role="search">
+            <form class="search-form" action="busqueda.php" method="GET" role="search">
                 <input class="form-control" type="search" name="buscar" placeholder="Buscar GPU" aria-label="Buscar GPU">
                 <button class="btn" type="submit">Buscar</button>
             </form>
@@ -150,3 +151,4 @@ loginForm.addEventListener("submit", function(event) {
 
 </body>
 </html>
+    
