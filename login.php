@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 
@@ -15,13 +16,13 @@ if (isset($_SESSION["usuario_id"])) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="pagina-login">
 
-<header>
-    <nav class="navbar">
-        <div class="navbar-izquierda">
-            <a class="navbar-brand" href="index.html">GPU FIX & STORE</a>
-            <ul class="navbar-nav">
+<header class="login-header">
+    <nav class="navbar navbar-login">
+        <div class="navbar-izquierda navbar-login-izquierda">
+            <a class="navbar-brand navbar-login-brand" href="index.html">GPU FIX & STORE</a>
+            <ul class="navbar-nav navbar-login-enlaces">
                 <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>
                 <li class="nav-item"><a class="nav-link" href="productos.html">Productos</a></li>
                 <li class="nav-item"><a class="nav-link" href="reparar.html">Reparar GPU</a></li>
@@ -29,14 +30,14 @@ if (isset($_SESSION["usuario_id"])) {
             </ul>
         </div>
 
-        <div class="navbar-centro">
+        <div class="navbar-centro navbar-login-centro">
             <form class="search-form" action="busqueda.html" method="GET" role="search">
                 <input class="form-control" type="search" name="buscar" placeholder="Buscar GPU" aria-label="Buscar GPU">
                 <button class="btn" type="submit">Buscar</button>
             </form>
         </div>
 
-        <div class="navbar-derecha">
+        <div class="navbar-derecha navbar-login-derecha">
             <button id="themeButton" class="theme-button" type="button" aria-label="Cambiar tema">☀️</button>
             <div class="cuenta-contenedor">
                 <button id="cuentaButton" class="cuenta-button" type="button" aria-label="Abrir menú de usuario" aria-expanded="false">👤</button>
@@ -49,7 +50,7 @@ if (isset($_SESSION["usuario_id"])) {
     </nav>
 </header>
 
-<main>
+<main class="login-main">
     <section class="login-contenedor">
         <div class="login-formulario">
             <h2>Iniciar sesión</h2>
@@ -69,14 +70,18 @@ if (isset($_SESSION["usuario_id"])) {
                 </div>
             <?php endif; ?>
 
-            <form id="loginForm" action="login.php" method="POST" novalidate>
-                <label for="correo">Correo electrónico</label>
-                <input type="email" id="correo" name="correo" placeholder="Ingresá tu correo" autocomplete="email" aria-describedby="correoError">
-                <span id="correoError" class="login-error-campo" role="alert"></span>
+            <form id="loginForm" class="login-form" action="login.php" method="POST" novalidate>
+                <div class="login-campo">
+                    <label for="correo">Correo electrónico</label>
+                    <input type="email" id="correo" name="correo" placeholder="Ingresá tu correo" autocomplete="email" aria-describedby="correoError">
+                    <span id="correoError" class="login-error-campo" role="alert"></span>
+                </div>
 
-                <label for="contrasena">Contraseña</label>
-                <input type="password" id="contrasena" name="contrasena" placeholder="Ingresá tu contraseña" autocomplete="current-password" aria-describedby="contrasenaError">
-                <span id="contrasenaError" class="login-error-campo" role="alert"></span>
+                <div class="login-campo">
+                    <label for="contrasena">Contraseña</label>
+                    <input type="password" id="contrasena" name="contrasena" placeholder="Ingresá tu contraseña" autocomplete="current-password" aria-describedby="contrasenaError">
+                    <span id="contrasenaError" class="login-error-campo" role="alert"></span>
+                </div>
 
                 <button class="login-boton" type="submit">Ingresar</button>
             </form>
@@ -89,7 +94,7 @@ if (isset($_SESSION["usuario_id"])) {
     </section>
 </main>
 
-<footer>
+<footer class="login-footer">
     <p>GPU FIX & STORE - Reparación y venta de GPUs</p>
 </footer>
 
