@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 
@@ -60,6 +59,7 @@
 
                     <input
                         class="form-control"
+                        id="campoBusqueda"
                         type="search"
                         name="buscar"
                         placeholder="Buscar GPU"
@@ -93,9 +93,7 @@
 
         <section class="buscados">
 
-            <h2 id="tituloResultados">
-                Resultados de búsqueda
-            </h2>
+            <h2 id="tituloResultados">Resultados de búsqueda</h2>
 
             <div class="productos" id="resultados"></div>
 
@@ -126,14 +124,17 @@
 
         const parametros = new URLSearchParams(window.location.search);
         const busqueda = parametros.get("buscar") || "";
-        const termino = busqueda.toLowerCase().trim();
+        const termino = busqueda.toLocaleLowerCase().trim();
 
-        const resultados = productos.filter(function(producto) {
-            return producto.nombre.toLowerCase().includes(termino);
-        });
-
+        const campoBusqueda = document.getElementById("campoBusqueda");
         const tituloResultados = document.getElementById("tituloResultados");
         const contenedor = document.getElementById("resultados");
+
+        campoBusqueda.value = busqueda;
+
+        const resultados = productos.filter(function(producto) {
+            return producto.nombre.toLocaleLowerCase().includes(termino);
+        });
 
         if (termino === "") {
             tituloResultados.textContent = "Buscá una GPU";
@@ -142,13 +143,9 @@
         }
 
         if (resultados.length === 0 && termino !== "") {
-
             contenedor.innerHTML = "<p>No se encontraron productos.</p>";
-
         } else {
-
             resultados.forEach(function(producto) {
-
                 contenedor.innerHTML += `
                     <div class="producto">
                         <a href="${producto.pagina}">
@@ -157,9 +154,7 @@
                         <h3>${producto.nombre}</h3>
                     </div>
                 `;
-
             });
-
         }
 
     </script>

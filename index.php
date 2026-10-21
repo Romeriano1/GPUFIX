@@ -138,6 +138,59 @@
 
         </section>
 
+        <section class="marcas-section">
+
+            <div class="marcas-encabezado">
+                <h2>Conocé nuestras marcas</h2>
+                <p>Encontrá tu próxima GPU entre las marcas que más te gustan.</p>
+            </div>
+
+            <div class="marcas-grid">
+
+                <a href="busqueda.php?buscar=Gigabyte" class="marca-boton">
+                    <span>GIGABYTE</span>
+                    <span class="marca-flecha" aria-hidden="true">↗</span>
+                </a>
+
+                <a href="busqueda.php?buscar=Sapphire" class="marca-boton">
+                    <span>SAPPHIRE</span>
+                    <span class="marca-flecha" aria-hidden="true">↗</span>
+                </a>
+
+                <a href="busqueda.php?buscar=ASUS" class="marca-boton">
+                    <span>ASUS</span>
+                    <span class="marca-flecha" aria-hidden="true">↗</span>
+                </a>
+
+                <a href="busqueda.php?buscar=PowerColor" class="marca-boton">
+                    <span>POWERCOLOR</span>
+                    <span class="marca-flecha" aria-hidden="true">↗</span>
+                </a>
+
+                <a href="busqueda.php?buscar=INNO3D" class="marca-boton">
+                    <span>INNO3D</span>
+                    <span class="marca-flecha" aria-hidden="true">↗</span>
+                </a>
+
+                <a href="busqueda.php?buscar=Gainward" class="marca-boton">
+                    <span>GAINWARD</span>
+                    <span class="marca-flecha" aria-hidden="true">↗</span>
+                </a>
+
+                <a href="busqueda.php?buscar=MSI" class="marca-boton">
+                    <span>MSI</span>
+                    <span class="marca-flecha" aria-hidden="true">↗</span>
+                </a>
+
+                <a href="busqueda.php?buscar=ZOTAC" class="marca-boton">
+                    <span>ZOTAC</span>
+                    <span class="marca-flecha" aria-hidden="true">↗</span>
+                </a>
+
+            </div>
+
+        </section>
+
     </main>
 
     <footer>
@@ -152,3 +205,4 @@
 
 </body>
 
+</html>
