@@ -100,16 +100,16 @@ if ($verificado) {
 <main class="login-main">
     <section class="login-contenedor">
         <div class="login-formulario">
-            <h2>Tu cuenta está a la espera de verificación</h2>
+            <h2>Confirmá tu correo para activar la cuenta</h2>
 
             <?php if ($pendienteMailEnviado === true): ?>
                 <p class="login-descripcion">
                     Te enviamos un enlace de confirmación a
                     <strong><?= htmlspecialchars($pendienteCorreo, ENT_QUOTES, "UTF-8") ?></strong>.
-                    Abrilo para activar tu cuenta. El enlace vence en 24 horas.
+                    Para terminar el registro, confirmá tu correo desde ese enlace. Vence en 24 horas.
                 </p>
                 <div class="login-aviso" role="status">
-                    Cuando confirmes el correo, esta página te va a llevar al inicio automáticamente.
+                    Cuando confirmes el correo, vas a ver la página de confirmación de tu cuenta.
                 </div>
             <?php else: ?>
                 <p class="login-descripcion">
@@ -135,13 +135,13 @@ if ($verificado) {
 
 <script src="script.js?v=20261021-9"></script>
 <script>
-// Consulta cada 5 segundos si la cuenta ya se verificó; si es así, va al inicio.
+// Consulta cada 5 segundos si la cuenta ya se verificó; si es así, muestra la confirmación.
 setInterval(function () {
     fetch("verificacion-pendiente.php?estado=1", { cache: "no-store" })
         .then(function (respuesta) { return respuesta.json(); })
         .then(function (datos) {
             if (datos.verificado) {
-                window.location.href = "index.php";
+                window.location.href = "mailconfirmado.php";
             }
         })
         .catch(function () {});

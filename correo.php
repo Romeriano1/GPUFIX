@@ -150,12 +150,20 @@ function correo_url_aplicacion()
 {
     $configuracion = correo_obtener_configuracion();
     $configurada = rtrim(trim((string) $configuracion["app_url"]), "/");
-    if ($configurada !== "") {
+    $hostActual = strtolower((string) ($_SERVER["HTTP_HOST"] ?? "localhost"));
+    $hostActual = preg_replace('/:\\d+$/', "", $hostActual);
+    $hostConfigurado = strtolower((string) (parse_url($configurada, PHP_URL_HOST) ?: ""));
+    $hostConfiguradoLocal = in_array($hostConfigurado, ["localhost", "127.0.0.1"], true);
+    $hostActualLocal = in_array($hostActual, ["localhost", "127.0.0.1"], true);
+
+    // No permitir que una configuración local genere enlaces localhost en el hosting.
+    if ($configurada !== "" && (!$hostConfiguradoLocal || $hostActualLocal)) {
         return $configurada;
     }
 
-    $host = preg_replace('/[^a-zA-Z0-9.\-:\[\]]/', "", (string) ($_SERVER["HTTP_HOST"] ?? "localhost"));
-    $https = (!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] !== "off");
+    $host = preg_replace('/[^a-zA-Z0-9.\-:\[\]]/', "", $hostActual);
+    $https = (!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] !== "off")
+        || strtolower((string) ($_SERVER["HTTP_X_FORWARDED_PROTO"] ?? "")) === "https";
     $base = rtrim(str_replace("\\", "/", dirname((string) ($_SERVER["SCRIPT_NAME"] ?? "/"))), "/");
     return ($https ? "https" : "http") . "://" . $host . ($base === "" ? "" : $base);
 }

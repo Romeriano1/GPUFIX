@@ -18,25 +18,41 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $encontrado = $consulta->fetch();
             $consulta->close();
             $token = "";
+            $enviado = false;
             $sePuedeEnviar = $encontrado && (int) $verificado !== 1;
 
             if ($sePuedeEnviar) {
-                $token = bin2hex(random_bytes(32));
-                $tokenHash = hash("sha256", $token);
-                $expira = date("Y-m-d H:i:s", time() + 86400);
-                $actualizar = $conexion->prepare(
-                    "UPDATE usuarios SET token_verificacion = ?, token_expira = ? WHERE id_correo = ? AND correo_verificado = 0"
-                );
-                $actualizar->bind_param("ssi", $tokenHash, $expira, $usuarioId);
-                $actualizar->execute();
-                $sePuedeEnviar = $actualizar->affected_rows === 1;
-                $actualizar->close();
+                $conexion->begin_transaction();
+                try {
+                    $token = bin2hex(random_bytes(32));
+                    $tokenHash = hash("sha256", $token);
+                    $expira = date("Y-m-d H:i:s", time() + 86400);
+                    $actualizar = $conexion->prepare(
+                        "UPDATE usuarios SET token_verificacion = ?, token_expira = ? WHERE id_correo = ? AND correo_verificado = 0"
+                    );
+                    $actualizar->bind_param("ssi", $tokenHash, $expira, $usuarioId);
+                    $actualizar->execute();
+                    $sePuedeEnviar = $actualizar->affected_rows === 1;
+                    $actualizar->close();
+
+                    if ($sePuedeEnviar) {
+                        require_once __DIR__ . "/correo.php";
+                        $enviado = correo_enviar_confirmacion($correo, $nombre, $token);
+                    }
+
+                    if ($enviado) {
+                        $conexion->commit();
+                    } else {
+                        $conexion->rollback();
+                    }
+                } catch (Throwable $error) {
+                    $conexion->rollback();
+                    throw $error;
+                }
             }
             $conexion->close();
 
             if ($sePuedeEnviar) {
-                require_once __DIR__ . "/correo.php";
-                $enviado = correo_enviar_confirmacion($correo, $nombre, $token);
                 $mensaje = $enviado
                     ? "Si la cuenta está pendiente de confirmación, enviamos un enlace nuevo. Revisá también la carpeta de correo no deseado."
                     : "La cuenta sigue pendiente de confirmación, pero el envío de correo no está disponible. Revisá la configuración SMTP e intentá de nuevo.";

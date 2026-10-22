@@ -27,14 +27,14 @@ if (preg_match('/^[a-f0-9]{64}$/', $token)) {
         }
         $conexion->close();
 
-        // Cuenta confirmada: se inicia sesión y se envía al inicio.
+        // Cuenta confirmada: iniciar sesión y mostrar la página de éxito.
         if ($confirmacion === "confirmada") {
             unset($_SESSION["verificacion_pendiente_id"], $_SESSION["verificacion_pendiente_correo"], $_SESSION["verificacion_pendiente_mail"]);
             session_regenerate_id(true);
             $_SESSION["usuario_id"] = (int) $usuarioId;
             $_SESSION["usuario_nombre"] = $nombreUsuario;
             $_SESSION["usuario_apellido"] = $apellidoUsuario;
-            header("Location: index.php");
+            header("Location: mailconfirmado.php");
             exit;
         }
     } catch (Throwable $error) {
@@ -56,9 +56,7 @@ if (preg_match('/^[a-f0-9]{64}$/', $token)) {
     <section class="login-contenedor">
         <div class="login-formulario">
             <h2>Confirmación de correo</h2>
-            <?php if ($confirmacion === "confirmada"): ?>
-                <p class="login-aviso">Tu correo quedó confirmado. Ya podés iniciar sesión.</p>
-            <?php elseif ($confirmacion === "error"): ?>
+            <?php if ($confirmacion === "error"): ?>
                 <p class="login-error">No pudimos completar la confirmación. Intentá nuevamente más tarde.</p>
             <?php else: ?>
                 <p class="login-error">El enlace no es válido o venció. Podés pedir uno nuevo.</p>
