@@ -162,7 +162,8 @@ function correo_url_aplicacion()
     }
 
     $host = preg_replace('/[^a-zA-Z0-9.\-:\[\]]/', "", $hostActual);
-    $https = (!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] !== "off")
+    $https = !$hostActualLocal
+        || (!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] !== "off")
         || strtolower((string) ($_SERVER["HTTP_X_FORWARDED_PROTO"] ?? "")) === "https";
     $base = rtrim(str_replace("\\", "/", dirname((string) ($_SERVER["SCRIPT_NAME"] ?? "/"))), "/");
     return ($https ? "https" : "http") . "://" . $host . ($base === "" ? "" : $base);
