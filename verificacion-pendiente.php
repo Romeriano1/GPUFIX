@@ -117,7 +117,7 @@ if ($verificado) {
                     pero no pudimos enviar el correo de confirmación.
                 </p>
                 <div class="login-error" role="alert">
-                    El envío de correos todavía no está disponible. Probá pedir otro enlace más tarde.
+                    No pudimos enviar el correo de confirmación. Revisá la configuración del correo y, cuando esté corregida, pedí otro enlace.
                 </div>
             <?php endif; ?>
 
