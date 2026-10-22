@@ -21,3 +21,29 @@ if (themeButton) {
         }
     });
 }
+
+const cuentaButton = document.getElementById("cuentaButton");
+const cuentaMenu = document.getElementById("cuentaMenu");
+
+if (cuentaButton && cuentaMenu) {
+    cuentaButton.addEventListener("click", function(event) {
+        event.stopPropagation();
+        const abierto = cuentaMenu.classList.toggle("visible");
+        cuentaButton.setAttribute("aria-expanded", String(abierto));
+    });
+
+    document.addEventListener("click", function(event) {
+        if (!event.target.closest(".cuenta-contenedor")) {
+            cuentaMenu.classList.remove("visible");
+            cuentaButton.setAttribute("aria-expanded", "false");
+        }
+    });
+
+    document.addEventListener("keydown", function(event) {
+        if (event.key === "Escape") {
+            cuentaMenu.classList.remove("visible");
+            cuentaButton.setAttribute("aria-expanded", "false");
+            cuentaButton.focus();
+        }
+    });
+}

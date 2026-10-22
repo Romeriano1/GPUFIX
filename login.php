@@ -1,4 +1,3 @@
-
 <?php
 session_start();
 
@@ -104,9 +103,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $loginError !== "") {
             <button id="themeButton" class="theme-button" type="button" aria-label="Cambiar tema">
                 ☀️
             </button>
-            <a href="login.php" class="cuenta-button" aria-label="Iniciar sesión">
-                👤
-            </a>
+            <?php include __DIR__ . "/menu-perfil.php"; ?>
         </div>
     </nav>
 </header>
@@ -172,26 +169,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $loginError !== "") {
     <p>GPU FIX & STORE - Reparación y venta de GPUs</p>
 </footer>
 
-<script src="script.js"></script>
+<script src="script.js?v=20261021-9"></script>
 <script>
-const cuentaButton = document.getElementById("cuentaButton");
-const cuentaMenu = document.getElementById("cuentaMenu");
-
-if (cuentaButton && cuentaMenu) {
-    cuentaButton.addEventListener("click", function(event) {
-        event.stopPropagation();
-        const abierto = cuentaMenu.classList.toggle("visible");
-        cuentaButton.setAttribute("aria-expanded", abierto);
-    });
-
-    document.addEventListener("click", function(event) {
-        if (!event.target.closest(".cuenta-contenedor")) {
-            cuentaMenu.classList.remove("visible");
-            cuentaButton.setAttribute("aria-expanded", "false");
-        }
-    });
-}
-
 const loginForm = document.getElementById("loginForm");
 const correo = document.getElementById("correo");
 const contrasena = document.getElementById("contrasena");

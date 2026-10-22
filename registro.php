@@ -127,7 +127,7 @@ function escaparRegistro($valor)
 
         <div class="navbar-derecha">
             <button id="themeButton" class="theme-button" type="button" aria-label="Cambiar tema">☀️</button>
-            <a href="login.php" class="cuenta-button" aria-label="Iniciar sesión">👤</a>
+            <?php include __DIR__ . "/menu-perfil.php"; ?>
         </div>
     </nav>
 </header>
@@ -211,7 +211,7 @@ function escaparRegistro($valor)
     <p>GPU FIX & STORE - Reparación y venta de GPUs</p>
 </footer>
 
-<script src="script.js"></script>
+<script src="script.js?v=20261021-9"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -1,3 +1,4 @@
+<?php session_start(); ?>
 <!DOCTYPE html>
 <html lang="es">
 
@@ -79,9 +80,7 @@
                     ☀️
                 </button>
 
-                <a href="login.php" class="cuenta-button" aria-label="Iniciar sesión">
-                    👤
-                </a>
+                <?php include __DIR__ . "/menu-perfil.php"; ?>
 
             </div>
 
@@ -159,7 +158,7 @@
 
     </script>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=20261021-9"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 

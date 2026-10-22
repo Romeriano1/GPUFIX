@@ -1,9 +1,8 @@
-
 <?php
 session_start();
 
 if (isset($_SESSION["usuario_id"])) {
-    header("Location: mi-cuenta.php");
+    header("Location: index.php");
     exit;
 }
 ?>
@@ -39,13 +38,7 @@ if (isset($_SESSION["usuario_id"])) {
 
         <div class="navbar-derecha navbar-login-derecha">
             <button id="themeButton" class="theme-button" type="button" aria-label="Cambiar tema">☀️</button>
-            <div class="cuenta-contenedor">
-                <button id="cuentaButton" class="cuenta-button" type="button" aria-label="Abrir menú de usuario" aria-expanded="false">👤</button>
-                <div id="cuentaMenu" class="cuenta-menu">
-                    <a href="login.php">Iniciar sesión</a>
-                    <a href="registro.php">Crear cuenta</a>
-                </div>
-            </div>
+                <?php include __DIR__ . "/menu-perfil.php"; ?>
         </div>
     </nav>
 </header>
@@ -98,24 +91,8 @@ if (isset($_SESSION["usuario_id"])) {
     <p>GPU FIX & STORE - Reparación y venta de GPUs</p>
 </footer>
 
-<script src="script.js"></script>
+<script src="script.js?v=20261021-9"></script>
 <script>
-const cuentaButton = document.getElementById("cuentaButton");
-const cuentaMenu = document.getElementById("cuentaMenu");
-
-cuentaButton.addEventListener("click", function(event) {
-    event.stopPropagation();
-    const abierto = cuentaMenu.classList.toggle("visible");
-    cuentaButton.setAttribute("aria-expanded", abierto);
-});
-
-document.addEventListener("click", function(event) {
-    if (!event.target.closest(".cuenta-contenedor")) {
-        cuentaMenu.classList.remove("visible");
-        cuentaButton.setAttribute("aria-expanded", "false");
-    }
-});
-
 const loginForm = document.getElementById("loginForm");
 const correo = document.getElementById("correo");
 const contrasena = document.getElementById("contrasena");
