@@ -26,14 +26,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             );
             $consulta->bind_param("s", $correoIngresado);
             $consulta->execute();
-            $consulta->bind_result($usuarioId, $hashContrasena, $nombreUsuario, $apellidoUsuario);
+            $consulta->bind_result($usuarioId, $contrasenaGuardada, $nombreUsuario, $apellidoUsuario);
             $usuarioEncontrado = $consulta->fetch();
             $consulta->close();
             $conexion->close();
 
-            $contrasenaValida = $usuarioEncontrado && password_verify($contrasenaIngresada, $hashContrasena);
-
-            if ($contrasenaValida) {
+            if ($usuarioEncontrado && $contrasenaIngresada === $contrasenaGuardada) {
                 session_regenerate_id(true);
                 $_SESSION["usuario_id"] = (int) $usuarioId;
                 $_SESSION["usuario_nombre"] = $nombreUsuario;
@@ -43,11 +41,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 exit;
             }
 
-            error_log(
-                "Diagnóstico temporal de login: cuenta_encontrada=" . ($usuarioEncontrado ? "sí" : "no") .
-                "; contraseña_validada=" . ($contrasenaValida ? "sí" : "no") .
-                "; algoritmo=" . ($usuarioEncontrado ? password_get_info($hashContrasena)["algoName"] : "n/a")
-            );
             $loginError = "credenciales";
         } catch (Throwable $error) {
             error_log("Error al iniciar sesión: " . $error->getMessage());

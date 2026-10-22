@@ -47,14 +47,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $conexion->rollback();
                 $registroError = "correo_existente";
             } else {
-                $hashContrasena = password_hash($contrasena, PASSWORD_DEFAULT);
+                $contrasenaGuardar = $contrasena;
                 $dniGuardar = $dni === "" ? null : $dni;
                 $telefonoGuardar = $telefono === "" ? null : $telefono;
 
                 $crearUsuario = $conexion->prepare(
                     "INSERT INTO USUARIOS (correo, `contraseña`, nombre, apellido, dni, telefono) VALUES (?, ?, ?, ?, ?, ?)"
                 );
-                $crearUsuario->bind_param("ssssss", $correo, $hashContrasena, $nombre, $apellido, $dniGuardar, $telefonoGuardar);
+                $crearUsuario->bind_param("ssssss", $correo, $contrasenaGuardar, $nombre, $apellido, $dniGuardar, $telefonoGuardar);
                 $crearUsuario->execute();
                 $idCorreo = $conexion->insert_id;
                 $crearUsuario->close();
