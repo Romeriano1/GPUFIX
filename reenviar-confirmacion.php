@@ -9,17 +9,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     } else {
         try {
             require_once __DIR__ . "/conexion.php";
-            $consulta = $conexion->prepare(
-            "SELECT id_correo, nombre, correo_verificado FROM usuarios WHERE correo = ? LIMIT 1"
-            );
+            $conexion->query("DELETE FROM registro_pendiente WHERE token_expira IS NOT NULL AND token_expira <= NOW()");
+            $consulta = $conexion->prepare("SELECT nombre FROM registro_pendiente WHERE correo = ? LIMIT 1");
             $consulta->bind_param("s", $correo);
             $consulta->execute();
-            $consulta->bind_result($usuarioId, $nombre, $verificado);
+            $consulta->bind_result($nombre);
             $encontrado = $consulta->fetch();
             $consulta->close();
             $token = "";
             $enviado = false;
-            $sePuedeEnviar = $encontrado && (int) $verificado !== 1;
+            $sePuedeEnviar = (bool) $encontrado;
 
             if ($sePuedeEnviar) {
                 $conexion->begin_transaction();
@@ -28,19 +27,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $tokenHash = hash("sha256", $token);
                     $expira = date("Y-m-d H:i:s", time() + 86400);
                     $actualizar = $conexion->prepare(
-                        "UPDATE usuarios SET token_verificacion = ?, token_expira = ? WHERE id_correo = ? AND correo_verificado = 0"
+                        "UPDATE registro_pendiente SET token_verificacion = ?, token_expira = ? WHERE correo = ?"
                     );
-                    $actualizar->bind_param("ssi", $tokenHash, $expira, $usuarioId);
+                    $actualizar->bind_param("sss", $tokenHash, $expira, $correo);
                     $actualizar->execute();
                     $sePuedeEnviar = $actualizar->affected_rows === 1;
                     $actualizar->close();
-
                     if ($sePuedeEnviar) {
-                        require_once __DIR__ . "/correo.php";
-                        $enviado = correo_enviar_confirmacion($correo, $nombre, $token);
-                    }
-
-                    if ($enviado) {
                         $conexion->commit();
                     } else {
                         $conexion->rollback();
@@ -49,13 +42,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $conexion->rollback();
                     throw $error;
                 }
+
+                if ($sePuedeEnviar) {
+                    require_once __DIR__ . "/correo.php";
+                    $enviado = correo_enviar_confirmacion($correo, $nombre, $token);
+                }
             }
             $conexion->close();
 
             if ($sePuedeEnviar) {
                 $mensaje = $enviado
                     ? "Si la cuenta está pendiente de confirmación, enviamos un enlace nuevo. Revisá también la carpeta de correo no deseado."
-                    : "La cuenta sigue pendiente de confirmación, pero el envío de correo no está disponible. Revisá la configuración SMTP e intentá de nuevo.";
+                    : "El registro sigue pendiente, pero no pudimos enviar el correo. Revisá la configuración SMTP e intentá de nuevo.";
             } else {
                 $mensaje = "Si la cuenta está pendiente de confirmación, enviamos un enlace nuevo. Revisá también la carpeta de correo no deseado.";
             }

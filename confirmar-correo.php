@@ -4,32 +4,61 @@ $confirmacion = "invalida";
 $token = trim((string) ($_GET["token"] ?? ""));
 
 if (preg_match('/^[a-f0-9]{64}$/', $token)) {
+    $transaccionActiva = false;
     try {
         require_once __DIR__ . "/conexion.php";
         $tokenHash = hash("sha256", $token);
+        $conexion->begin_transaction();
+        $transaccionActiva = true;
         $consulta = $conexion->prepare(
-            "SELECT id_correo, nombre, apellido FROM usuarios WHERE token_verificacion = ? AND token_expira > NOW() AND correo_verificado = 0 LIMIT 1"
+            "SELECT id_pendiente, correo, `contraseña`, nombre, apellido, dni, telefono FROM registro_pendiente WHERE token_verificacion = ? AND token_expira > NOW() LIMIT 1 FOR UPDATE"
         );
         $consulta->bind_param("s", $tokenHash);
         $consulta->execute();
-        $consulta->bind_result($usuarioId, $nombreUsuario, $apellidoUsuario);
+        $consulta->bind_result($pendienteId, $correoUsuario, $contrasenaUsuario, $nombreUsuario, $apellidoUsuario, $dniUsuario, $telefonoUsuario);
         $encontrado = $consulta->fetch();
         $consulta->close();
 
         if ($encontrado) {
-            $actualizar = $conexion->prepare(
-                "UPDATE usuarios SET correo_verificado = 1, token_verificacion = NULL, token_expira = NULL WHERE id_correo = ? AND correo_verificado = 0"
+            $crearUsuario = $conexion->prepare(
+                "INSERT INTO usuarios (correo, `contraseña`, nombre, apellido, dni, telefono, correo_verificado, token_verificacion, token_expira) VALUES (?, ?, ?, ?, ?, ?, 1, NULL, NULL)"
             );
-            $actualizar->bind_param("i", $usuarioId);
-            $actualizar->execute();
-            $confirmacion = $actualizar->affected_rows === 1 ? "confirmada" : "invalida";
-            $actualizar->close();
+            $crearUsuario->bind_param("ssssss", $correoUsuario, $contrasenaUsuario, $nombreUsuario, $apellidoUsuario, $dniUsuario, $telefonoUsuario);
+            $crearUsuario->execute();
+            $usuarioId = (int) $conexion->insert_id;
+            $crearUsuario->close();
+
+            $crearCliente = $conexion->prepare("INSERT INTO cliente (id_correo) VALUES (?)");
+            $crearCliente->bind_param("i", $usuarioId);
+            $crearCliente->execute();
+            $crearCliente->close();
+
+            $eliminarPendiente = $conexion->prepare("DELETE FROM registro_pendiente WHERE id_pendiente = ? AND token_verificacion = ?");
+            $eliminarPendiente->bind_param("is", $pendienteId, $tokenHash);
+            $eliminarPendiente->execute();
+            $pendienteEliminado = $eliminarPendiente->affected_rows === 1;
+            $eliminarPendiente->close();
+
+            if (!$pendienteEliminado) {
+                throw new RuntimeException("El registro pendiente ya no está disponible.");
+            }
+
+            $conexion->commit();
+            $transaccionActiva = false;
+            $confirmacion = "confirmada";
+        } else {
+            $limpiarExpirado = $conexion->prepare("DELETE FROM registro_pendiente WHERE token_verificacion = ? AND token_expira <= NOW()");
+            $limpiarExpirado->bind_param("s", $tokenHash);
+            $limpiarExpirado->execute();
+            $limpiarExpirado->close();
+            $conexion->commit();
+            $transaccionActiva = false;
         }
         $conexion->close();
 
         // Cuenta confirmada: iniciar sesión y mostrar la página de éxito.
         if ($confirmacion === "confirmada") {
-            unset($_SESSION["verificacion_pendiente_id"], $_SESSION["verificacion_pendiente_correo"], $_SESSION["verificacion_pendiente_mail"]);
+            unset($_SESSION["verificacion_pendiente_correo"], $_SESSION["verificacion_pendiente_mail"]);
             session_regenerate_id(true);
             $_SESSION["usuario_id"] = (int) $usuarioId;
             $_SESSION["usuario_nombre"] = $nombreUsuario;
@@ -38,6 +67,16 @@ if (preg_match('/^[a-f0-9]{64}$/', $token)) {
             exit;
         }
     } catch (Throwable $error) {
+        if (isset($conexion)) {
+            try {
+                if ($transaccionActiva) {
+                    $conexion->rollback();
+                }
+                $conexion->close();
+            } catch (Throwable $errorRollback) {
+                // La conexión ya puede haberse cerrado.
+            }
+        }
         error_log("Error al confirmar correo: " . $error->getMessage());
         $confirmacion = "error";
     }

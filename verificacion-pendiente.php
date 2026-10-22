@@ -6,12 +6,11 @@ if (!empty($_SESSION["usuario_id"])) {
     exit;
 }
 
-$pendienteId = (int) ($_SESSION["verificacion_pendiente_id"] ?? 0);
 $pendienteCorreo = (string) ($_SESSION["verificacion_pendiente_correo"] ?? "");
 $pendienteMailEnviado = $_SESSION["verificacion_pendiente_mail"] ?? null;
 $consultandoEstado = (($_GET["estado"] ?? "") === "1");
 
-if ($pendienteId < 1) {
+if (!filter_var($pendienteCorreo, FILTER_VALIDATE_EMAIL)) {
     if ($consultandoEstado) {
         header("Content-Type: application/json");
         echo json_encode(["verificado" => false]);
@@ -21,24 +20,24 @@ if ($pendienteId < 1) {
     exit;
 }
 
-// Si la cuenta de esta sesión ya se verificó (por ejemplo, desde el celular), se inicia sesión y se va al inicio.
+// Si el correo se confirmó desde otro dispositivo, se crea la sesión en esta página también.
 $verificado = false;
 try {
     require_once __DIR__ . "/conexion.php";
     $consulta = $conexion->prepare(
-        "SELECT nombre, apellido, correo_verificado FROM usuarios WHERE id_correo = ? LIMIT 1"
+        "SELECT id_correo, nombre, apellido FROM usuarios WHERE correo = ? AND correo_verificado = 1 LIMIT 1"
     );
-    $consulta->bind_param("i", $pendienteId);
+    $consulta->bind_param("s", $pendienteCorreo);
     $consulta->execute();
-    $consulta->bind_result($nombreUsuario, $apellidoUsuario, $correoVerificado);
+    $consulta->bind_result($usuarioId, $nombreUsuario, $apellidoUsuario);
     $encontrado = $consulta->fetch();
     $consulta->close();
     $conexion->close();
 
-    if ($encontrado && (int) $correoVerificado === 1) {
-        unset($_SESSION["verificacion_pendiente_id"], $_SESSION["verificacion_pendiente_correo"], $_SESSION["verificacion_pendiente_mail"]);
+    if ($encontrado) {
+        unset($_SESSION["verificacion_pendiente_correo"], $_SESSION["verificacion_pendiente_mail"]);
         session_regenerate_id(true);
-        $_SESSION["usuario_id"] = $pendienteId;
+        $_SESSION["usuario_id"] = (int) $usuarioId;
         $_SESSION["usuario_nombre"] = $nombreUsuario;
         $_SESSION["usuario_apellido"] = $apellidoUsuario;
         $verificado = true;
@@ -104,16 +103,16 @@ if ($verificado) {
 
             <?php if ($pendienteMailEnviado === true): ?>
                 <p class="login-descripcion">
-                    Te enviamos un enlace de confirmación a
+                    Guardamos tu registro temporalmente y te enviamos un enlace de confirmación a
                     <strong><?= htmlspecialchars($pendienteCorreo, ENT_QUOTES, "UTF-8") ?></strong>.
-                    Para terminar el registro, confirmá tu correo desde ese enlace. Vence en 24 horas.
+                    Al confirmarlo, se creará tu cuenta. El enlace vence en 24 horas.
                 </p>
                 <div class="login-aviso" role="status">
                     Cuando confirmes el correo, vas a ver la página de confirmación de tu cuenta.
                 </div>
             <?php else: ?>
                 <p class="login-descripcion">
-                    Creamos tu cuenta con <strong><?= htmlspecialchars($pendienteCorreo, ENT_QUOTES, "UTF-8") ?></strong>,
+                    Guardamos tu registro temporalmente con <strong><?= htmlspecialchars($pendienteCorreo, ENT_QUOTES, "UTF-8") ?></strong>,
                     pero no pudimos enviar el correo de confirmación.
                 </p>
                 <div class="login-error" role="alert">

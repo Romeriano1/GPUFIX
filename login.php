@@ -33,7 +33,27 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             $contrasenaValida = $usuarioEncontrado && password_verify($contrasenaIngresada, $contrasenaGuardada);
 
-            if (!$contrasenaValida) {
+            if (!$usuarioEncontrado) {
+                $consultaPendiente = $conexion->prepare(
+                    "SELECT `contraseña`, CASE WHEN token_expira IS NULL OR token_expira > NOW() THEN 1 ELSE 0 END FROM registro_pendiente WHERE correo = ? LIMIT 1"
+                );
+                $consultaPendiente->bind_param("s", $correoIngresado);
+                $consultaPendiente->execute();
+                $consultaPendiente->bind_result($contrasenaPendiente, $pendienteVigente);
+                $pendienteEncontrado = $consultaPendiente->fetch();
+                $consultaPendiente->close();
+                $conexion->query("DELETE FROM registro_pendiente WHERE token_expira IS NOT NULL AND token_expira <= NOW()");
+
+                if ($pendienteEncontrado && password_verify($contrasenaIngresada, $contrasenaPendiente)) {
+                    if ((int) $pendienteVigente === 1) {
+                        $loginError = "correo_no_verificado";
+                    } else {
+                        $loginError = "registro_expirado";
+                    }
+                } else {
+                    $loginError = "credenciales";
+                }
+            } elseif (!$contrasenaValida) {
                 $loginError = "credenciales";
             } elseif ((int) $correoVerificado !== 1) {
                 $loginError = "correo_no_verificado";
@@ -138,9 +158,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $loginError !== "") {
             <?php if (($_GET["registrado"] ?? "") === "1"): ?>
                 <div class="login-aviso">
                     <?php if ($registroMailEnviado === true): ?>
-                        Creamos tu cuenta y enviamos un enlace de confirmación a <?= htmlspecialchars($registroCorreo, ENT_QUOTES, "UTF-8") ?>. Confirmá el correo antes de iniciar sesión.
+                        Guardamos tu registro temporalmente y enviamos un enlace de confirmación a <?= htmlspecialchars($registroCorreo, ENT_QUOTES, "UTF-8") ?>. Confirmá el correo para crear tu cuenta.
                     <?php else: ?>
-                        Creamos tu cuenta, pero no se pudo enviar el correo. Revisá la configuración de correo y pedí otro enlace desde <a href="reenviar-confirmacion.php">esta página</a>.
+                        Guardamos tu registro temporalmente, pero no se pudo enviar el correo. Revisá la configuración de correo y pedí otro enlace desde <a href="reenviar-confirmacion.php">esta página</a>.
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
@@ -153,8 +173,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $loginError !== "") {
                     } elseif ($loginError === "credenciales") {
                         echo "El correo o la contraseña son incorrectos.";
                     } elseif ($loginError === "correo_no_verificado") {
-                        echo "Primero confirmá tu correo. Si no recibiste el mensaje, podés pedir otro enlace en ";
+                        echo "Necesitás confirmar tu correo. Revisá tu mail. Si no recibiste el mensaje, podés pedir otro enlace en ";
                         echo '<a href="reenviar-confirmacion.php">reenviar confirmación</a>.';
+                    } elseif ($loginError === "registro_expirado") {
+                        echo "El registro pendiente venció. Volvé a registrarte para recibir un enlace nuevo.";
                     } elseif ($loginError === "conexion") {
                         echo "No pudimos conectar con la base de datos. Intentá nuevamente más tarde.";
                     } else {
