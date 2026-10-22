@@ -7,13 +7,14 @@
  */
 function correo_enviar($destinatario, $asunto, $html, $texto = "")
 {
-    $host = trim((string) getenv("GPUFIX_SMTP_HOST"));
-    $puerto = (int) (getenv("GPUFIX_SMTP_PORT") ?: 587);
-    $seguridad = strtolower(trim((string) (getenv("GPUFIX_SMTP_SECURITY") ?: "tls")));
-    $usuario = (string) getenv("GPUFIX_SMTP_USER");
-    $clave = (string) getenv("GPUFIX_SMTP_PASSWORD");
-    $remitente = trim((string) getenv("GPUFIX_MAIL_FROM"));
-    $nombreRemitente = trim((string) (getenv("GPUFIX_MAIL_FROM_NAME") ?: "GPU FIX & STORE"));
+    $configuracion = correo_obtener_configuracion();
+    $host = trim((string) $configuracion["host"]);
+    $puerto = (int) $configuracion["port"];
+    $seguridad = strtolower(trim((string) $configuracion["security"]));
+    $usuario = trim((string) $configuracion["user"]);
+    $clave = trim(str_replace(" ", "", (string) $configuracion["password"]));
+    $remitente = trim((string) $configuracion["from"]);
+    $nombreRemitente = trim((string) $configuracion["from_name"]);
 
     if ($host === "" || $puerto < 1 || !filter_var($destinatario, FILTER_VALIDATE_EMAIL)
         || !filter_var($remitente, FILTER_VALIDATE_EMAIL) || !in_array($seguridad, ["tls", "ssl", "none"], true)) {
@@ -111,9 +112,44 @@ function correo_cabecera($valor)
     return trim(str_replace(["\r", "\n"], "", (string) $valor));
 }
 
+function correo_obtener_configuracion()
+{
+    $local = [];
+    $archivoLocal = __DIR__ . "/correo-config.local.php";
+    if (is_file($archivoLocal)) {
+        if (!defined("GPUFIX_CARGA_CONFIG_CORREO")) {
+            define("GPUFIX_CARGA_CONFIG_CORREO", true);
+        }
+        $resultado = require $archivoLocal;
+        if (is_array($resultado)) {
+            $local = $resultado;
+        }
+    }
+
+    $leer = static function ($variable, $clave, $predeterminado = "") use ($local) {
+        $valorEntorno = getenv($variable);
+        if ($valorEntorno !== false && $valorEntorno !== "") {
+            return $valorEntorno;
+        }
+        return $local[$clave] ?? $predeterminado;
+    };
+
+    return [
+        "host" => $leer("GPUFIX_SMTP_HOST", "host"),
+        "port" => $leer("GPUFIX_SMTP_PORT", "port", 587),
+        "security" => $leer("GPUFIX_SMTP_SECURITY", "security", "tls"),
+        "user" => $leer("GPUFIX_SMTP_USER", "user"),
+        "password" => $leer("GPUFIX_SMTP_PASSWORD", "password"),
+        "from" => $leer("GPUFIX_MAIL_FROM", "from"),
+        "from_name" => $leer("GPUFIX_MAIL_FROM_NAME", "from_name", "GPU FIX & STORE"),
+        "app_url" => $leer("GPUFIX_APP_URL", "app_url")
+    ];
+}
+
 function correo_url_aplicacion()
 {
-    $configurada = rtrim(trim((string) getenv("GPUFIX_APP_URL")), "/");
+    $configuracion = correo_obtener_configuracion();
+    $configurada = rtrim(trim((string) $configuracion["app_url"]), "/");
     if ($configurada !== "") {
         return $configurada;
     }

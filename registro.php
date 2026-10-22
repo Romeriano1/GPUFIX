@@ -86,9 +86,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                 require_once __DIR__ . "/correo.php";
                 $registroMailEnviado = correo_enviar_confirmacion($correo, $nombre, $tokenVerificacion);
-                $_SESSION["registro_mail_flash"] = $registroMailEnviado;
-                $_SESSION["registro_correo_flash"] = $correo;
-                header("Location: login.php?registrado=1" . ($requeridoCarrito ? "&requerido=carrito" : ""));
+                $_SESSION["verificacion_pendiente_id"] = (int) $idCorreo;
+                $_SESSION["verificacion_pendiente_correo"] = $correo;
+                $_SESSION["verificacion_pendiente_mail"] = $registroMailEnviado;
+                header("Location: verificacion-pendiente.php");
                 exit;
             }
         } catch (Throwable $error) {
