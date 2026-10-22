@@ -18,14 +18,14 @@ function correo_enviar($destinatario, $asunto, $html, $texto = "")
 
     if ($host === "" || $puerto < 1 || !filter_var($destinatario, FILTER_VALIDATE_EMAIL)
         || !filter_var($remitente, FILTER_VALIDATE_EMAIL) || !in_array($seguridad, ["tls", "ssl", "none"], true)) {
-        error_log("Correo no enviado: falta configuración SMTP válida.");
+        correo_registrar_error("Falta configuración SMTP válida.");
         return false;
     }
 
     $transporte = $seguridad === "ssl" ? "ssl://" : "tcp://";
     $socket = @stream_socket_client($transporte . $host . ":" . $puerto, $errno, $errstr, 15, STREAM_CLIENT_CONNECT);
     if (!$socket) {
-        error_log("No se pudo conectar al servidor SMTP (" . $errno . ").");
+        correo_registrar_error("No se pudo conectar al servidor SMTP (" . $errno . "): " . $errstr);
         return false;
     }
     stream_set_timeout($socket, 15);
@@ -75,10 +75,21 @@ function correo_enviar($destinatario, $asunto, $html, $texto = "")
         fclose($socket);
         return true;
     } catch (Throwable $error) {
-        error_log("Error de envío SMTP: " . $error->getMessage());
+        correo_registrar_error("Error de envío SMTP: " . $error->getMessage());
         fclose($socket);
         return false;
     }
+}
+
+function correo_registrar_error($mensaje)
+{
+    $mensaje = preg_replace('/[\r\n\t]+/', ' ', (string) $mensaje);
+    $mensaje = preg_replace('/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i', '[correo oculto]', $mensaje);
+    $mensaje = substr($mensaje, 0, 600);
+    $entrada = sprintf("[%s] etapa=correo: %s\n", date('c'), $mensaje);
+
+    error_log(trim($entrada));
+    @file_put_contents(__DIR__ . "/registro-error.log", $entrada, FILE_APPEND | LOCK_EX);
 }
 
 function correo_smtp_comando($socket, $comando, $codigosPermitidos)
@@ -102,7 +113,7 @@ function correo_smtp_respuesta($socket, $codigosPermitidos)
 
     $codigo = (int) substr($respuesta, 0, 3);
     if (!in_array($codigo, $codigosPermitidos, true)) {
-        throw new RuntimeException("El servidor SMTP respondió con código " . $codigo . ".");
+        throw new RuntimeException("El servidor SMTP respondió con código " . $codigo . ": " . trim($respuesta));
     }
     return $respuesta;
 }

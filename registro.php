@@ -9,6 +9,8 @@ if (!empty($_SESSION["usuario_id"])) {
 
 $registroError = "";
 $registroMailEnviado = null;
+$etapaRegistro = "validar_formulario";
+$transaccionActiva = false;
 $nombre = "";
 $apellido = "";
 $dni = "";
@@ -36,9 +38,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $registroError = "contrasenas_distintas";
     } else {
         try {
+            $etapaRegistro = "conectar_base";
             require_once __DIR__ . "/conexion.php";
             $conexion->begin_transaction();
+            $transaccionActiva = true;
 
+            $etapaRegistro = "consultar_correo";
             $consultaCorreo = $conexion->prepare("SELECT id_correo FROM usuarios WHERE correo = ? LIMIT 1");
             $consultaCorreo->bind_param("s", $correo);
             $consultaCorreo->execute();
@@ -48,6 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             if ($correoExiste) {
                 $conexion->rollback();
+                $transaccionActiva = false;
                 $registroError = "correo_existente";
             } else {
                 // Guardar solo el hash; password_verify() lo valida en el login.
@@ -61,6 +67,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $tokenVerificacionHash = hash("sha256", $tokenVerificacion);
                 $tokenExpira = date("Y-m-d H:i:s", time() + 86400);
 
+                $etapaRegistro = "insertar_usuario";
                 $crearUsuario = $conexion->prepare(
                     "INSERT INTO usuarios (correo, `contraseña`, nombre, apellido, dni, telefono, correo_verificado, token_verificacion, token_expira) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)"
                 );
@@ -69,14 +76,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $idCorreo = $conexion->insert_id;
                 $crearUsuario->close();
 
+                $etapaRegistro = "insertar_cliente";
                 $crearCliente = $conexion->prepare("INSERT INTO cliente (id_correo) VALUES (?)");
                 $crearCliente->bind_param("i", $idCorreo);
                 $crearCliente->execute();
                 $crearCliente->close();
 
+                $etapaRegistro = "confirmar_transaccion";
                 $conexion->commit();
+                $transaccionActiva = false;
                 $conexion->close();
 
+                $etapaRegistro = "enviar_correo_confirmacion";
                 require_once __DIR__ . "/correo.php";
                 $registroMailEnviado = correo_enviar_confirmacion($correo, $nombre, $tokenVerificacion);
                 $_SESSION["verificacion_pendiente_id"] = (int) $idCorreo;
@@ -88,14 +99,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         } catch (Throwable $error) {
             if (isset($conexion)) {
                 try {
-                    $conexion->rollback();
+                    if ($transaccionActiva) {
+                        $conexion->rollback();
+                    }
                     $conexion->close();
                 } catch (Throwable $errorRollback) {
                     // La conexión puede haber fallado antes de iniciar una transacción.
                 }
             }
 
-            error_log("Error al registrar una cuenta: " . $error->getMessage());
+            $mensajeTecnico = preg_replace('/[\r\n\t]+/', ' ', $error->getMessage());
+            $mensajeTecnico = preg_replace('/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i', '[correo oculto]', $mensajeTecnico);
+            $codigoTecnico = $error instanceof mysqli_sql_exception ? (int) $error->getCode() : 0;
+            $entradaTecnica = sprintf(
+                "[%s] etapa=%s %s (código %d): %s\n",
+                date('c'),
+                $etapaRegistro,
+                get_class($error),
+                $codigoTecnico,
+                $mensajeTecnico
+            );
+            error_log("Error al registrar una cuenta: " . $mensajeTecnico);
+            @file_put_contents(__DIR__ . "/registro-error.log", $entradaTecnica, FILE_APPEND | LOCK_EX);
             $registroError = ($error instanceof mysqli_sql_exception && (int) $error->getCode() === 1062)
                 ? "correo_existente"
                 : "conexion";
