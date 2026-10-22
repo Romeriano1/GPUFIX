@@ -2,8 +2,9 @@
 <?php
 session_start();
 
-$loginError = $_GET["error"] ?? "";
-$correoIngresado = "";
+$loginError = $_SESSION["login_error_flash"] ?? "";
+$correoIngresado = $_SESSION["login_correo_flash"] ?? "";
+unset($_SESSION["login_error_flash"], $_SESSION["login_correo_flash"]);
 $requeridoCarrito = (($_GET["requerido"] ?? "") === "carrito") || (($_POST["requerido"] ?? "") === "carrito");
 
 if (!empty($_SESSION["usuario_id"])) {
@@ -30,7 +31,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $consulta->close();
             $conexion->close();
 
-            if ($usuarioEncontrado && password_verify($contrasenaIngresada, $hashContrasena)) {
+            $contrasenaValida = $usuarioEncontrado && password_verify($contrasenaIngresada, $hashContrasena);
+
+            if ($contrasenaValida) {
                 session_regenerate_id(true);
                 $_SESSION["usuario_id"] = (int) $usuarioId;
                 $_SESSION["usuario_nombre"] = $nombreUsuario;
@@ -40,12 +43,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 exit;
             }
 
+            error_log(
+                "Diagnóstico temporal de login: cuenta_encontrada=" . ($usuarioEncontrado ? "sí" : "no") .
+                "; contraseña_validada=" . ($contrasenaValida ? "sí" : "no") .
+                "; algoritmo=" . ($usuarioEncontrado ? password_get_info($hashContrasena)["algoName"] : "n/a")
+            );
             $loginError = "credenciales";
         } catch (Throwable $error) {
             error_log("Error al iniciar sesión: " . $error->getMessage());
             $loginError = "conexion";
         }
     }
+}
+
+if ($_SERVER["REQUEST_METHOD"] === "POST" && $loginError !== "") {
+    $_SESSION["login_error_flash"] = $loginError;
+    $_SESSION["login_correo_flash"] = $correoIngresado;
+    header("Location: login.php" . ($requeridoCarrito ? "?requerido=carrito" : ""));
+    exit;
 }
 ?>
 <!DOCTYPE html>
