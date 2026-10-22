@@ -7,6 +7,7 @@ $estaLogueado = !empty($_SESSION["usuario_id"]);
     </button>
     <div id="cuentaMenu" class="cuenta-menu">
         <?php if ($estaLogueado): ?>
+            <a href="mi-cuenta.php">Mi cuenta</a>
             <a href="cerrar-sesion.php">Cerrar sesión</a>
         <?php else: ?>
             <a href="login.php">Iniciar sesión</a>

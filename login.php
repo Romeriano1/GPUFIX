@@ -30,21 +30,36 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $consulta->bind_result($usuarioId, $contrasenaGuardada, $nombreUsuario, $apellidoUsuario, $correoVerificado);
             $usuarioEncontrado = $consulta->fetch();
             $consulta->close();
-            $conexion->close();
 
-            if ($usuarioEncontrado && $contrasenaIngresada === $contrasenaGuardada && (int) $correoVerificado !== 1) {
+            $contrasenaValida = $usuarioEncontrado && password_verify($contrasenaIngresada, $contrasenaGuardada);
+
+            if (!$contrasenaValida) {
+                $loginError = "credenciales";
+            } elseif ((int) $correoVerificado !== 1) {
                 $loginError = "correo_no_verificado";
-            } elseif ($usuarioEncontrado && $contrasenaIngresada === $contrasenaGuardada) {
+            } else {
+                if (password_needs_rehash($contrasenaGuardada, PASSWORD_DEFAULT)) {
+                    $nuevoHash = password_hash($contrasenaIngresada, PASSWORD_DEFAULT);
+                    if ($nuevoHash !== false) {
+                        $actualizarHash = $conexion->prepare(
+                            "UPDATE usuarios SET `contraseña` = ? WHERE id_correo = ?"
+                        );
+                        $actualizarHash->bind_param("si", $nuevoHash, $usuarioId);
+                        $actualizarHash->execute();
+                        $actualizarHash->close();
+                    }
+                }
+
                 session_regenerate_id(true);
                 $_SESSION["usuario_id"] = (int) $usuarioId;
                 $_SESSION["usuario_nombre"] = $nombreUsuario;
                 $_SESSION["usuario_apellido"] = $apellidoUsuario;
 
+                $conexion->close();
                 header("Location: " . ($requeridoCarrito ? "carrito.php" : "mi-cuenta.php"));
                 exit;
             }
-
-            $loginError = "credenciales";
+            $conexion->close();
         } catch (Throwable $error) {
             error_log("Error al iniciar sesión: " . $error->getMessage());
             $loginError = "conexion";
@@ -89,9 +104,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $loginError !== "") {
                 <li class="nav-item">
                     <a class="nav-link" href="reparar.php">Reparar GPU</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="carrito.php">Ver carrito</a>
-                </li>
+
             </ul>
         </div>
 
@@ -219,4 +232,4 @@ loginForm.addEventListener("submit", function(event) {
 
 </body>
 </html>
-    
+

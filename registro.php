@@ -30,6 +30,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $registroError = "correo_invalido";
     } elseif (strlen($contrasena) < 8) {
         $registroError = "contrasena_corta";
+    } elseif (strlen($contrasena) > 72) {
+        $registroError = "contrasena_larga";
     } elseif ($contrasena !== $confirmarContrasena) {
         $registroError = "contrasenas_distintas";
     } else {
@@ -48,7 +50,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $conexion->rollback();
                 $registroError = "correo_existente";
             } else {
-                $contrasenaGuardar = $contrasena;
+                // Guardar solo el hash; password_verify() lo valida en el login.
+                $contrasenaGuardar = password_hash($contrasena, PASSWORD_DEFAULT);
+                if ($contrasenaGuardar === false) {
+                    throw new RuntimeException("No se pudo proteger la contraseña.");
+                }
                 $dniGuardar = $dni === "" ? null : $dni;
                 $telefonoGuardar = $telefono === "" ? null : $telefono;
                 $tokenVerificacion = bin2hex(random_bytes(32));
@@ -62,19 +68,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $crearUsuario->execute();
                 $idCorreo = $conexion->insert_id;
                 $crearUsuario->close();
-
-                $verificarContrasena = $conexion->prepare(
-                    "SELECT `contraseña` FROM usuarios WHERE id_correo = ? LIMIT 1"
-                );
-                $verificarContrasena->bind_param("i", $idCorreo);
-                $verificarContrasena->execute();
-                $verificarContrasena->bind_result($contrasenaVerificada);
-                $verificarContrasena->fetch();
-                $verificarContrasena->close();
-
-                if ($contrasenaVerificada !== $contrasenaGuardar) {
-                    throw new RuntimeException("La contraseña no se guardó correctamente.");
-                }
 
                 $crearCliente = $conexion->prepare("INSERT INTO cliente (id_correo) VALUES (?)");
                 $crearCliente->bind_param("i", $idCorreo);
@@ -136,7 +129,7 @@ function escaparRegistro($valor)
                 <li class="nav-item"><a class="nav-link" href="index.php">Inicio</a></li>
                 <li class="nav-item"><a class="nav-link" href="productos.php">Productos</a></li>
                 <li class="nav-item"><a class="nav-link" href="reparar.php">Reparar GPU</a></li>
-                <li class="nav-item"><a class="nav-link" href="carrito.php">Ver carrito</a></li>
+
             </ul>
         </div>
 
@@ -167,6 +160,7 @@ function escaparRegistro($valor)
                         "datos" => "Completá los campos obligatorios.",
                         "correo_invalido" => "Ingresá un correo electrónico válido.",
                         "contrasena_corta" => "La contraseña debe tener al menos 8 caracteres.",
+                        "contrasena_larga" => "La contraseña no puede superar los 72 bytes.",
                         "contrasenas_distintas" => "Las contraseñas no coinciden.",
                         "correo_existente" => "Ya existe una cuenta registrada con ese correo.",
                         "conexion" => "No pudimos completar el registro. Revisá la conexión con la base de datos e intentá nuevamente."

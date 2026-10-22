@@ -50,12 +50,6 @@ if (empty($_SESSION["usuario_id"])) {
                         </a>
                     </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link active" href="carrito.php">
-                            Ver carrito
-                        </a>
-                    </li>
-
                 </ul>
 
             </div>

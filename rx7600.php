@@ -22,7 +22,6 @@
                     <a class="nav-link" href="index.php">Inicio</a>
                     <a class="nav-link" href="productos.php">Productos</a>
                     <a class="nav-link" href="reparar.php">Reparar GPU</a>
-                    <a class="nav-link" href="carrito.php">Ver carrito</a>
                 </div>
             </div>
 

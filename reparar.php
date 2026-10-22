@@ -43,12 +43,6 @@
                         </a>
                     </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link" href="carrito.php">
-                            Ver carrito
-                        </a>
-                    </li>
-
                 </ul>
 
             </div>

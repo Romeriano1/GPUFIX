@@ -12,7 +12,7 @@
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
         crossorigin="anonymous">
 
-   
+
 </head>
 
 <body>
@@ -33,9 +33,7 @@
                     <li class="nav-item">
                         <a class="nav-link" href="reparar.php">Reparar GPU</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="carrito.php">Ver carrito</a>
-                    </li>
+
                 </ul>
             </div>
 
@@ -143,4 +141,4 @@
 
 </html>
 
-  
+

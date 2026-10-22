@@ -1072,6 +1072,280 @@ body.light-theme .acceso-reparaciones p {
     transform: translateY(-1px);
 }
 
+.mi-cuenta-main {
+    width: min(1180px, 92%);
+    margin: 46px auto 70px;
+    color: #f4f7f8;
+}
+
+.mi-cuenta-encabezado {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 28px;
+}
+
+.mi-cuenta-encabezado h1 {
+    margin: 0 0 8px;
+    font-size: clamp(32px, 5vw, 46px);
+    font-weight: 800;
+}
+
+.mi-cuenta-encabezado p:not(.mi-cuenta-etiqueta) {
+    margin: 0;
+    color: #aeb9c0;
+}
+
+.mi-cuenta-etiqueta {
+    margin: 0 0 7px;
+    color: #00bfff;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+}
+
+.mi-cuenta-datos {
+    min-width: 230px;
+    padding: 15px 18px;
+    border: 1px solid #35434d;
+    border-radius: 12px;
+    background: #151c22;
+}
+
+.mi-cuenta-datos span,
+.mi-cuenta-datos strong {
+    display: block;
+}
+
+.mi-cuenta-datos span {
+    margin-bottom: 4px;
+    color: #9eabb3;
+    font-size: 12px;
+}
+
+.mi-cuenta-datos strong {
+    overflow-wrap: anywhere;
+}
+
+.mi-cuenta-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+}
+
+.mi-cuenta-seccion {
+    min-width: 0;
+    padding: 24px;
+    border: 1px solid #303b43;
+    border-radius: 14px;
+    background: #1c1c1c;
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.16);
+}
+
+.mi-cuenta-seguridad {
+    grid-column: 1 / -1;
+}
+
+.mi-cuenta-seccion-titulo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.mi-cuenta-seccion-titulo h2 {
+    margin: 0;
+    color: #f4f7f8;
+    font-size: 21px;
+    font-weight: 700;
+}
+
+.mi-cuenta-contador,
+.mi-cuenta-icono-seguridad {
+    display: inline-flex;
+    min-width: 36px;
+    height: 36px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+    border: 1px solid rgba(0, 191, 255, 0.35);
+    border-radius: 10px;
+    background: rgba(0, 191, 255, 0.1);
+    color: #63d9ff;
+}
+
+.mi-cuenta-vacio,
+.mi-cuenta-ayuda {
+    margin: 0;
+    color: #aeb9c0;
+    line-height: 1.6;
+}
+
+.mi-cuenta-tabla-scroll {
+    overflow-x: auto;
+}
+
+.mi-cuenta-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    color: #e7edf0;
+    font-size: 14px;
+}
+
+.mi-cuenta-tabla th,
+.mi-cuenta-tabla td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #303b43;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.mi-cuenta-tabla th {
+    color: #9eabb3;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.mi-cuenta-tabla td:last-child {
+    white-space: nowrap;
+    font-weight: 700;
+}
+
+.mi-cuenta-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 20px;
+    max-width: 820px;
+    margin-top: 18px;
+}
+
+.mi-cuenta-form .login-campo {
+    min-width: 0;
+}
+
+.mi-cuenta-form input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #35434d;
+    border-radius: 10px;
+    outline: none;
+    background: #101820;
+    color: #fff;
+}
+
+.mi-cuenta-form input:focus {
+    border-color: #00d5ff;
+    box-shadow: 0 0 0 3px rgba(0, 213, 255, 0.16);
+}
+
+.mi-cuenta-form small {
+    display: block;
+    margin-top: -12px;
+    margin-bottom: 14px;
+    color: #9eabb3;
+}
+
+.mi-cuenta-form .login-boton {
+    align-self: end;
+    min-height: 46px;
+    margin-bottom: 20px;
+}
+
+.mi-cuenta-mensaje {
+    margin: 0 0 22px;
+    padding: 13px 16px;
+    border: 1px solid;
+    border-radius: 10px;
+}
+
+.mi-cuenta-mensaje.error {
+    border-color: #8e3540;
+    background: rgba(183, 51, 68, 0.14);
+    color: #ffabb3;
+}
+
+.mi-cuenta-mensaje.exito {
+    border-color: #24784c;
+    background: rgba(36, 120, 76, 0.14);
+    color: #a9f0c8;
+}
+
+body.light-theme .mi-cuenta-main,
+body.light-theme .mi-cuenta-seccion-titulo h2 {
+    color: #17212a;
+}
+
+body.light-theme .mi-cuenta-encabezado p:not(.mi-cuenta-etiqueta),
+body.light-theme .mi-cuenta-vacio,
+body.light-theme .mi-cuenta-ayuda {
+    color: #5d6870;
+}
+
+body.light-theme .mi-cuenta-datos,
+body.light-theme .mi-cuenta-seccion {
+    border-color: #d8e0e5;
+    background: #fff;
+    box-shadow: 0 8px 26px rgba(20, 44, 60, 0.08);
+}
+
+body.light-theme .mi-cuenta-datos span,
+body.light-theme .mi-cuenta-tabla th,
+body.light-theme .mi-cuenta-form small {
+    color: #66727a;
+}
+
+body.light-theme .mi-cuenta-tabla {
+    color: #17212a;
+}
+
+body.light-theme .mi-cuenta-tabla th,
+body.light-theme .mi-cuenta-tabla td {
+    border-color: #e0e6ea;
+}
+
+body.light-theme .mi-cuenta-form input {
+    border-color: #ccd6dc;
+    background: #f8fafb;
+    color: #17212a;
+}
+
+@media (max-width: 800px) {
+    .mi-cuenta-encabezado {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .mi-cuenta-datos {
+        min-width: 0;
+    }
+
+    .mi-cuenta-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .mi-cuenta-seguridad {
+        grid-column: auto;
+    }
+}
+
+@media (max-width: 560px) {
+    .mi-cuenta-main {
+        width: 94%;
+        margin-top: 28px;
+    }
+
+    .mi-cuenta-seccion {
+        padding: 18px 14px;
+    }
+
+    .mi-cuenta-form {
+        grid-template-columns: 1fr;
+    }
+}
+
 .login-boton {
     width: 100%;
     padding: 12px;
