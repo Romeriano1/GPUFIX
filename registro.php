@@ -13,7 +13,6 @@ $apellido = "";
 $dni = "";
 $telefono = "";
 $correo = "";
-$direccion = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $nombre = trim($_POST["nombre"] ?? "");
@@ -21,7 +20,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $dni = trim($_POST["dni"] ?? "");
     $telefono = trim($_POST["telefono"] ?? "");
     $correo = strtolower(trim($_POST["correo"] ?? ""));
-    $direccion = trim($_POST["direccion"] ?? "");
     $contrasena = $_POST["contrasena"] ?? "";
     $confirmarContrasena = $_POST["confirmar_contrasena"] ?? "";
 
@@ -61,9 +59,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $idCorreo = $conexion->insert_id;
                 $crearUsuario->close();
 
-                $crearCliente = $conexion->prepare("INSERT INTO CLIENTE (id_correo, direccion) VALUES (?, ?)");
-                $direccionGuardar = $direccion === "" ? null : $direccion;
-                $crearCliente->bind_param("is", $idCorreo, $direccionGuardar);
+                $crearCliente = $conexion->prepare("INSERT INTO CLIENTE (id_correo) VALUES (?)");
+                $crearCliente->bind_param("i", $idCorreo);
                 $crearCliente->execute();
                 $crearCliente->close();
 
@@ -197,10 +194,6 @@ function escaparRegistro($valor)
                         <input type="password" id="confirmar_contrasena" name="confirmar_contrasena" minlength="8" autocomplete="new-password" required>
                     </div>
 
-                    <div class="login-campo registro-campo-completo">
-                        <label for="direccion">Dirección</label>
-                        <input type="text" id="direccion" name="direccion" maxlength="255" autocomplete="street-address" value="<?= escaparRegistro($direccion) ?>">
-                    </div>
                 </div>
 
                 <button class="login-boton" type="submit">Crear cuenta</button>
