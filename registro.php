@@ -59,6 +59,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $idCorreo = $conexion->insert_id;
                 $crearUsuario->close();
 
+                $verificarContrasena = $conexion->prepare(
+                    "SELECT `contraseña` FROM USUARIOS WHERE id_correo = ? LIMIT 1"
+                );
+                $verificarContrasena->bind_param("i", $idCorreo);
+                $verificarContrasena->execute();
+                $verificarContrasena->bind_result($contrasenaVerificada);
+                $verificarContrasena->fetch();
+                $verificarContrasena->close();
+
+                if ($contrasenaVerificada !== $contrasenaGuardar) {
+                    throw new RuntimeException("La contraseña no se guardó correctamente.");
+                }
+
                 $crearCliente = $conexion->prepare("INSERT INTO CLIENTE (id_correo) VALUES (?)");
                 $crearCliente->bind_param("i", $idCorreo);
                 $crearCliente->execute();
