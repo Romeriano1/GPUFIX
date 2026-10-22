@@ -1,3 +1,7 @@
 <Files "correo-config.local.php">
     Require all denied
 </Files>
+
+<Files "conexion-config.local.php">
+    Require all denied
+</Files>
