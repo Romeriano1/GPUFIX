@@ -1,0 +1,4 @@
+ALTER TABLE USUARIOS
+    ADD COLUMN correo_verificado TINYINT(1) NOT NULL DEFAULT 1,
+    ADD COLUMN token_verificacion CHAR(64) NULL,
+    ADD COLUMN token_expira DATETIME NULL;

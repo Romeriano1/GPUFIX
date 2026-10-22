@@ -3,7 +3,9 @@ session_start();
 
 $loginError = $_SESSION["login_error_flash"] ?? "";
 $correoIngresado = $_SESSION["login_correo_flash"] ?? "";
-unset($_SESSION["login_error_flash"], $_SESSION["login_correo_flash"]);
+$registroMailEnviado = $_SESSION["registro_mail_flash"] ?? null;
+$registroCorreo = $_SESSION["registro_correo_flash"] ?? "";
+unset($_SESSION["login_error_flash"], $_SESSION["login_correo_flash"], $_SESSION["registro_mail_flash"], $_SESSION["registro_correo_flash"]);
 $requeridoCarrito = (($_GET["requerido"] ?? "") === "carrito") || (($_POST["requerido"] ?? "") === "carrito");
 
 if (!empty($_SESSION["usuario_id"])) {
@@ -21,16 +23,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         try {
             require_once __DIR__ . "/conexion.php";
             $consulta = $conexion->prepare(
-                "SELECT id_correo, `contraseña`, nombre, apellido FROM USUARIOS WHERE correo = ? LIMIT 1"
+                "SELECT id_correo, `contraseña`, nombre, apellido, correo_verificado FROM USUARIOS WHERE correo = ? LIMIT 1"
             );
             $consulta->bind_param("s", $correoIngresado);
             $consulta->execute();
-            $consulta->bind_result($usuarioId, $contrasenaGuardada, $nombreUsuario, $apellidoUsuario);
+            $consulta->bind_result($usuarioId, $contrasenaGuardada, $nombreUsuario, $apellidoUsuario, $correoVerificado);
             $usuarioEncontrado = $consulta->fetch();
             $consulta->close();
             $conexion->close();
 
-            if ($usuarioEncontrado && $contrasenaIngresada === $contrasenaGuardada) {
+            if ($usuarioEncontrado && $contrasenaIngresada === $contrasenaGuardada && (int) $correoVerificado !== 1) {
+                $loginError = "correo_no_verificado";
+            } elseif ($usuarioEncontrado && $contrasenaIngresada === $contrasenaGuardada) {
                 session_regenerate_id(true);
                 $_SESSION["usuario_id"] = (int) $usuarioId;
                 $_SESSION["usuario_nombre"] = $nombreUsuario;
@@ -119,7 +123,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $loginError !== "") {
             <?php endif; ?>
 
             <?php if (($_GET["registrado"] ?? "") === "1"): ?>
-                <div class="login-aviso">Tu cuenta quedó creada. Iniciá sesión para continuar.</div>
+                <div class="login-aviso">
+                    <?php if ($registroMailEnviado === true): ?>
+                        Creamos tu cuenta y enviamos un enlace de confirmación a <?= htmlspecialchars($registroCorreo, ENT_QUOTES, "UTF-8") ?>. Confirmá el correo antes de iniciar sesión.
+                    <?php else: ?>
+                        Creamos tu cuenta, pero no se pudo enviar el correo. Revisá la configuración de correo y pedí otro enlace desde <a href="reenviar-confirmacion.php">esta página</a>.
+                    <?php endif; ?>
+                </div>
             <?php endif; ?>
 
             <?php if ($loginError !== ""): ?>
@@ -129,6 +139,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $loginError !== "") {
                         echo "Completá todos los campos.";
                     } elseif ($loginError === "credenciales") {
                         echo "El correo o la contraseña son incorrectos.";
+                    } elseif ($loginError === "correo_no_verificado") {
+                        echo "Primero confirmá tu correo. Si no recibiste el mensaje, podés pedir otro enlace en ";
+                        echo '<a href="reenviar-confirmacion.php">reenviar confirmación</a>.';
                     } elseif ($loginError === "conexion") {
                         echo "No pudimos conectar con la base de datos. Intentá nuevamente más tarde.";
                     } else {

@@ -8,6 +8,7 @@ if (!empty($_SESSION["usuario_id"])) {
 }
 
 $registroError = "";
+$registroMailEnviado = null;
 $nombre = "";
 $apellido = "";
 $dni = "";
@@ -50,11 +51,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $contrasenaGuardar = $contrasena;
                 $dniGuardar = $dni === "" ? null : $dni;
                 $telefonoGuardar = $telefono === "" ? null : $telefono;
+                $tokenVerificacion = bin2hex(random_bytes(32));
+                $tokenVerificacionHash = hash("sha256", $tokenVerificacion);
+                $tokenExpira = date("Y-m-d H:i:s", time() + 86400);
 
                 $crearUsuario = $conexion->prepare(
-                    "INSERT INTO USUARIOS (correo, `contraseña`, nombre, apellido, dni, telefono) VALUES (?, ?, ?, ?, ?, ?)"
+                    "INSERT INTO USUARIOS (correo, `contraseña`, nombre, apellido, dni, telefono, correo_verificado, token_verificacion, token_expira) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)"
                 );
-                $crearUsuario->bind_param("ssssss", $correo, $contrasenaGuardar, $nombre, $apellido, $dniGuardar, $telefonoGuardar);
+                $crearUsuario->bind_param("ssssssss", $correo, $contrasenaGuardar, $nombre, $apellido, $dniGuardar, $telefonoGuardar, $tokenVerificacionHash, $tokenExpira);
                 $crearUsuario->execute();
                 $idCorreo = $conexion->insert_id;
                 $crearUsuario->close();
@@ -80,6 +84,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $conexion->commit();
                 $conexion->close();
 
+                require_once __DIR__ . "/correo.php";
+                $registroMailEnviado = correo_enviar_confirmacion($correo, $nombre, $tokenVerificacion);
+                $_SESSION["registro_mail_flash"] = $registroMailEnviado;
+                $_SESSION["registro_correo_flash"] = $correo;
                 header("Location: login.php?registrado=1" . ($requeridoCarrito ? "&requerido=carrito" : ""));
                 exit;
             }
