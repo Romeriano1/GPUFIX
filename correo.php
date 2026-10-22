@@ -185,7 +185,23 @@ function correo_enviar_confirmacion($destinatario, $nombre, $token)
     $url = correo_url_aplicacion() . "/confirmar-correo.php?token=" . rawurlencode($token);
     $nombreSeguro = htmlspecialchars((string) $nombre, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
     $urlSeguro = htmlspecialchars($url, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
-    $html = "<p>Hola " . $nombreSeguro . ",</p><p>Confirmá tu correo para activar tu cuenta de GPU FIX &amp; STORE:</p><p><a href=\"" . $urlSeguro . "\">Confirmar mi correo</a></p><p>El enlace vence en 24 horas. Si no creaste esta cuenta, podés ignorar este mensaje.</p>";
+    $html = '<!doctype html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Confirmá tu correo</title></head>';
+    $html .= '<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:Arial,Helvetica,sans-serif;color:#1e293b;">';
+    $html .= '<div style="display:none;font-size:1px;color:#f1f5f9;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">Confirmá tu correo para activar tu cuenta de GPU FIX &amp; STORE.</div>';
+    $html .= '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f1f5f9;padding:32px 12px;"><tr><td align="center">';
+    $html .= '<table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:600px;background-color:#ffffff;border-radius:12px;overflow:hidden;">';
+    $html .= '<tr><td style="background-color:#111827;padding:24px 32px;text-align:center;"><div style="font-size:22px;line-height:28px;font-weight:bold;letter-spacing:1px;color:#ffffff;">GPU FIX <span style="color:#f97316;">&amp;</span> STORE</div></td></tr>';
+    $html .= '<tr><td style="padding:36px 32px 24px;"><h1 style="margin:0 0 20px;font-size:24px;line-height:32px;color:#111827;">Confirmá tu correo</h1>';
+    $html .= '<p style="margin:0 0 16px;font-size:16px;line-height:24px;">Hola ' . $nombreSeguro . ',</p>';
+    $html .= '<p style="margin:0 0 24px;font-size:16px;line-height:24px;">Confirmá tu correo para activar tu cuenta de GPU FIX &amp; STORE:</p>';
+    $html .= '<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto 24px;"><tr><td align="center" style="border-radius:6px;background-color:#f97316;"><a href="' . $urlSeguro . '" style="display:inline-block;padding:14px 24px;border:1px solid #f97316;border-radius:6px;color:#ffffff;font-size:16px;line-height:20px;font-weight:bold;text-decoration:none;">Confirmar mi correo</a></td></tr></table>';
+    $html .= '<p style="margin:0 0 8px;font-size:14px;line-height:22px;color:#475569;">El enlace vence en 24 horas.</p>';
+    $html .= '<p style="margin:0 0 8px;font-size:14px;line-height:22px;color:#475569;">Si el botón no funciona, copiá y pegá este enlace en tu navegador:</p>';
+    $html .= '<p style="margin:0 0 24px;font-size:13px;line-height:20px;word-break:break-all;"><a href="' . $urlSeguro . '" style="color:#c2410c;">' . $urlSeguro . '</a></p>';
+    $html .= '<p style="margin:0;font-size:14px;line-height:22px;color:#64748b;">Si no creaste esta cuenta, podés ignorar este mensaje.</p></td></tr>';
+    $html .= '<tr><td style="padding:20px 32px;background-color:#f8fafc;border-top:1px solid #e2e8f0;text-align:center;font-size:12px;line-height:18px;color:#64748b;">GPU FIX &amp; STORE</td></tr>';
+    $html .= '</table></td></tr></table></body></html>';
+
     $texto = "Hola " . $nombre . ",\n\nConfirmá tu correo para activar tu cuenta: " . $url . "\n\nEl enlace vence en 24 horas. Si no creaste esta cuenta, podés ignorar este mensaje.";
     return correo_enviar($destinatario, "Confirmá tu correo - GPU FIX & STORE", $html, $texto);
 }
