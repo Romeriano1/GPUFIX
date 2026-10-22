@@ -10,7 +10,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         try {
             require_once __DIR__ . "/conexion.php";
             $consulta = $conexion->prepare(
-                "SELECT id_correo, nombre, correo_verificado FROM USUARIOS WHERE correo = ? LIMIT 1"
+            "SELECT id_correo, nombre, correo_verificado FROM usuarios WHERE correo = ? LIMIT 1"
             );
             $consulta->bind_param("s", $correo);
             $consulta->execute();
@@ -25,7 +25,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $tokenHash = hash("sha256", $token);
                 $expira = date("Y-m-d H:i:s", time() + 86400);
                 $actualizar = $conexion->prepare(
-                    "UPDATE USUARIOS SET token_verificacion = ?, token_expira = ? WHERE id_correo = ? AND correo_verificado = 0"
+                    "UPDATE usuarios SET token_verificacion = ?, token_expira = ? WHERE id_correo = ? AND correo_verificado = 0"
                 );
                 $actualizar->bind_param("ssi", $tokenHash, $expira, $usuarioId);
                 $actualizar->execute();

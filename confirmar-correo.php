@@ -8,7 +8,7 @@ if (preg_match('/^[a-f0-9]{64}$/', $token)) {
         require_once __DIR__ . "/conexion.php";
         $tokenHash = hash("sha256", $token);
         $consulta = $conexion->prepare(
-            "SELECT id_correo, nombre, apellido FROM USUARIOS WHERE token_verificacion = ? AND token_expira > NOW() AND correo_verificado = 0 LIMIT 1"
+            "SELECT id_correo, nombre, apellido FROM usuarios WHERE token_verificacion = ? AND token_expira > NOW() AND correo_verificado = 0 LIMIT 1"
         );
         $consulta->bind_param("s", $tokenHash);
         $consulta->execute();
@@ -18,7 +18,7 @@ if (preg_match('/^[a-f0-9]{64}$/', $token)) {
 
         if ($encontrado) {
             $actualizar = $conexion->prepare(
-                "UPDATE USUARIOS SET correo_verificado = 1, token_verificacion = NULL, token_expira = NULL WHERE id_correo = ? AND correo_verificado = 0"
+                "UPDATE usuarios SET correo_verificado = 1, token_verificacion = NULL, token_expira = NULL WHERE id_correo = ? AND correo_verificado = 0"
             );
             $actualizar->bind_param("i", $usuarioId);
             $actualizar->execute();

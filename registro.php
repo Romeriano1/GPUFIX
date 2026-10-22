@@ -37,7 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             require_once __DIR__ . "/conexion.php";
             $conexion->begin_transaction();
 
-            $consultaCorreo = $conexion->prepare("SELECT id_correo FROM USUARIOS WHERE correo = ? LIMIT 1");
+            $consultaCorreo = $conexion->prepare("SELECT id_correo FROM usuarios WHERE correo = ? LIMIT 1");
             $consultaCorreo->bind_param("s", $correo);
             $consultaCorreo->execute();
             $consultaCorreo->store_result();
@@ -56,7 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $tokenExpira = date("Y-m-d H:i:s", time() + 86400);
 
                 $crearUsuario = $conexion->prepare(
-                    "INSERT INTO USUARIOS (correo, `contraseña`, nombre, apellido, dni, telefono, correo_verificado, token_verificacion, token_expira) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)"
+                    "INSERT INTO usuarios (correo, `contraseña`, nombre, apellido, dni, telefono, correo_verificado, token_verificacion, token_expira) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)"
                 );
                 $crearUsuario->bind_param("ssssssss", $correo, $contrasenaGuardar, $nombre, $apellido, $dniGuardar, $telefonoGuardar, $tokenVerificacionHash, $tokenExpira);
                 $crearUsuario->execute();
@@ -64,7 +64,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $crearUsuario->close();
 
                 $verificarContrasena = $conexion->prepare(
-                    "SELECT `contraseña` FROM USUARIOS WHERE id_correo = ? LIMIT 1"
+                    "SELECT `contraseña` FROM usuarios WHERE id_correo = ? LIMIT 1"
                 );
                 $verificarContrasena->bind_param("i", $idCorreo);
                 $verificarContrasena->execute();
@@ -76,7 +76,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     throw new RuntimeException("La contraseña no se guardó correctamente.");
                 }
 
-                $crearCliente = $conexion->prepare("INSERT INTO CLIENTE (id_correo) VALUES (?)");
+                $crearCliente = $conexion->prepare("INSERT INTO cliente (id_correo) VALUES (?)");
                 $crearCliente->bind_param("i", $idCorreo);
                 $crearCliente->execute();
                 $crearCliente->close();

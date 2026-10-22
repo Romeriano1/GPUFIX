@@ -26,7 +26,7 @@ $verificado = false;
 try {
     require_once __DIR__ . "/conexion.php";
     $consulta = $conexion->prepare(
-        "SELECT nombre, apellido, correo_verificado FROM USUARIOS WHERE id_correo = ? LIMIT 1"
+        "SELECT nombre, apellido, correo_verificado FROM usuarios WHERE id_correo = ? LIMIT 1"
     );
     $consulta->bind_param("i", $pendienteId);
     $consulta->execute();

@@ -23,7 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         try {
             require_once __DIR__ . "/conexion.php";
             $consulta = $conexion->prepare(
-                "SELECT id_correo, `contraseña`, nombre, apellido, correo_verificado FROM USUARIOS WHERE correo = ? LIMIT 1"
+                "SELECT id_correo, `contraseña`, nombre, apellido, correo_verificado FROM usuarios WHERE correo = ? LIMIT 1"
             );
             $consulta->bind_param("s", $correoIngresado);
             $consulta->execute();
