@@ -2,9 +2,50 @@
 <?php
 session_start();
 
-if (isset($_SESSION["usuario_id"])) {
-    header("Location: mi-cuenta.php");
+$loginError = $_GET["error"] ?? "";
+$correoIngresado = "";
+$requeridoCarrito = (($_GET["requerido"] ?? "") === "carrito") || (($_POST["requerido"] ?? "") === "carrito");
+
+if (!empty($_SESSION["usuario_id"])) {
+    header("Location: " . ($requeridoCarrito ? "carrito.php" : "mi-cuenta.php"));
     exit;
+}
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $correoIngresado = strtolower(trim($_POST["correo"] ?? ""));
+    $contrasenaIngresada = $_POST["contrasena"] ?? "";
+
+    if ($correoIngresado === "" || $contrasenaIngresada === "") {
+        $loginError = "datos";
+    } else {
+        try {
+            require_once __DIR__ . "/conexion.php";
+            $consulta = $conexion->prepare(
+                "SELECT id_correo, `contraseña`, nombre, apellido FROM USUARIOS WHERE correo = ? LIMIT 1"
+            );
+            $consulta->bind_param("s", $correoIngresado);
+            $consulta->execute();
+            $consulta->bind_result($usuarioId, $hashContrasena, $nombreUsuario, $apellidoUsuario);
+            $usuarioEncontrado = $consulta->fetch();
+            $consulta->close();
+            $conexion->close();
+
+            if ($usuarioEncontrado && password_verify($contrasenaIngresada, $hashContrasena)) {
+                session_regenerate_id(true);
+                $_SESSION["usuario_id"] = (int) $usuarioId;
+                $_SESSION["usuario_nombre"] = $nombreUsuario;
+                $_SESSION["usuario_apellido"] = $apellidoUsuario;
+
+                header("Location: " . ($requeridoCarrito ? "carrito.php" : "mi-cuenta.php"));
+                exit;
+            }
+
+            $loginError = "credenciales";
+        } catch (Throwable $error) {
+            error_log("Error al iniciar sesión: " . $error->getMessage());
+            $loginError = "conexion";
+        }
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -13,39 +54,51 @@ if (isset($_SESSION["usuario_id"])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar sesión - GPU FIX & STORE</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=20261021-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+        crossorigin="anonymous">
 </head>
 <body class="pagina-login">
 
-<header class="login-header">
-    <nav class="navbar navbar-login">
-        <div class="navbar-izquierda navbar-login-izquierda">
-            <a class="navbar-brand navbar-login-brand" href="index.php">GPU FIX & STORE</a>
-            <ul class="navbar-nav navbar-login-enlaces">
-                <li class="nav-item"><a class="nav-link" href="index.php">Inicio</a></li>
-                <li class="nav-item"><a class="nav-link" href="productos.php">Productos</a></li>
-                <li class="nav-item"><a class="nav-link" href="reparar.php">Reparar GPU</a></li>
-                <li class="nav-item"><a class="nav-link" href="carrito.php">Ver carrito</a></li>
+<header>
+    <nav class="navbar">
+        <div class="navbar-izquierda">
+            <a class="navbar-brand" href="index.php">
+                GPU FIX & STORE
+            </a>
+
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link active" href="index.php">Inicio</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="productos.php">Productos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="reparar.php">Reparar GPU</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="carrito.php">Ver carrito</a>
+                </li>
             </ul>
         </div>
 
-        <div class="navbar-centro navbar-login-centro">
+        <div class="navbar-centro">
             <form class="search-form" action="busqueda.php" method="GET" role="search">
-                <input class="form-control" type="search" name="buscar" placeholder="Buscar GPU" aria-label="Buscar GPU">
+                <input class="form-control" type="search" name="buscar"
+                    placeholder="Buscar GPU" aria-label="Buscar GPU">
                 <button class="btn" type="submit">Buscar</button>
             </form>
         </div>
 
-        <div class="navbar-derecha navbar-login-derecha">
-            <button id="themeButton" class="theme-button" type="button" aria-label="Cambiar tema">☀️</button>
-            <div class="cuenta-contenedor">
-                <button id="cuentaButton" class="cuenta-button" type="button" aria-label="Abrir menú de usuario" aria-expanded="false">👤</button>
-                <div id="cuentaMenu" class="cuenta-menu">
-                    <a href="login.php">Iniciar sesión</a>
-                    <a href="registro.php">Crear cuenta</a>
-                </div>
-            </div>
+        <div class="navbar-derecha">
+            <button id="themeButton" class="theme-button" type="button" aria-label="Cambiar tema">
+                ☀️
+            </button>
+            <a href="login.php" class="cuenta-button" aria-label="Iniciar sesión">
+                👤
+            </a>
         </div>
     </nav>
 </header>
@@ -56,13 +109,23 @@ if (isset($_SESSION["usuario_id"])) {
             <h2>Iniciar sesión</h2>
             <p class="login-descripcion">Ingresá a tu cuenta de GPU FIX & STORE</p>
 
-            <?php if (isset($_GET["error"])): ?>
+            <?php if ($requeridoCarrito): ?>
+                <div class="login-aviso">Iniciá sesión para entrar al carrito.</div>
+            <?php endif; ?>
+
+            <?php if (($_GET["registrado"] ?? "") === "1"): ?>
+                <div class="login-aviso">Tu cuenta quedó creada. Iniciá sesión para continuar.</div>
+            <?php endif; ?>
+
+            <?php if ($loginError !== ""): ?>
                 <div class="login-error">
                     <?php
-                    if ($_GET["error"] === "datos") {
+                    if ($loginError === "datos") {
                         echo "Completá todos los campos.";
-                    } elseif ($_GET["error"] === "credenciales") {
+                    } elseif ($loginError === "credenciales") {
                         echo "El correo o la contraseña son incorrectos.";
+                    } elseif ($loginError === "conexion") {
+                        echo "No pudimos conectar con la base de datos. Intentá nuevamente más tarde.";
                     } else {
                         echo "No se pudo iniciar sesión.";
                     }
@@ -71,9 +134,12 @@ if (isset($_SESSION["usuario_id"])) {
             <?php endif; ?>
 
             <form id="loginForm" class="login-form" action="login.php" method="POST" novalidate>
+                <?php if ($requeridoCarrito): ?>
+                    <input type="hidden" name="requerido" value="carrito">
+                <?php endif; ?>
                 <div class="login-campo">
                     <label for="correo">Correo electrónico</label>
-                    <input type="email" id="correo" name="correo" placeholder="Ingresá tu correo" autocomplete="email" aria-describedby="correoError">
+                    <input type="email" id="correo" name="correo" placeholder="Ingresá tu correo" autocomplete="email" aria-describedby="correoError" value="<?php echo htmlspecialchars($correoIngresado, ENT_QUOTES, "UTF-8"); ?>">
                     <span id="correoError" class="login-error-campo" role="alert"></span>
                 </div>
 
@@ -87,8 +153,8 @@ if (isset($_SESSION["usuario_id"])) {
             </form>
 
             <div class="login-enlaces">
-                <p>¿Todavía no tenés una cuenta?</p>
-                <a href="registro.php">Crear una cuenta</a>
+                <p>¿No tenés cuenta?</p>
+                <a class="login-registro-boton" href="registro.php<?php echo $requeridoCarrito ? '?requerido=carrito' : ''; ?>">Registrate</a>
             </div>
         </div>
     </section>
@@ -103,18 +169,20 @@ if (isset($_SESSION["usuario_id"])) {
 const cuentaButton = document.getElementById("cuentaButton");
 const cuentaMenu = document.getElementById("cuentaMenu");
 
-cuentaButton.addEventListener("click", function(event) {
-    event.stopPropagation();
-    const abierto = cuentaMenu.classList.toggle("visible");
-    cuentaButton.setAttribute("aria-expanded", abierto);
-});
+if (cuentaButton && cuentaMenu) {
+    cuentaButton.addEventListener("click", function(event) {
+        event.stopPropagation();
+        const abierto = cuentaMenu.classList.toggle("visible");
+        cuentaButton.setAttribute("aria-expanded", abierto);
+    });
 
-document.addEventListener("click", function(event) {
-    if (!event.target.closest(".cuenta-contenedor")) {
-        cuentaMenu.classList.remove("visible");
-        cuentaButton.setAttribute("aria-expanded", "false");
-    }
-});
+    document.addEventListener("click", function(event) {
+        if (!event.target.closest(".cuenta-contenedor")) {
+            cuentaMenu.classList.remove("visible");
+            cuentaButton.setAttribute("aria-expanded", "false");
+        }
+    });
+}
 
 const loginForm = document.getElementById("loginForm");
 const correo = document.getElementById("correo");

@@ -65,10 +65,11 @@ body.light-theme footer p {
 .navbar {
     width: 100%;
     min-height: 80px;
-    padding: 20px 40px;
+    padding: 8px 0;
     background-color: #181818 !important;
-    display: grid;
-    grid-template-columns: 1fr auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
     align-items: center;
     position: relative;
 }
@@ -88,7 +89,7 @@ body.light-theme footer p {
 
 .navbar-brand {
     color: white !important;
-    font-size: 32px;
+    font-size: 20px;
     font-weight: bold;
 }
 
@@ -117,7 +118,15 @@ body.light-theme footer p {
 }
 
 body.light-theme .navbar {
+    width: 100%;
+    min-height: 80px;
+    padding: 8px 0;
     background-color: #ffffff !important;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
 }
 
 body.light-theme .navbar-brand {
@@ -886,10 +895,6 @@ body.light-theme .bloque-informacion p {
     color: #555555;
 }
 
-.pagina-login .login-header {
-    width: 100%;
-}
-
 .acceso-reparaciones {
     max-width: 700px;
     margin: 25px auto 0;
@@ -939,30 +944,6 @@ body.light-theme .acceso-reparaciones h3 {
 
 body.light-theme .acceso-reparaciones p {
     color: #555555;
-}
-
-.pagina-login .navbar-login {
-    min-height: 70px;
-    padding: 14px 40px;
-}
-
-.pagina-login .navbar-login-brand {
-    font-size: 29px;
-    line-height: 1.2;
-}
-
-.pagina-login .navbar-login-izquierda {
-    gap: 22px;
-}
-
-.pagina-login .navbar-login-enlaces {
-    gap: 22px;
-}
-
-.pagina-login .navbar-login .nav-link {
-    font-size: 15px;
-    padding-top: 6px;
-    padding-bottom: 6px;
 }
 
 .pagina-login .login-main {
@@ -1066,14 +1047,14 @@ body.light-theme .acceso-reparaciones p {
 
 .login-formulario input {
     width: 100%;
-    padding: 12px;
+    padding: 13px 15px;
     margin-bottom: 20px;
-    background-color: #111;
-    border: 1px solid #444;
-    border-radius: 6px;
+    background-color: #101820;
+    border: 1px solid #35434d;
+    border-radius: 12px;
     color: white;
     outline: none;
-    transition: 0.3s;
+    transition: border-color 0.25s, box-shadow 0.25s, background-color 0.25s, transform 0.25s;
 }
 
 .login-formulario input::placeholder {
@@ -1081,59 +1062,32 @@ body.light-theme .acceso-reparaciones p {
 }
 
 .login-formulario input:hover {
-    border-color: #777;
-    animation: rgbInputSuave 5s linear infinite;
+    border-color: #00bfff;
 }
 
 .login-formulario input:focus {
-    border-color: #00aaff;
+    background-color: #101820;
+    border-color: #00d5ff;
+    box-shadow: 0 0 0 3px rgba(0, 213, 255, 0.16), 0 0 18px rgba(0, 191, 255, 0.28);
+    transform: translateY(-1px);
 }
 
 .login-boton {
     width: 100%;
     padding: 12px;
-    border: none;
+    border: 1px solid #00bfff;
     border-radius: 6px;
     color: white;
     font-weight: bold;
     cursor: pointer;
-    background-color: #222;
-    transition: transform 0.2s;
+    background-color: #00bfff;
+    transition: transform 0.2s, color 0.25s, background-color 0.25s;
 }
 
 .login-boton:hover {
+    color: white;
+    background-color: #00a6dd;
     transform: scale(1.03);
-    animation: rgb 5s linear infinite;
-}
-
-@keyframes rgbInputSuave {
-    0% {
-        box-shadow: 0 0 6px rgba(255, 0, 0, 0.3);
-    }
-    33% {
-        box-shadow: 0 0 6px rgba(0, 255, 0, 0.3);
-    }
-    66% {
-        box-shadow: 0 0 6px rgba(0, 0, 255, 0.3);
-    }
-    100% {
-        box-shadow: 0 0 6px rgba(255, 0, 0, 0.3);
-    }
-}
-
-@keyframes rgb {
-    0% {
-        box-shadow: 0 8px 25px rgba(255, 0, 0, 0.7);
-    }
-    33% {
-        box-shadow: 0 8px 25px rgba(0, 255, 0, 0.7);
-    }
-    66% {
-        box-shadow: 0 8px 25px rgba(0, 0, 255, 0.7);
-    }
-    100% {
-        box-shadow: 0 8px 25px rgba(255, 0, 0, 0.7);
-    }
 }
 
 .login-boton:active {
@@ -1165,6 +1119,16 @@ body.light-theme .acceso-reparaciones p {
     margin-bottom: 15px;
 }
 
+.login-aviso {
+    margin-bottom: 18px;
+    padding: 10px 12px;
+    border: 1px solid #00bfff;
+    border-radius: 6px;
+    background-color: rgba(0, 191, 255, 0.08);
+    color: #00bfff;
+    text-align: center;
+}
+
 .login-error-campo {
     color: #ff4444;
     font-size: 14px;
@@ -1193,9 +1157,19 @@ body.light-theme .login-enlaces p {
 }
 
 body.light-theme .login-formulario input {
-    background-color: #fff;
-    border: 1px solid #555;
-    color: #111;
+    background-color: #ffffff;
+    border: 1px solid #aeb8c2;
+    color: #111111;
+}
+
+body.light-theme .login-formulario input:hover {
+    border-color: #008fc4;
+}
+
+body.light-theme .login-formulario input:focus {
+    background-color: #ffffff;
+    border-color: #008fc4;
+    box-shadow: 0 0 0 3px rgba(0, 143, 196, 0.14), 0 0 16px rgba(0, 143, 196, 0.2);
 }
 
 body.light-theme .login-formulario input::placeholder {
@@ -1210,8 +1184,14 @@ body.light-theme .login-formulario input:-webkit-autofill:focus {
 }
 
 body.light-theme .login-boton {
-    background-color: #111;
-    color: #fff;
+    background-color: #008fc4;
+    border-color: #008fc4;
+    color: white;
+}
+
+body.light-theme .login-boton:hover {
+    background-color: #007aa8;
+    color: white;
 }
 
 body.light-theme .login-enlaces a {
@@ -1221,4 +1201,189 @@ body.light-theme .login-enlaces a {
 body.light-theme .login-error,
 body.light-theme .login-error-campo {
     color: #b00020;
+}
+
+body.light-theme .login-aviso {
+    border-color: #008fc4;
+    background-color: #f5fbfd;
+    color: #0077a5;
+}
+.marcas-section {
+    margin-top: 70px;
+    color: #ffffff;
+}
+
+.marcas-encabezado {
+    margin-bottom: 28px;
+    text-align: center;
+}
+
+.marcas-encabezado h2 {
+    margin-bottom: 10px;
+    color: #ffffff;
+    font-size: 30px;
+}
+
+.marcas-encabezado p {
+    color: #aaaaaa;
+    font-size: 16px;
+}
+
+.marcas-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.marca-boton {
+    min-height: 90px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background-color: #1c1c1c;
+    border: 1px solid #333333;
+    border-radius: 12px;
+    color: #ffffff;
+    font-weight: bold;
+    text-decoration: none;
+    transition: border-color 0.25s, color 0.25s, background-color 0.25s, transform 0.25s;
+}
+
+.marca-boton:hover {
+    background-color: #222222;
+    border-color: #00bfff;
+    color: #00d5ff;
+    transform: translateY(-3px);
+}
+
+.marca-flecha {
+    color: #00bfff;
+    font-size: 20px;
+}
+
+body.light-theme .marcas-section {
+    color: #111111;
+}
+
+body.light-theme .marcas-encabezado h2 {
+    color: #111111;
+}
+
+body.light-theme .marcas-encabezado p {
+    color: #555555;
+}
+
+body.light-theme .marca-boton {
+    background-color: #ffffff;
+    border-color: #cccccc;
+    color: #111111;
+}
+
+body.light-theme .marca-boton:hover {
+    background-color: #f5fbfd;
+    border-color: #008fc4;
+    color: #0077a5;
+}
+
+body.light-theme .marca-flecha {
+    color: #008fc4;
+}
+
+@media (max-width: 800px) {
+    .marcas-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .marcas-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 900px) {
+    .navbar-izquierda {
+        order: 1;
+    }
+
+    .navbar-derecha {
+        order: 2;
+    }
+
+    .navbar-centro {
+        position: static;
+        left: auto;
+        top: auto;
+        transform: none;
+        order: 3;
+        flex: 0 0 100%;
+        width: 100%;
+        min-width: 0;
+        margin-top: 12px;
+    }
+
+    .navbar-centro .search-form {
+        justify-content: center;
+    }
+}
+
+.registro-formulario {
+    max-width: 760px;
+}
+
+.registro-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 20px;
+}
+
+.registro-campo-completo {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 600px) {
+    .registro-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .registro-campo-completo {
+        grid-column: auto;
+    }
+
+    .registro-formulario {
+        padding: 28px 22px;
+    }
+}
+
+.login-enlaces a.login-registro-boton {
+    display: inline-block;
+    padding: 10px 20px;
+    border: 1px solid #00bfff;
+    border-radius: 6px;
+    background-color: #00bfff;
+    color: #ffffff;
+    font-weight: bold;
+    text-decoration: none;
+    transition: transform 0.2s, background-color 0.25s;
+}
+
+.login-enlaces a.login-registro-boton:hover {
+    background-color: #00a6dd;
+    color: #ffffff;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+body.light-theme .login-enlaces a.login-registro-boton {
+    border-color: #008fc4;
+    background-color: #008fc4;
+    color: #ffffff;
+}
+
+body.light-theme .login-enlaces a.login-registro-boton:hover {
+    border-color: #007aa8;
+    background-color: #007aa8;
+    color: #ffffff;
 }

@@ -6,203 +6,142 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GPU FIX & STORE</title>
 
-    <link rel="stylesheet" href="style.css">
-
+    <link rel="stylesheet" href="style.css?v=20261021-6">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
         crossorigin="anonymous">
+
+   
 </head>
 
 <body>
-
     <header>
-
         <nav class="navbar">
-
             <div class="navbar-izquierda">
-
                 <a class="navbar-brand" href="index.php">
                     GPU FIX & STORE
                 </a>
 
                 <ul class="navbar-nav">
-
                     <li class="nav-item">
-                        <a class="nav-link active" href="index.php">
-                            Inicio
-                        </a>
+                        <a class="nav-link active" href="index.php">Inicio</a>
                     </li>
-
                     <li class="nav-item">
-                        <a class="nav-link" href="productos.php">
-                            Productos
-                        </a>
+                        <a class="nav-link" href="productos.php">Productos</a>
                     </li>
-
                     <li class="nav-item">
-                        <a class="nav-link" href="reparar.php">
-                            Reparar GPU
-                        </a>
+                        <a class="nav-link" href="reparar.php">Reparar GPU</a>
                     </li>
-
                     <li class="nav-item">
-                        <a class="nav-link" href="carrito.php">
-                            Ver carrito
-                        </a>
+                        <a class="nav-link" href="carrito.php">Ver carrito</a>
                     </li>
-
                 </ul>
-
             </div>
 
             <div class="navbar-centro">
-
                 <form class="search-form" action="busqueda.php" method="GET" role="search">
-
-                    <input
-                        class="form-control"
-                        type="search"
-                        name="buscar"
-                        placeholder="Buscar GPU"
-                        aria-label="Buscar GPU">
-
-                    <button class="btn" type="submit">
-                        Buscar
-                    </button>
-
+                    <input class="form-control" type="search" name="buscar"
+                        placeholder="Buscar GPU" aria-label="Buscar GPU">
+                    <button class="btn" type="submit">Buscar</button>
                 </form>
-
             </div>
 
             <div class="navbar-derecha">
-
                 <button id="themeButton" class="theme-button" type="button" aria-label="Cambiar tema">
                     ☀️
                 </button>
-
                 <a href="login.php" class="cuenta-button" aria-label="Iniciar sesión">
                     👤
                 </a>
-
             </div>
-
         </nav>
-
     </header>
 
     <main>
-
         <section class="buscados">
-
             <h2>Los más buscados</h2>
 
-            <div id="carruselProductos" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
-
+            <div id="carruselProductos" class="carousel slide"
+                data-bs-ride="carousel" data-bs-interval="5000">
                 <div class="carousel-inner">
-
                     <div class="carousel-item active">
-
                         <a href="rx7600.php">
                             <img src="img/rx7600.png" class="carrusel-imagen" alt="RX 7600">
                         </a>
-
                     </div>
 
                     <div class="carousel-item">
-
                         <a href="rx9070.php">
                             <img src="img/rx9070.png" class="carrusel-imagen" alt="RX 9070">
                         </a>
-
                     </div>
-
                 </div>
 
                 <button class="carousel-control-prev" type="button"
                     data-bs-target="#carruselProductos" data-bs-slide="prev">
-
                     <span class="carousel-control-prev-icon"></span>
                     <span class="visually-hidden">Anterior</span>
-
                 </button>
 
                 <button class="carousel-control-next" type="button"
                     data-bs-target="#carruselProductos" data-bs-slide="next">
-
                     <span class="carousel-control-next-icon"></span>
                     <span class="visually-hidden">Siguiente</span>
-
                 </button>
-
             </div>
-
         </section>
 
         <section class="marcas-section">
-
             <div class="marcas-encabezado">
                 <h2>Conocé nuestras marcas</h2>
                 <p>Encontrá tu próxima GPU entre las marcas que más te gustan.</p>
             </div>
 
             <div class="marcas-grid">
-
                 <a href="busqueda.php?buscar=Gigabyte" class="marca-boton">
                     <span>GIGABYTE</span>
                     <span class="marca-flecha" aria-hidden="true">↗</span>
                 </a>
-
                 <a href="busqueda.php?buscar=Sapphire" class="marca-boton">
                     <span>SAPPHIRE</span>
                     <span class="marca-flecha" aria-hidden="true">↗</span>
                 </a>
-
                 <a href="busqueda.php?buscar=ASUS" class="marca-boton">
                     <span>ASUS</span>
                     <span class="marca-flecha" aria-hidden="true">↗</span>
                 </a>
-
                 <a href="busqueda.php?buscar=PowerColor" class="marca-boton">
                     <span>POWERCOLOR</span>
                     <span class="marca-flecha" aria-hidden="true">↗</span>
                 </a>
-
                 <a href="busqueda.php?buscar=INNO3D" class="marca-boton">
                     <span>INNO3D</span>
                     <span class="marca-flecha" aria-hidden="true">↗</span>
                 </a>
-
                 <a href="busqueda.php?buscar=Gainward" class="marca-boton">
                     <span>GAINWARD</span>
                     <span class="marca-flecha" aria-hidden="true">↗</span>
                 </a>
-
                 <a href="busqueda.php?buscar=MSI" class="marca-boton">
                     <span>MSI</span>
                     <span class="marca-flecha" aria-hidden="true">↗</span>
                 </a>
-
                 <a href="busqueda.php?buscar=ZOTAC" class="marca-boton">
                     <span>ZOTAC</span>
                     <span class="marca-flecha" aria-hidden="true">↗</span>
                 </a>
-
             </div>
-
         </section>
-
     </main>
 
     <footer>
-
         <p>GPU FIX & STORE - Reparación y venta de GPUs</p>
-
     </footer>
 
     <script src="script.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-
 </body>
 
 </html>
+
+  
