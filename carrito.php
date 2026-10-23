@@ -22,8 +22,49 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     $accion = (string) ($_POST["accion"] ?? "");
-    $tipo = (string) ($_POST["tipo"] ?? "agregar");
     $idGpu = filter_var($_POST["id_gpu"] ?? null, FILTER_VALIDATE_INT);
+
+    if ($accion === "eliminar") {
+        if (!$idGpu || $idGpu < 1) {
+            $_SESSION["mensaje_carrito"] = "No pudimos identificar el producto que querés eliminar.";
+            header("Location: carrito.php");
+            exit;
+        }
+
+        if (empty($_SESSION["usuario_id"])) {
+            header("Location: login.php?requerido=carrito");
+            exit;
+        }
+
+        try {
+            require_once __DIR__ . "/conexion.php";
+            $usuarioId = (int) $_SESSION["usuario_id"];
+            $eliminarDetalle = $conexion->prepare(
+                "DELETE d FROM detalle_carrito AS d " .
+                "INNER JOIN carrito AS ca ON ca.id_carrito = d.id_carrito " .
+                "INNER JOIN cliente AS c ON c.id_cliente = ca.id_cliente " .
+                "WHERE c.id_correo = ? AND d.id_gpu = ?"
+            );
+            $eliminarDetalle->bind_param("ii", $usuarioId, $idGpu);
+            $eliminarDetalle->execute();
+            $_SESSION["mensaje_carrito"] = $eliminarDetalle->affected_rows > 0
+                ? "Producto eliminado del carrito."
+                : "Ese producto ya no estaba en tu carrito.";
+            $eliminarDetalle->close();
+            $conexion->close();
+        } catch (Throwable $error) {
+            error_log("Error al eliminar GPU del carrito: " . $error->getMessage());
+            if (isset($conexion)) {
+                try { $conexion->close(); } catch (Throwable $errorCierre) {}
+            }
+            $_SESSION["mensaje_carrito"] = "No pudimos eliminar el producto. Revisá la conexión con la base de datos e intentá nuevamente.";
+        }
+
+        header("Location: carrito.php");
+        exit;
+    }
+
+    $tipo = (string) ($_POST["tipo"] ?? "agregar");
     $cantidadSolicitada = filter_var($_POST["cantidad"] ?? 1, FILTER_VALIDATE_INT);
 
     if ($accion !== "agregar" || !in_array($tipo, ["agregar", "comprar"], true) || !$idGpu || !$cantidadSolicitada || $cantidadSolicitada < 1) {
@@ -316,6 +357,12 @@ try {
                                 <h3><?= $escapar($item["modelo"]) ?></h3>
                                 <p>Cantidad: <?= (int) $item["cantidad"] ?></p>
                                 <p><?= $item["stock"] > 0 ? "Hay stock" : "No hay stock" ?></p>
+                                <form action="carrito.php" method="post" class="carrito-item-accion">
+                                    <input type="hidden" name="accion" value="eliminar">
+                                    <input type="hidden" name="id_gpu" value="<?= (int) $item["id"] ?>">
+                                    <input type="hidden" name="csrf_carrito" value="<?= $escapar($csrfCarrito) ?>">
+                                    <button type="submit" class="boton-eliminar-carrito" aria-label="Eliminar <?= $escapar($item["modelo"]) ?> del carrito">Eliminar del carrito</button>
+                                </form>
                             </div>
                             <div class="carrito-item-precio">
                                 <span>Precio unitario</span>

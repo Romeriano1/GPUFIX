@@ -717,6 +717,26 @@ body.light-theme .carrito-vacio p {
     font-size: 13px;
 }
 
+.carrito-item-accion {
+    margin-top: 10px;
+}
+
+.boton-eliminar-carrito {
+    padding: 7px 10px;
+    border: 1px solid #d44747;
+    border-radius: 6px;
+    background: transparent;
+    color: #ff7373;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.boton-eliminar-carrito:hover {
+    background: #c62828;
+    color: #ffffff;
+}
+
 .carrito-item-precio {
     display: grid;
     justify-items: end;
@@ -763,6 +783,15 @@ body.light-theme .carrito-item {
 body.light-theme .carrito-item-detalle p:not(.producto-marca),
 body.light-theme .carrito-item-precio span {
     color: #555555;
+}
+
+body.light-theme .boton-eliminar-carrito {
+    border-color: #c62828;
+    color: #c62828;
+}
+
+body.light-theme .boton-eliminar-carrito:hover {
+    color: #ffffff;
 }
 
 body.light-theme .carrito-resumen {
