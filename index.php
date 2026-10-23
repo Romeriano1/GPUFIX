@@ -7,10 +7,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GPU FIX & STORE</title>
 
-    <link rel="stylesheet" href="style.css?v=20261021-6">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
         crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css?v=20261022-5">
 
 
 </head>
@@ -62,14 +62,32 @@
                 data-bs-ride="carousel" data-bs-interval="5000">
                 <div class="carousel-inner">
                     <div class="carousel-item active">
-                        <a href="rx7600.php">
+                        <a href="rx7600pulse.php">
                             <img src="img/rx7600.png" class="carrusel-imagen" alt="RX 7600">
                         </a>
                     </div>
 
                     <div class="carousel-item">
-                        <a href="rx9070.php">
+                        <a href="rx9070gigabyte.php">
                             <img src="img/rx9070.png" class="carrusel-imagen" alt="RX 9070">
+                        </a>
+                    </div>
+
+                    <div class="carousel-item">
+                        <a href="rx6700xtgigabyte.php">
+                            <img src="img/rx6700xtgiga.png" class="carrusel-imagen" alt="Gigabyte RX 6700 XT Gaming OC">
+                        </a>
+                    </div>
+
+                    <div class="carousel-item">
+                        <a href="rx7700xtgigabyte.php">
+                            <img src="img/rx7700xtgiga.png" class="carrusel-imagen" alt="Gigabyte RX 7700 XT Gaming OC">
+                        </a>
+                    </div>
+
+                    <div class="carousel-item">
+                        <a href="rtx4090msi.php">
+                            <img src="img/rtx4090msi.png" class="carrusel-imagen" alt="MSI RTX 4090 Gaming Slim">
                         </a>
                     </div>
                 </div>
@@ -99,6 +117,10 @@
                     <span>GIGABYTE</span>
                     <span class="marca-flecha" aria-hidden="true">↗</span>
                 </a>
+                <a href="busqueda.php?buscar=Aorus" class="marca-boton">
+                    <span>AORUS</span>
+                    <span class="marca-flecha" aria-hidden="true">↗</span>
+                </a>
                 <a href="busqueda.php?buscar=Sapphire" class="marca-boton">
                     <span>SAPPHIRE</span>
                     <span class="marca-flecha" aria-hidden="true">↗</span>
@@ -113,10 +135,6 @@
                 </a>
                 <a href="busqueda.php?buscar=INNO3D" class="marca-boton">
                     <span>INNO3D</span>
-                    <span class="marca-flecha" aria-hidden="true">↗</span>
-                </a>
-                <a href="busqueda.php?buscar=Gainward" class="marca-boton">
-                    <span>GAINWARD</span>
                     <span class="marca-flecha" aria-hidden="true">↗</span>
                 </a>
                 <a href="busqueda.php?buscar=MSI" class="marca-boton">
