@@ -63,7 +63,7 @@ $formatearPrecio = static fn ($precio): string => $precio === null || $precio ==
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resultados - GPU FIX &amp; STORE</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=20261022-6">
+    <link rel="stylesheet" href="style.css?v=20261023-navbar">
 </head>
 <body>
     <header>
