@@ -315,7 +315,7 @@ try {
                                 <p class="producto-marca"><?= $escapar($item["marca"]) ?></p>
                                 <h3><?= $escapar($item["modelo"]) ?></h3>
                                 <p>Cantidad: <?= (int) $item["cantidad"] ?></p>
-                                <p>Stock disponible: <?= (int) $item["stock"] ?></p>
+                                <p><?= $item["stock"] > 0 ? "Hay stock" : "No hay stock" ?></p>
                             </div>
                             <div class="carrito-item-precio">
                                 <span>Precio unitario</span>
@@ -330,6 +330,7 @@ try {
                     <span>Total<?= $totalCompleto ? "" : " parcial" ?></span>
                     <strong><?= $escapar($formatearPrecio($totalCarrito)) ?></strong>
                 </div>
+                <button type="button" class="boton-comprar">Comprar</button>
                 <?php if (!$totalCompleto): ?>
                     <p class="acciones-compra-nota">Hay productos sin precio cargado; el total final queda pendiente.</p>
                 <?php endif; ?>
