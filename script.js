@@ -1,3 +1,17 @@
+document.querySelectorAll("[data-validacion]").forEach(function(campo) {
+    function validarCampo() {
+        campo.setCustomValidity("");
+        if (campo.dataset.validacion === "dni" && !/^[0-9]{7,8}$/.test(campo.value)) {
+            campo.setCustomValidity("El DNI no es válido. Ingresá 7 u 8 números, sin puntos ni espacios.");
+        } else if (campo.dataset.validacion === "correo" && (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(campo.value) || campo.validity.typeMismatch)) {
+            campo.setCustomValidity("El correo electrónico no es válido. Ingresá una dirección con @ y un dominio válido.");
+        }
+    }
+    campo.addEventListener("input", validarCampo);
+    campo.addEventListener("invalid", validarCampo);
+    validarCampo();
+});
+
 const themeButton = document.getElementById("themeButton");
 
 if (localStorage.getItem("tema") === "claro") {

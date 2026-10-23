@@ -25,9 +25,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $contrasena = $_POST["contrasena"] ?? "";
     $confirmarContrasena = $_POST["confirmar_contrasena"] ?? "";
 
-    if ($nombre === "" || $apellido === "" || $correo === "" || $contrasena === "" || $confirmarContrasena === "") {
+    if ($nombre === "" || $apellido === "" || $dni === "" || $correo === "" || $contrasena === "" || $confirmarContrasena === "") {
         $registroError = "datos";
-    } elseif (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+    } elseif (!preg_match('/^[0-9]{7,8}$/D', $dni)) {
+        $registroError = "dni_invalido";
+    } elseif (strlen($correo) > 150 || !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
         $registroError = "correo_invalido";
     } elseif (strlen($contrasena) < 8) {
         $registroError = "contrasena_corta";
@@ -60,7 +62,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 if ($contrasenaGuardar === false) {
                     throw new RuntimeException("No se pudo proteger la contraseña.");
                 }
-                $dniGuardar = $dni === "" ? null : $dni;
+                $dniGuardar = $dni;
                 $telefonoGuardar = $telefono === "" ? null : $telefono;
 
                 $etapaRegistro = "crear_usuario";
@@ -130,7 +132,7 @@ function escaparRegistro($valor)
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crear cuenta - GPU FIX & STORE</title>
-    <link rel="stylesheet" href="style.css?v=20261021-7">
+    <link rel="stylesheet" href="style.css?v=20261023-espacios">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
         crossorigin="anonymous">
@@ -174,7 +176,8 @@ function escaparRegistro($valor)
                     <?php
                     $mensajesError = [
                         "datos" => "Completá los campos obligatorios.",
-                        "correo_invalido" => "Ingresá un correo electrónico válido.",
+                        "dni_invalido" => "El DNI no es válido. Ingresá 7 u 8 números, sin puntos ni espacios.",
+                        "correo_invalido" => "El correo electrónico no es válido. Ingresá una dirección con @ y un dominio válido.",
                         "contrasena_corta" => "La contraseña debe tener al menos 8 caracteres.",
                         "contrasena_larga" => "La contraseña no puede superar los 72 bytes.",
                         "contrasenas_distintas" => "Las contraseñas no coinciden.",
@@ -202,8 +205,9 @@ function escaparRegistro($valor)
                     </div>
 
                     <div class="login-campo">
-                        <label for="dni">DNI</label>
-                        <input type="text" id="dni" name="dni" maxlength="20" autocomplete="off" value="<?= escaparRegistro($dni) ?>">
+                        <label for="dni">DNI *</label>
+                        <input type="text" id="dni" name="dni" inputmode="numeric" pattern="[0-9]{7,8}" minlength="7" maxlength="8" autocomplete="off" aria-describedby="dni-ayuda" data-validacion="dni" value="<?= escaparRegistro($dni) ?>" required>
+                        <small id="dni-ayuda">7 u 8 números, sin puntos ni espacios.</small>
                     </div>
 
                     <div class="login-campo">
@@ -213,7 +217,7 @@ function escaparRegistro($valor)
 
                     <div class="login-campo registro-campo-completo">
                         <label for="correo">Correo electrónico *</label>
-                        <input type="email" id="correo" name="correo" maxlength="150" autocomplete="email" value="<?= escaparRegistro($correo) ?>" required>
+                        <input type="email" id="correo" name="correo" maxlength="150" autocomplete="email" data-validacion="correo" value="<?= escaparRegistro($correo) ?>" required>
                     </div>
 
                     <div class="login-campo">
@@ -243,7 +247,7 @@ function escaparRegistro($valor)
     <p>GPU FIX & STORE - Reparación y venta de GPUs</p>
 </footer>
 
-<script src="script.js?v=20261021-9"></script>
+<script src="script.js?v=20261023-cuenta"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

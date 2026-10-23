@@ -19,6 +19,12 @@ if (empty($_SESSION["csrf_mi_cuenta"])) {
     $_SESSION["csrf_mi_cuenta"] = bin2hex(random_bytes(32));
 }
 $csrfMiCuenta = $_SESSION["csrf_mi_cuenta"];
+$editarCuenta = $_GET["editar"] ?? "";
+if (!in_array($editarCuenta, ["correo", "contrasena"], true)) {
+    $editarCuenta = "";
+}
+$correoNuevo = "";
+$accion = "";
 
 try {
     require_once __DIR__ . "/conexion.php";
@@ -44,18 +50,47 @@ try {
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $csrfEnviado = $_POST["csrf_token"] ?? "";
         $accion = $_POST["accion"] ?? "";
+        $editarCuenta = $accion === "cambiar_correo" ? "correo" : ($accion === "cambiar_contrasena" ? "contrasena" : "");
+        $correoNuevo = strtolower(trim($_POST["correo_nuevo"] ?? ""));
         $contrasenaActual = $_POST["contrasena_actual"] ?? "";
         $contrasenaNueva = $_POST["contrasena_nueva"] ?? "";
         $confirmarContrasena = $_POST["confirmar_contrasena"] ?? "";
 
         if (!hash_equals($csrfMiCuenta, $csrfEnviado)) {
             $errorCuenta = "La sesión del formulario venció. Recargá la página e intentá otra vez.";
-        } elseif ($accion !== "cambiar_contrasena") {
+        } elseif (!in_array($accion, ["cambiar_contrasena", "cambiar_correo"], true)) {
             $errorCuenta = "No se reconoció la acción solicitada.";
-        } elseif ($contrasenaActual === "" || $contrasenaNueva === "" || $confirmarContrasena === "") {
-            $errorCuenta = "Completá los tres campos de contraseña.";
+        } elseif ($contrasenaActual === "") {
+            $errorCuenta = "Ingresá tu contraseña actual para guardar el cambio.";
         } elseif (!password_verify($contrasenaActual, $hashActual)) {
             $errorCuenta = "La contraseña actual no es correcta.";
+        } elseif ($accion === "cambiar_correo") {
+            if (strlen($correoNuevo) > 150 || !filter_var($correoNuevo, FILTER_VALIDATE_EMAIL)) {
+                $errorCuenta = "El correo electrónico no es válido. Ingresá una dirección con @ y un dominio válido.";
+            } elseif ($correoNuevo === strtolower($correo)) {
+                $errorCuenta = "Ingresá un correo diferente del actual.";
+            } else {
+                $consultaCorreo = $conexion->prepare("SELECT id_correo FROM usuarios WHERE correo = ? AND id_correo <> ? LIMIT 1");
+                $consultaCorreo->bind_param("si", $correoNuevo, $usuarioId);
+                $consultaCorreo->execute();
+                $consultaCorreo->store_result();
+                $correoOcupado = $consultaCorreo->num_rows > 0;
+                $consultaCorreo->close();
+                if ($correoOcupado) {
+                    $errorCuenta = "Ya existe una cuenta registrada con ese correo.";
+                } else {
+                    $actualizarCorreo = $conexion->prepare("UPDATE usuarios SET correo = ? WHERE id_correo = ?");
+                    $actualizarCorreo->bind_param("si", $correoNuevo, $usuarioId);
+                    $actualizarCorreo->execute();
+                    $actualizarCorreo->close();
+                    $conexion->close();
+                    $_SESSION["mensaje_cuenta"] = "El correo se cambió correctamente. Usá el nuevo correo para iniciar sesión.";
+                    header("Location: mi-cuenta.php#seguridad");
+                    exit;
+                }
+            }
+        } elseif ($contrasenaNueva === "" || $confirmarContrasena === "") {
+            $errorCuenta = "Completá los campos de la nueva contraseña y su repetición.";
         } elseif (strlen($contrasenaNueva) < 8) {
             $errorCuenta = "La contraseña nueva debe tener al menos 8 caracteres.";
         } elseif (strlen($contrasenaNueva) > 72) {
@@ -123,7 +158,9 @@ try {
         }
     }
     error_log("Error al cargar Mi cuenta: " . $error->getMessage());
-    $errorCuenta = "No pudimos cargar tu cuenta. Intentá nuevamente más tarde.";
+    $errorCuenta = ($accion === "cambiar_correo" && $error instanceof mysqli_sql_exception && (int) $error->getCode() === 1062)
+        ? "Ya existe una cuenta registrada con ese correo."
+        : "No pudimos cargar tu cuenta. Intentá nuevamente más tarde.";
     $facturas = [];
     $presupuestos = [];
 }
@@ -150,7 +187,7 @@ function formatoImporteCuenta($importe)
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi cuenta - GPU FIX & STORE</title>
-    <link rel="stylesheet" href="style.css?v=20261022-cuenta">
+    <link rel="stylesheet" href="style.css?v=20261023-espacios">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
         crossorigin="anonymous">
@@ -182,9 +219,9 @@ function formatoImporteCuenta($importe)
 <main class="mi-cuenta-main">
     <section class="mi-cuenta-encabezado">
         <div>
-            <p class="mi-cuenta-etiqueta">GPU FIX & STORE</p>
-            <h1>Mi cuenta</h1>
-            <p>Hola, <?= escaparCuenta($nombre . " " . $apellido) ?>. Acá podés consultar tus comprobantes y gestionar tu acceso.</p>
+            <p class="mi-cuenta-etiqueta">MI CUENTA</p>
+            <h1><?= escaparCuenta(trim($nombre . " " . $apellido)) ?></h1>
+            <p>Acá podés consultar tus comprobantes y gestionar tu acceso.</p>
         </div>
         <div class="mi-cuenta-datos">
             <span>Correo</span>
@@ -261,15 +298,40 @@ function formatoImporteCuenta($importe)
             <div class="mi-cuenta-seccion-titulo">
                 <div>
                     <p class="mi-cuenta-etiqueta">SEGURIDAD</p>
-                    <h2>Cambiar contraseña</h2>
+                    <h2>Datos de acceso</h2>
                 </div>
                 <span class="mi-cuenta-icono-seguridad" aria-hidden="true">🔒</span>
             </div>
-            <p class="mi-cuenta-ayuda">Ingresá tu contraseña actual y elegí una nueva. Se guarda protegida con hash.</p>
-            <form class="mi-cuenta-form" action="mi-cuenta.php#seguridad" method="POST">
+            <div class="mi-cuenta-opciones">
+                <a href="mi-cuenta.php?editar=correo#seguridad"<?= $editarCuenta === "correo" ? ' aria-current="page"' : '' ?>>Cambiar correo</a>
+                <a href="mi-cuenta.php?editar=contrasena#seguridad"<?= $editarCuenta === "contrasena" ? ' aria-current="page"' : '' ?>>Cambiar contraseña</a>
+            </div>
+            <?php if ($editarCuenta === "correo"): ?>
+            <h3 class="mi-cuenta-form-titulo">Cambiar correo</h3>
+            <p class="mi-cuenta-ayuda">Ingresá tu nuevo correo y tu contraseña actual para guardar el cambio.</p>
+            <form class="mi-cuenta-form" action="mi-cuenta.php?editar=correo#seguridad" method="POST">
+                <input type="hidden" name="csrf_token" value="<?= escaparCuenta($csrfMiCuenta) ?>">
+                <input type="hidden" name="accion" value="cambiar_correo">
+                <div class="login-campo">
+                    <label for="correo_nuevo">Nuevo correo electrónico</label>
+                    <input type="email" id="correo_nuevo" name="correo_nuevo" maxlength="150" autocomplete="email" data-validacion="correo" value="<?= escaparCuenta($correoNuevo) ?>" required>
+                </div>
+                <div class="login-campo">
+                    <label for="contrasena_actual_correo">Contraseña actual</label>
+                    <input type="password" id="contrasena_actual_correo" name="contrasena_actual" autocomplete="current-password" required>
+                </div>
+                <div class="mi-cuenta-acciones">
+                    <button class="login-boton" type="submit">Guardar correo</button>
+                    <a class="mi-cuenta-cancelar" href="mi-cuenta.php#seguridad">Cancelar</a>
+                </div>
+            </form>
+            <?php elseif ($editarCuenta === "contrasena"): ?>
+            <h3 class="mi-cuenta-form-titulo">Cambiar contraseña</h3>
+            <p class="mi-cuenta-ayuda">Ingresá tu contraseña actual y elegí una nueva.</p>
+            <form class="mi-cuenta-form" action="mi-cuenta.php?editar=contrasena#seguridad" method="POST">
                 <input type="hidden" name="csrf_token" value="<?= escaparCuenta($csrfMiCuenta) ?>">
                 <input type="hidden" name="accion" value="cambiar_contrasena">
-                <div class="login-campo">
+                <div class="login-campo mi-cuenta-campo-completo">
                     <label for="contrasena_actual">Contraseña actual</label>
                     <input type="password" id="contrasena_actual" name="contrasena_actual" autocomplete="current-password" required>
                 </div>
@@ -282,14 +344,18 @@ function formatoImporteCuenta($importe)
                     <label for="confirmar_contrasena">Repetir nueva contraseña</label>
                     <input type="password" id="confirmar_contrasena" name="confirmar_contrasena" minlength="8" autocomplete="new-password" required>
                 </div>
-                <button class="login-boton" type="submit">Guardar contraseña</button>
+                <div class="mi-cuenta-acciones">
+                    <button class="login-boton" type="submit">Guardar contraseña</button>
+                    <a class="mi-cuenta-cancelar" href="mi-cuenta.php#seguridad">Cancelar</a>
+                </div>
             </form>
+            <?php endif; ?>
         </section>
     </div>
 </main>
 
 <footer class="login-footer"><p>GPU FIX & STORE - Reparación y venta de GPUs</p></footer>
-<script src="script.js?v=20261021-9"></script>
+<script src="script.js?v=20261023-cuenta"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

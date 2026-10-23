@@ -1305,6 +1305,69 @@ body.light-theme .acceso-reparaciones p {
     grid-column: 1 / -1;
 }
 
+.mi-cuenta-opciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.mi-cuenta-opciones a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 46px;
+    padding: 12px 18px;
+    line-height: 1.4;
+    border: 1px solid #00bfff;
+    border-radius: 8px;
+    color: #00bfff;
+    text-decoration: none;
+}
+
+.mi-cuenta-opciones a:hover,
+.mi-cuenta-opciones a[aria-current="page"] {
+    background: #00bfff;
+    color: #101820;
+}
+
+.mi-cuenta-form-titulo {
+    max-width: 820px;
+    margin: 28px 0 12px;
+    padding-top: 24px;
+    border-top: 1px solid #35434d;
+    font-size: 19px;
+}
+
+.mi-cuenta-cancelar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 12px 18px;
+    color: #00bfff;
+}
+
+body.light-theme .mi-cuenta-opciones a,
+body.light-theme .mi-cuenta-cancelar {
+    color: #006d95;
+}
+
+body.light-theme .mi-cuenta-opciones a:hover,
+body.light-theme .mi-cuenta-opciones a[aria-current="page"] {
+    color: #101820;
+}
+
+.registro-formulario .login-campo small {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #aeb9c0;
+}
+
+body.light-theme .registro-formulario .login-campo small {
+    color: #5d6870;
+}
+
 .mi-cuenta-seccion-titulo {
     display: flex;
     align-items: center;
@@ -1375,13 +1438,45 @@ body.light-theme .acceso-reparaciones p {
 .mi-cuenta-form {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px 20px;
+    gap: 22px 24px;
     max-width: 820px;
-    margin-top: 18px;
+    margin-top: 24px;
 }
 
-.mi-cuenta-form .login-campo {
+.mi-cuenta-form .login-campo,
+.registro-grid .login-campo {
+    display: flex;
+    flex-direction: column;
+    align-self: start;
+    gap: 8px;
+    margin: 0;
     min-width: 0;
+}
+
+.mi-cuenta-form .login-campo label,
+.registro-grid .login-campo label {
+    margin: 0;
+    line-height: 1.4;
+}
+
+.mi-cuenta-form .login-campo input,
+.registro-grid .login-campo input {
+    min-height: 48px;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.mi-cuenta-campo-completo,
+.mi-cuenta-acciones {
+    grid-column: 1 / -1;
+}
+
+.mi-cuenta-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 2px;
 }
 
 .mi-cuenta-form input {
@@ -1401,15 +1496,22 @@ body.light-theme .acceso-reparaciones p {
 
 .mi-cuenta-form small {
     display: block;
-    margin-top: -12px;
-    margin-bottom: 14px;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
     color: #9eabb3;
 }
 
 .mi-cuenta-form .login-boton {
-    align-self: end;
-    min-height: 46px;
-    margin-bottom: 20px;
+    width: auto;
+    min-width: 200px;
+    min-height: 48px;
+    margin: 0;
+    padding: 12px 20px;
+}
+
+body.light-theme .mi-cuenta-form-titulo {
+    border-color: #d8e0e5;
 }
 
 .mi-cuenta-mensaje {
@@ -1501,6 +1603,13 @@ body.light-theme .mi-cuenta-form input {
 
     .mi-cuenta-form {
         grid-template-columns: 1fr;
+    }
+
+    .mi-cuenta-form .login-boton,
+    .mi-cuenta-cancelar,
+    .mi-cuenta-opciones a {
+        width: 100%;
+        min-width: 0;
     }
 }
 
@@ -1768,7 +1877,8 @@ body.light-theme .marca-flecha {
 .registro-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 20px;
+    gap: 20px 24px;
+    margin-bottom: 24px;
 }
 
 .registro-campo-completo {
