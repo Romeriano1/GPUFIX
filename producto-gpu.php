@@ -1,5 +1,9 @@
 <?php
 session_start();
+if (empty($_SESSION["csrf_carrito"])) {
+    $_SESSION["csrf_carrito"] = bin2hex(random_bytes(32));
+}
+$csrfCarrito = $_SESSION["csrf_carrito"];
 
 $producto = null;
 $errorConsulta = false;
@@ -118,7 +122,7 @@ if ($producto) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $escapar($producto ? $producto["modelo"] : "Producto no disponible") ?> - GPU FIX &amp; STORE</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=20261022-5">
+    <link rel="stylesheet" href="style.css?v=20261022-6">
 </head>
 <body>
     <header>
@@ -148,7 +152,7 @@ if ($producto) {
         <?php if ($producto === null): ?>
             <section class="carrito-vacio">
                 <h2><?= $errorConsulta ? "No se pudo cargar el producto" : "Producto no encontrado" ?></h2>
-                <p><?= $errorConsulta ? "Revisá la conexión y la migración de la base de datos." : "Este producto todavía no está cargado en la base de datos." ?></p>
+                <p><?= $errorConsulta ? "Revisá la conexión y la estructura de la base de datos." : "Este producto todavía no está cargado en la base de datos." ?></p>
                 <a href="productos.php" class="boton-maps">Ver productos</a>
             </section>
         <?php else: ?>
@@ -182,6 +186,12 @@ if ($producto) {
                         <?php endif; ?>
                     </div>
 
+                    <form action="carrito.php" method="post" class="acciones-detalle">
+                        <input type="hidden" name="accion" value="agregar">
+                        <input type="hidden" name="id_gpu" value="<?= (int) $producto["id"] ?>">
+                        <input type="hidden" name="cantidad" id="cantidadCarrito" value="<?= $stockDisponible > 0 ? 1 : 0 ?>">
+                        <input type="hidden" name="csrf_carrito" value="<?= $escapar($csrfCarrito) ?>">
+
                     <div class="cantidad">
                         <p>Cantidad</p>
                         <?php if ($stockPendiente): ?>
@@ -195,8 +205,9 @@ if ($producto) {
                         <?php endif; ?>
                     </div>
 
-                    <button class="boton-comprar" type="button" <?= $compraDeshabilitada ? "disabled" : "" ?>>Comprar</button>
-                    <button class="boton-carrito" type="button" <?= $compraDeshabilitada ? "disabled" : "" ?>>Agregar al carrito</button>
+                    <button class="boton-carrito" type="submit" name="tipo" value="agregar" <?= $compraDeshabilitada ? "disabled" : "" ?>>Agregar al carrito</button>
+                    <button class="boton-comprar" type="submit" name="tipo" value="comprar" <?= $compraDeshabilitada ? "disabled" : "" ?>>Comprar</button>
+                    </form>
 
                     <div class="producto-extra">
                         <div><strong>Envío</strong><p>A consultar</p></div>
@@ -249,6 +260,8 @@ if ($producto) {
             let cantidad = stockDisponible > 0 ? 1 : 0;
             function actualizarSelector() {
                 cantidadElemento.textContent = String(cantidad);
+                const campoCantidad = document.getElementById("cantidadCarrito");
+                if (campoCantidad) campoCantidad.value = String(cantidad);
                 botonMenos.disabled = stockDisponible <= 0 || cantidad <= 1;
                 botonMas.disabled = stockDisponible <= 0 || cantidad >= stockDisponible;
             }

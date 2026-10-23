@@ -1,5 +1,9 @@
 <?php
 session_start();
+if (empty($_SESSION["csrf_carrito"])) {
+    $_SESSION["csrf_carrito"] = bin2hex(random_bytes(32));
+}
+$csrfCarrito = $_SESSION["csrf_carrito"];
 
 $productos = [];
 $errorProductos = false;
@@ -50,7 +54,7 @@ $formatearPrecio = static fn ($precio): string => $precio === null || $precio ==
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Productos - GPU FIX &amp; STORE</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=20261022-5">
+    <link rel="stylesheet" href="style.css?v=20261022-6">
 </head>
 <body>
     <header>
@@ -97,6 +101,7 @@ $formatearPrecio = static fn ($precio): string => $precio === null || $precio ==
                             $estadoStockClase = "stock-disponible";
                             $estadoStockTexto = (int) $producto["cantidad"] . " unidades disponibles";
                         }
+                        $compraDeshabilitada = $producto["registros_stock"] === 0 || $producto["cantidad"] <= 0;
                         ?>
                         <article class="producto">
                             <a href="<?= $escapar($producto["pagina"]) ?>" class="producto-enlace">
@@ -107,10 +112,17 @@ $formatearPrecio = static fn ($precio): string => $precio === null || $precio ==
                                 <?php endif; ?>
                             </a>
                             <p class="producto-marca"><?= $escapar($producto["marca"]) ?></p>
-                            <h3><?= $escapar($producto["modelo"]) ?></h3>
+                            <h3><a class="producto-titulo-enlace" href="<?= $escapar($producto["pagina"]) ?>"><?= $escapar($producto["modelo"]) ?></a></h3>
                             <p class="producto-precio"><?= $escapar($formatearPrecio($producto["precio"])) ?></p>
                             <p class="producto-stock <?= $escapar($estadoStockClase) ?>"><?= $escapar($estadoStockTexto) ?></p>
-                            <a href="<?= $escapar($producto["pagina"]) ?>" class="producto-ver">Ver producto</a>
+                            <form action="carrito.php" method="post" class="producto-acciones">
+                                <input type="hidden" name="accion" value="agregar">
+                                <input type="hidden" name="id_gpu" value="<?= (int) $producto["id"] ?>">
+                                <input type="hidden" name="cantidad" value="1">
+                                <input type="hidden" name="csrf_carrito" value="<?= $escapar($csrfCarrito) ?>">
+                                <button type="submit" name="tipo" value="agregar" class="boton-carrito" <?= $compraDeshabilitada ? "disabled" : "" ?>>Agregar al carrito</button>
+                                <button type="submit" name="tipo" value="comprar" class="boton-comprar" <?= $compraDeshabilitada ? "disabled" : "" ?>>Comprar</button>
+                            </form>
                         </article>
                     <?php endforeach; ?>
                 </div>

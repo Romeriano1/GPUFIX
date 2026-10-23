@@ -7,9 +7,12 @@ $registroMailEnviado = $_SESSION["registro_mail_flash"] ?? null;
 $registroCorreo = $_SESSION["registro_correo_flash"] ?? "";
 unset($_SESSION["login_error_flash"], $_SESSION["login_correo_flash"], $_SESSION["registro_mail_flash"], $_SESSION["registro_correo_flash"]);
 $requeridoCarrito = (($_GET["requerido"] ?? "") === "carrito") || (($_POST["requerido"] ?? "") === "carrito");
+$destinoCarrito = !empty($_SESSION["carrito_pendiente"])
+    ? "carrito.php?continuar_pendiente=1"
+    : "carrito.php";
 
 if (!empty($_SESSION["usuario_id"])) {
-    header("Location: " . ($requeridoCarrito ? "carrito.php" : "mi-cuenta.php"));
+    header("Location: " . (($requeridoCarrito || !empty($_SESSION["carrito_pendiente"])) ? $destinoCarrito : "mi-cuenta.php"));
     exit;
 }
 
@@ -76,7 +79,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $_SESSION["usuario_apellido"] = $apellidoUsuario;
 
                 $conexion->close();
-                header("Location: " . ($requeridoCarrito ? "carrito.php" : "mi-cuenta.php"));
+                header("Location: " . (($requeridoCarrito || !empty($_SESSION["carrito_pendiente"])) ? $destinoCarrito : "mi-cuenta.php"));
                 exit;
             }
             $conexion->close();
