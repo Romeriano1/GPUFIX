@@ -8,7 +8,6 @@ if (!empty($_SESSION["usuario_id"])) {
 }
 
 $registroError = "";
-$registroMailEnviado = null;
 $etapaRegistro = "validar_formulario";
 $transaccionActiva = false;
 $nombre = "";
@@ -43,9 +42,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $conexion->begin_transaction();
             $transaccionActiva = true;
 
-            $etapaRegistro = "limpiar_registros_vencidos";
-            $conexion->query("DELETE FROM registro_pendiente WHERE token_expira IS NOT NULL AND token_expira <= NOW()");
-
             $etapaRegistro = "consultar_correo";
             $consultaCorreo = $conexion->prepare("SELECT id_correo FROM usuarios WHERE correo = ? LIMIT 1");
             $consultaCorreo->bind_param("s", $correo);
@@ -66,29 +62,29 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 }
                 $dniGuardar = $dni === "" ? null : $dni;
                 $telefonoGuardar = $telefono === "" ? null : $telefono;
-                $tokenVerificacion = bin2hex(random_bytes(32));
-                $tokenVerificacionHash = hash("sha256", $tokenVerificacion);
-                $tokenExpira = date("Y-m-d H:i:s", time() + 86400);
 
-                $etapaRegistro = "guardar_registro_pendiente";
-                $guardarPendiente = $conexion->prepare(
-                    "INSERT INTO registro_pendiente (correo, `contraseña`, nombre, apellido, dni, telefono, token_verificacion, token_expira) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `contraseña` = VALUES(`contraseña`), nombre = VALUES(nombre), apellido = VALUES(apellido), dni = VALUES(dni), telefono = VALUES(telefono), token_verificacion = VALUES(token_verificacion), token_expira = VALUES(token_expira)"
+                $etapaRegistro = "crear_usuario";
+                $crearUsuario = $conexion->prepare(
+                    "INSERT INTO usuarios (correo, `contraseña`, nombre, apellido, dni, telefono) VALUES (?, ?, ?, ?, ?, ?)"
                 );
-                $guardarPendiente->bind_param("ssssssss", $correo, $contrasenaGuardar, $nombre, $apellido, $dniGuardar, $telefonoGuardar, $tokenVerificacionHash, $tokenExpira);
-                $guardarPendiente->execute();
-                $guardarPendiente->close();
+                $crearUsuario->bind_param("ssssss", $correo, $contrasenaGuardar, $nombre, $apellido, $dniGuardar, $telefonoGuardar);
+                $crearUsuario->execute();
+                $usuarioId = (int) $conexion->insert_id;
+                $crearUsuario->close();
+
+                $etapaRegistro = "crear_cliente";
+                $crearCliente = $conexion->prepare("INSERT INTO cliente (id_correo) VALUES (?)");
+                $crearCliente->bind_param("i", $usuarioId);
+                $crearCliente->execute();
+                $crearCliente->close();
 
                 $etapaRegistro = "confirmar_transaccion";
                 $conexion->commit();
                 $transaccionActiva = false;
                 $conexion->close();
 
-                $etapaRegistro = "enviar_correo_confirmacion";
-                require_once __DIR__ . "/correo.php";
-                $registroMailEnviado = correo_enviar_confirmacion($correo, $nombre, $tokenVerificacion);
-                $_SESSION["verificacion_pendiente_correo"] = $correo;
-                $_SESSION["verificacion_pendiente_mail"] = $registroMailEnviado;
-                header("Location: verificacion-pendiente.php");
+                $_SESSION["registro_creado"] = true;
+                header("Location: login.php?registrado=1" . ($requeridoCarrito ? "&requerido=carrito" : ""));
                 exit;
             }
         } catch (Throwable $error) {

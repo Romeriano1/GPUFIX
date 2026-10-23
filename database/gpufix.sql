@@ -39,7 +39,6 @@ CREATE TABLE `carrito` (
 
 LOCK TABLES `carrito` WRITE;
 /*!40000 ALTER TABLE `carrito` DISABLE KEYS */;
-INSERT INTO `carrito` VALUES (1,11,'2026-10-23 01:02:03','2026-10-23 01:02:03');
 /*!40000 ALTER TABLE `carrito` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -57,7 +56,7 @@ CREATE TABLE `cliente` (
   PRIMARY KEY (`id_cliente`),
   UNIQUE KEY `uq_cliente_correo` (`id_correo`),
   CONSTRAINT `fk_cliente_usuarios` FOREIGN KEY (`id_correo`) REFERENCES `usuarios` (`id_correo`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -66,7 +65,6 @@ CREATE TABLE `cliente` (
 
 LOCK TABLES `cliente` WRITE;
 /*!40000 ALTER TABLE `cliente` DISABLE KEYS */;
-INSERT INTO `cliente` VALUES (11,11,NULL);
 /*!40000 ALTER TABLE `cliente` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -120,7 +118,6 @@ CREATE TABLE `detalle_carrito` (
 
 LOCK TABLES `detalle_carrito` WRITE;
 /*!40000 ALTER TABLE `detalle_carrito` DISABLE KEYS */;
-INSERT INTO `detalle_carrito` VALUES (5,1,10,1);
 /*!40000 ALTER TABLE `detalle_carrito` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -642,40 +639,6 @@ LOCK TABLES `puesto` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `registro_pendiente`
---
-
-DROP TABLE IF EXISTS `registro_pendiente`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `registro_pendiente` (
-  `id_pendiente` int(11) NOT NULL AUTO_INCREMENT,
-  `correo` varchar(150) NOT NULL,
-  `contraseña` varchar(255) NOT NULL,
-  `nombre` varchar(100) NOT NULL,
-  `apellido` varchar(100) NOT NULL,
-  `dni` varchar(20) DEFAULT NULL,
-  `telefono` varchar(30) DEFAULT NULL,
-  `token_verificacion` char(64) DEFAULT NULL,
-  `token_expira` datetime DEFAULT NULL,
-  PRIMARY KEY (`id_pendiente`),
-  UNIQUE KEY `uq_registro_pendiente_correo` (`correo`),
-  UNIQUE KEY `uq_registro_pendiente_token` (`token_verificacion`),
-  KEY `idx_registro_pendiente_expira` (`token_expira`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `registro_pendiente`
---
-
-LOCK TABLES `registro_pendiente` WRITE;
-/*!40000 ALTER TABLE `registro_pendiente` DISABLE KEYS */;
-INSERT INTO `registro_pendiente` VALUES (1,'lucasnicolas2002@gmail.com','$2y$10$klsSAMUt1fBbjHLYpV6imuT3mxJBAjbvE9gEky54BrtOMC7TMFHDK','lucas','calvano','43434343','+541160209263','d15ca4e8719a40654e74853873bad0942856a64257194880ba90df1c166a4502','2026-10-24 05:05:46');
-/*!40000 ALTER TABLE `registro_pendiente` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `reparacion`
 --
 
@@ -779,12 +742,9 @@ CREATE TABLE `usuarios` (
   `apellido` varchar(100) NOT NULL,
   `dni` varchar(20) DEFAULT NULL,
   `telefono` varchar(30) DEFAULT NULL,
-  `correo_verificado` tinyint(1) NOT NULL DEFAULT 1,
-  `token_verificacion` char(64) DEFAULT NULL,
-  `token_expira` datetime DEFAULT NULL,
   PRIMARY KEY (`id_correo`),
   UNIQUE KEY `uq_usuarios_correo` (`correo`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -793,7 +753,6 @@ CREATE TABLE `usuarios` (
 
 LOCK TABLES `usuarios` WRITE;
 /*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
-INSERT INTO `usuarios` VALUES (11,'gpufixstore@gmail.com','$2y$10$M6eNKvWrARaxfqO9eJjemuIrgA.gg.gdx8bWpI7SOyuDFjmTp80UW','GPU FIX','Provisorio','32323232',NULL,1,NULL,NULL);
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -814,4 +773,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-10-23  9:50:19
+-- Dump completed on 2026-10-23 13:47:09
