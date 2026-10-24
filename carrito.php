@@ -253,7 +253,7 @@ try {
     require_once __DIR__ . "/conexion.php";
     $usuarioId = (int) $_SESSION["usuario_id"];
     $consultaCarrito = $conexion->prepare(
-        "SELECT d.id_gpu, d.cantidad, g.marca, g.modelo, g.imagen, g.precio_especial, g.pagina, " .
+        "SELECT d.id_gpu, d.cantidad, g.marca, g.modelo, g.imagen, g.precio_especial, " .
         "COALESCE(SUM(s.cantidad), 0) AS stock " .
         "FROM cliente c " .
         "INNER JOIN carrito ca ON ca.id_cliente = c.id_cliente " .
@@ -261,12 +261,12 @@ try {
         "INNER JOIN gpu g ON g.id_gpu = d.id_gpu " .
         "LEFT JOIN stock_gpu s ON s.id_gpu = g.id_gpu " .
         "WHERE c.id_correo = ? " .
-        "GROUP BY d.id_gpu, d.cantidad, g.marca, g.modelo, g.imagen, g.precio_especial, g.pagina " .
+        "GROUP BY d.id_gpu, d.cantidad, g.marca, g.modelo, g.imagen, g.precio_especial " .
         "ORDER BY g.marca, g.modelo"
     );
     $consultaCarrito->bind_param("i", $usuarioId);
     $consultaCarrito->execute();
-    $consultaCarrito->bind_result($idGpu, $cantidadItem, $marcaItem, $modeloItem, $imagenItem, $precioItem, $paginaItem, $stockItem);
+    $consultaCarrito->bind_result($idGpu, $cantidadItem, $marcaItem, $modeloItem, $imagenItem, $precioItem, $stockItem);
     while ($consultaCarrito->fetch()) {
         $precioNumerico = $precioItem === null || $precioItem === "" ? null : (float) $precioItem;
         $subtotal = $precioNumerico === null ? null : $precioNumerico * (int) $cantidadItem;
@@ -281,7 +281,7 @@ try {
             "marca" => (string) $marcaItem,
             "modelo" => (string) $modeloItem,
             "imagen" => (string) ($imagenItem ?? ""),
-            "pagina" => (string) ($paginaItem ?? ""),
+            "pagina" => "producto-gpu.php?id=" . (int) $idGpu,
             "precio" => $precioItem,
             "subtotal" => $subtotal,
             "stock" => max(0, (int) $stockItem),

@@ -62,32 +62,32 @@
                 data-bs-ride="carousel" data-bs-interval="5000">
                 <div class="carousel-inner">
                     <div class="carousel-item active">
-                        <a href="rx7600pulse.php">
-                            <img src="img/rx7600.png" class="carrusel-imagen" alt="RX 7600">
+                        <a href="producto-gpu.php?id=10">
+                            <img src="https://i.ibb.co/fYmP0g9N/rtx5090-Maorus.png" class="carrusel-imagen" alt="Aorus RTX 5090 Master Ice 32GB">
                         </a>
                     </div>
 
                     <div class="carousel-item">
-                        <a href="rx9070gigabyte.php">
-                            <img src="img/rx9070.png" class="carrusel-imagen" alt="RX 9070">
+                        <a href="producto-gpu.php?id=15">
+                            <img src="https://i.ibb.co/pjZY0nn5/rtx3060asus.png" class="carrusel-imagen" alt="ASUS RTX 3060 Dual V2 OC 12GB">
                         </a>
                     </div>
 
                     <div class="carousel-item">
-                        <a href="rx6700xtgigabyte.php">
-                            <img src="img/rx6700xtgiga.png" class="carrusel-imagen" alt="Gigabyte RX 6700 XT Gaming OC">
+                        <a href="producto-gpu.php?id=13">
+                            <img src="https://i.ibb.co/zWCMT08N/rx9070sapphire.png" class="carrusel-imagen" alt="Sapphire RX 9070 Pulse 16GB">
                         </a>
                     </div>
 
                     <div class="carousel-item">
-                        <a href="rx7700xtgigabyte.php">
-                            <img src="img/rx7700xtgiga.png" class="carrusel-imagen" alt="Gigabyte RX 7700 XT Gaming OC">
+                        <a href="producto-gpu.php?id=18">
+                            <img src="https://i.ibb.co/RkfFXM3z/rx9070tipowercolor.png" class="carrusel-imagen" alt="PowerColor RX 9070 XT Hellhound OC 16GB">
                         </a>
                     </div>
 
                     <div class="carousel-item">
-                        <a href="rtx4090msi.php">
-                            <img src="img/rtx4090msi.png" class="carrusel-imagen" alt="MSI RTX 4090 Gaming Slim">
+                        <a href="producto-gpu.php?id=19">
+                            <img src="https://i.ibb.co/XxGWdzyt/rtx3080inno3d.webp" class="carrusel-imagen" alt="INNO3D RTX 3080 X3 LHR 10GB">
                         </a>
                     </div>
                 </div>

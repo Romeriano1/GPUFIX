@@ -14,30 +14,29 @@ if ($busqueda !== "") {
         $termino = "%" . $busqueda . "%";
         $terminoNormalizado = "%" . preg_replace('/[\s._-]+/u', '', strtolower($busqueda)) . "%";
         $consulta = $conexion->prepare(
-            "SELECT gpu.id_gpu, gpu.marca, gpu.modelo, gpu.imagen, gpu.precio_especial, gpu.pagina, " .
+            "SELECT gpu.id_gpu, gpu.marca, gpu.modelo, gpu.imagen, gpu.precio_especial, " .
             "COUNT(stock_gpu.id_stock_gpu) AS registros_stock, " .
             "COALESCE(SUM(stock_gpu.cantidad), 0) AS cantidad " .
             "FROM gpu LEFT JOIN stock_gpu ON stock_gpu.id_gpu = gpu.id_gpu " .
-            "WHERE gpu.pagina IS NOT NULL AND gpu.pagina <> '' " .
-            "AND (gpu.marca LIKE ? OR gpu.modelo LIKE ? " .
+            "WHERE (gpu.marca LIKE ? OR gpu.modelo LIKE ? " .
             "OR REPLACE(REPLACE(REPLACE(LOWER(gpu.marca), ' ', ''), '-', ''), '.', '') LIKE ? " .
             "OR REPLACE(REPLACE(REPLACE(LOWER(gpu.modelo), ' ', ''), '-', ''), '.', '') LIKE ?) " .
-            "GROUP BY gpu.id_gpu, gpu.marca, gpu.modelo, gpu.imagen, gpu.precio_especial, gpu.pagina " .
+            "GROUP BY gpu.id_gpu, gpu.marca, gpu.modelo, gpu.imagen, gpu.precio_especial " .
             "ORDER BY gpu.marca, gpu.modelo"
         );
         $consulta->bind_param("ssss", $termino, $termino, $terminoNormalizado, $terminoNormalizado);
         $consulta->execute();
-        $consulta->bind_result($id, $marca, $modelo, $imagen, $precio, $pagina, $registrosStock, $cantidad);
+        $consulta->bind_result($idProducto, $marcaProducto, $modeloProducto, $imagenProducto, $precioProducto, $registrosStock, $cantidadStock);
         while ($consulta->fetch()) {
             $productos[] = [
-                "id" => (int) $id,
-                "marca" => (string) $marca,
-                "modelo" => (string) $modelo,
-                "imagen" => (string) ($imagen ?? ""),
-                "precio" => $precio,
-                "pagina" => (string) $pagina,
+                "id" => (int) $idProducto,
+                "marca" => (string) $marcaProducto,
+                "modelo" => (string) $modeloProducto,
+                "imagen" => (string) ($imagenProducto ?? ""),
+                "precio" => $precioProducto,
+                "pagina" => "producto-gpu.php?id=" . (int) $idProducto,
                 "registros_stock" => (int) $registrosStock,
-                "cantidad" => max(0, (int) $cantidad),
+                "cantidad" => max(0, (int) $cantidadStock),
             ];
         }
         $consulta->close();

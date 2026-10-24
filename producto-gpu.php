@@ -8,6 +8,8 @@ $csrfCarrito = $_SESSION["csrf_carrito"];
 $producto = null;
 $errorConsulta = false;
 $paginaProducto = basename((string) ($_SERVER["SCRIPT_NAME"] ?? ""));
+$buscarPorId = $paginaProducto === "producto-gpu.php";
+$idSolicitado = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]) ?: 0;
 
 try {
     require_once __DIR__ . "/conexion.php";
@@ -17,11 +19,15 @@ try {
         "COUNT(stock_gpu.id_stock_gpu) AS registros_stock, " .
         "COALESCE(SUM(stock_gpu.cantidad), 0) AS cantidad " .
         "FROM gpu LEFT JOIN stock_gpu ON stock_gpu.id_gpu = gpu.id_gpu " .
-        "WHERE gpu.pagina = ? " .
+        ($buscarPorId ? "WHERE gpu.id_gpu = ? " : "WHERE gpu.pagina = ? ") .
         "GROUP BY gpu.id_gpu, gpu.marca, gpu.modelo, gpu.imagen, gpu.precio_especial, " .
         "gpu.especificaciones LIMIT 1"
     );
-    $consulta->bind_param("s", $paginaProducto);
+    if ($buscarPorId) {
+        $consulta->bind_param("i", $idSolicitado);
+    } else {
+        $consulta->bind_param("s", $paginaProducto);
+    }
     $consulta->execute();
     $consulta->bind_result(
         $idProducto,
