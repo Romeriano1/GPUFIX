@@ -1,3 +1,5 @@
 correo-config.local.php
 conexion-config.local.php
 registro-error.log
+comprobantes/*
+!comprobantes/.htaccess

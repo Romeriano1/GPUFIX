@@ -30,7 +30,7 @@ CREATE TABLE `carrito` (
   PRIMARY KEY (`id_carrito`),
   UNIQUE KEY `uq_carrito_cliente` (`id_cliente`),
   CONSTRAINT `fk_carrito_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -39,6 +39,7 @@ CREATE TABLE `carrito` (
 
 LOCK TABLES `carrito` WRITE;
 /*!40000 ALTER TABLE `carrito` DISABLE KEYS */;
+INSERT INTO `carrito` VALUES (6,18,'2026-10-26 08:40:41','2026-10-26 08:40:41');
 /*!40000 ALTER TABLE `carrito` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -56,7 +57,7 @@ CREATE TABLE `cliente` (
   PRIMARY KEY (`id_cliente`),
   UNIQUE KEY `uq_cliente_correo` (`id_correo`),
   CONSTRAINT `fk_cliente_usuarios` FOREIGN KEY (`id_correo`) REFERENCES `usuarios` (`id_correo`)
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -110,7 +111,7 @@ CREATE TABLE `detalle_carrito` (
   KEY `ix_detalle_carrito_gpu` (`id_gpu`),
   CONSTRAINT `fk_detalle_carrito_carrito` FOREIGN KEY (`id_carrito`) REFERENCES `carrito` (`id_carrito`) ON DELETE CASCADE,
   CONSTRAINT `fk_detalle_carrito_gpu` FOREIGN KEY (`id_gpu`) REFERENCES `gpu` (`id_gpu`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -119,6 +120,7 @@ CREATE TABLE `detalle_carrito` (
 
 LOCK TABLES `detalle_carrito` WRITE;
 /*!40000 ALTER TABLE `detalle_carrito` DISABLE KEYS */;
+INSERT INTO `detalle_carrito` VALUES (6,6,1,1),(9,6,9,1);
 /*!40000 ALTER TABLE `detalle_carrito` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -174,7 +176,7 @@ CREATE TABLE `detalle_factura` (
   PRIMARY KEY (`id_detalle_factura`),
   KEY `fk_detalle_factura_factura` (`id_factura`),
   CONSTRAINT `fk_detalle_factura_factura` FOREIGN KEY (`id_factura`) REFERENCES `factura` (`id_factura`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -265,7 +267,7 @@ CREATE TABLE `detalle_venta` (
   KEY `fk_detalle_venta_gpu` (`id_gpu`),
   CONSTRAINT `fk_detalle_venta_gpu` FOREIGN KEY (`id_gpu`) REFERENCES `gpu` (`id_gpu`),
   CONSTRAINT `fk_detalle_venta_venta` FOREIGN KEY (`id_gpu_ventas`) REFERENCES `gpu_ventas` (`id_gpu_ventas`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -393,7 +395,7 @@ CREATE TABLE `factura` (
   CONSTRAINT `fk_factura_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`),
   CONSTRAINT `fk_factura_reparacion` FOREIGN KEY (`id_reparacion`) REFERENCES `reparacion` (`id_reparacion`),
   CONSTRAINT `fk_factura_venta` FOREIGN KEY (`id_gpu_ventas`) REFERENCES `gpu_ventas` (`id_gpu_ventas`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -454,7 +456,7 @@ CREATE TABLE `gpu_cliente` (
   UNIQUE KEY `uq_gpu_cliente_serie` (`numero_serie`),
   KEY `fk_gpu_cliente_cliente` (`id_cliente`),
   CONSTRAINT `fk_gpu_cliente_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -483,7 +485,7 @@ CREATE TABLE `gpu_ventas` (
   PRIMARY KEY (`id_gpu_ventas`),
   KEY `fk_gpu_ventas_cliente` (`id_cliente`),
   CONSTRAINT `fk_gpu_ventas_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -536,7 +538,7 @@ DROP TABLE IF EXISTS `orden_reparacion`;
 CREATE TABLE `orden_reparacion` (
   `id_orden_reparacion` int(11) NOT NULL AUTO_INCREMENT,
   `id_gpu_cliente` int(11) NOT NULL,
-  `id_empleado_recepcion` int(11) NOT NULL,
+  `id_empleado_recepcion` int(11) DEFAULT NULL,
   `fecha_ingreso` datetime NOT NULL DEFAULT current_timestamp(),
   `motivo` text DEFAULT NULL,
   `estado` varchar(50) DEFAULT NULL,
@@ -546,7 +548,7 @@ CREATE TABLE `orden_reparacion` (
   KEY `fk_orden_rep_empleado` (`id_empleado_recepcion`),
   CONSTRAINT `fk_orden_rep_empleado` FOREIGN KEY (`id_empleado_recepcion`) REFERENCES `empleado` (`id_empleado`),
   CONSTRAINT `fk_orden_rep_gpu_cliente` FOREIGN KEY (`id_gpu_cliente`) REFERENCES `gpu_cliente` (`id_gpu_cliente`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -744,7 +746,7 @@ CREATE TABLE `usuarios` (
   `telefono` varchar(30) DEFAULT NULL,
   PRIMARY KEY (`id_correo`),
   UNIQUE KEY `uq_usuarios_correo` (`correo`)
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -774,4 +776,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-10-24  1:58:44
+-- Dump completed on 2026-10-26  9:20:43

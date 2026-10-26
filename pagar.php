@@ -9,7 +9,8 @@ if (empty($_SESSION["usuario_id"])) {
 $usuarioId = (int) $_SESSION["usuario_id"];
 $errorPago = (string) ($_SESSION["error_pago"] ?? "");
 $direccionFacturacion = (string) ($_SESSION["direccion_pago"] ?? "");
-unset($_SESSION["error_pago"], $_SESSION["direccion_pago"]);
+$metodoSeleccionado = ($_SESSION["metodo_pago_form"] ?? "tarjeta") === "transferencia" ? "transferencia" : "tarjeta";
+unset($_SESSION["error_pago"], $_SESSION["direccion_pago"], $_SESSION["metodo_pago_form"]);
 if (empty($_SESSION["csrf_pago"])) {
     $_SESSION["csrf_pago"] = bin2hex(random_bytes(32));
 }
@@ -21,6 +22,7 @@ $totalCentavos = 0;
 $errorCarga = false;
 $transaccionActiva = false;
 $problemaCarrito = "";
+$rutaComprobanteGuardado = null;
 $idCompra = filter_input(INPUT_GET, "compra", FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]) ?: 0;
 
 function escaparPago($valor): string
@@ -80,6 +82,9 @@ function validarArticulosPago(array $articulos): int
         if ($precio === null || $precio <= 0) {
             throw new RuntimeException("Hay un producto sin un precio válido. Volvé al carrito para revisarlo.");
         }
+        if ((int) $item["stock"] < 1) {
+            throw new RuntimeException("No hay stock de " . $item["modelo"] . ". Volvé al carrito para quitar el producto.");
+        }
         if ($cantidad < 1 || $cantidad > (int) $item["stock"]) {
             throw new RuntimeException("La cantidad de " . $item["modelo"] . " supera el stock disponible. Revisá tu carrito.");
         }
@@ -115,7 +120,8 @@ try {
         $direccionFacturacion = is_string($direccionEnviada) ? trim($direccionEnviada) : "";
         try {
             $csrfEnviado = $_POST["csrf_pago"] ?? null;
-            if (!is_string($csrfEnviado) || !hash_equals($csrfPago, $csrfEnviado)) {
+            $csrfValido = is_string($csrfEnviado) && hash_equals($csrfPago, $csrfEnviado);
+            if (!$csrfValido) {
                 throw new RuntimeException("La solicitud venció. Revisá el resumen y volvé a confirmar.");
             }
             if (mb_strlen($direccionFacturacion, "UTF-8") < 8 || mb_strlen($direccionFacturacion, "UTF-8") > 255) {
@@ -123,6 +129,35 @@ try {
             }
             if (!preg_match('/^[0-9]{7,8}$/', (string) $datosCliente["dni"])) {
                 throw new RuntimeException("Tu cuenta necesita un DNI válido para completar la compra.");
+            }
+            $metodoSeleccionado = $_POST["metodo_pago"] ?? "";
+            $archivoComprobante = null;
+            if ($metodoSeleccionado === "tarjeta") {
+                $marcaTarjeta = $_POST["marca_tarjeta"] ?? "";
+                if (!in_array($marcaTarjeta, ["Visa", "Mastercard"], true)) {
+                    throw new RuntimeException("Ingresá una tarjeta Visa o Mastercard válida.");
+                }
+                $metodoPago = "Tarjeta " . $marcaTarjeta . " (simulada)";
+            } elseif ($metodoSeleccionado === "transferencia") {
+                $archivoComprobante = $_FILES["comprobante"] ?? null;
+                if (!$archivoComprobante || !is_int($archivoComprobante["error"] ?? null)
+                    || $archivoComprobante["error"] !== UPLOAD_ERR_OK) {
+                    throw new RuntimeException("Subí un comprobante PDF, JPG o PNG de hasta 2 MB. Si hubo un error, seleccioná el archivo nuevamente.");
+                }
+                $rutaTemporal = $archivoComprobante["tmp_name"] ?? null;
+                if (!is_string($rutaTemporal) || !is_uploaded_file($rutaTemporal)
+                    || filesize($rutaTemporal) < 1 || filesize($rutaTemporal) > 2 * 1024 * 1024) {
+                    throw new RuntimeException("El comprobante debe tener un tamaño máximo de 2 MB.");
+                }
+                $tipoArchivo = (new finfo(FILEINFO_MIME_TYPE))->file($rutaTemporal);
+                $extensiones = ["application/pdf" => "pdf", "image/jpeg" => "jpg", "image/png" => "png"];
+                if (!isset($extensiones[$tipoArchivo]) || ($tipoArchivo !== "application/pdf" && !@getimagesize($rutaTemporal))) {
+                    throw new RuntimeException("El comprobante debe ser un archivo PDF, JPG o PNG válido.");
+                }
+                $archivoComprobante["extension"] = $extensiones[$tipoArchivo];
+                $metodoPago = "Transferencia (simulada)";
+            } else {
+                throw new RuntimeException("Seleccioná tarjeta o transferencia para continuar.");
             }
             $conexion->begin_transaction();
             $transaccionActiva = true;
@@ -150,14 +185,14 @@ try {
                 $consultaStock->close();
                 $stockDisponible = array_sum(array_map(static fn ($fila) => max(0, (int) $fila["cantidad"]), $filasStock));
                 if ($stockDisponible < (int) $item["cantidad"]) {
-                    throw new RuntimeException("Ya no hay suficiente stock de " . $item["modelo"] . ". Revisá tu carrito.");
+                    throw new RuntimeException("No hay stock suficiente de " . $item["modelo"] . ". Revisá tu carrito.");
                 }
                 $stockPorProducto[$idGpu] = $filasStock;
             }
 
             $totalVenta = decimalPago($totalCentavos);
-            $crearVenta = $conexion->prepare("INSERT INTO gpu_ventas (id_cliente, precio_total, metodo_pago, estado) VALUES (?, ?, 'Simulacion', 'Simulada')");
-            $crearVenta->bind_param("is", $idCliente, $totalVenta);
+            $crearVenta = $conexion->prepare("INSERT INTO gpu_ventas (id_cliente, precio_total, metodo_pago, estado) VALUES (?, ?, ?, 'Simulada')");
+            $crearVenta->bind_param("iss", $idCliente, $totalVenta, $metodoPago);
             $crearVenta->execute();
             $idVenta = (int) $conexion->insert_id;
             $crearVenta->close();
@@ -209,6 +244,13 @@ try {
             $actualizarCarrito->bind_param("i", $idCarrito);
             $actualizarCarrito->execute();
             $actualizarCarrito->close();
+            if ($archivoComprobante !== null) {
+                $rutaComprobante = __DIR__ . "/comprobantes/" . $idVenta . "." . $archivoComprobante["extension"];
+                if (is_file($rutaComprobante) || !@move_uploaded_file($archivoComprobante["tmp_name"], $rutaComprobante)) {
+                    throw new RuntimeException("No pudimos guardar el comprobante. Seleccioná el archivo e intentá nuevamente.");
+                }
+                $rutaComprobanteGuardado = $rutaComprobante;
+            }
             $conexion->commit();
             $transaccionActiva = false;
             unset($_SESSION["csrf_pago"], $_SESSION["resumen_pago"]);
@@ -219,11 +261,17 @@ try {
                 $conexion->rollback();
                 $transaccionActiva = false;
             }
+            if ($rutaComprobanteGuardado !== null && is_file($rutaComprobanteGuardado)) {
+                unlink($rutaComprobanteGuardado);
+            }
             error_log("Error al confirmar compra simulada: " . $error->getMessage());
             $_SESSION["error_pago"] = $error instanceof mysqli_sql_exception
                 ? "No pudimos guardar la compra. Intentá nuevamente."
                 : ($error instanceof RuntimeException ? $error->getMessage() : "No pudimos completar la compra. Intentá nuevamente.");
-            $_SESSION["direccion_pago"] = $direccionFacturacion;
+            if ($csrfValido ?? false) {
+                $_SESSION["direccion_pago"] = $direccionFacturacion;
+                $_SESSION["metodo_pago_form"] = $metodoSeleccionado === "transferencia" ? "transferencia" : "tarjeta";
+            }
             header("Location: pagar.php", true, 303);
             exit;
         }
@@ -231,7 +279,7 @@ try {
 
     if ($idCompra > 0) {
         $consultaCompra = $conexion->prepare(
-            "SELECT f.id_factura, f.numero_factura, f.fecha_emision, f.total FROM factura f " .
+            "SELECT f.id_factura, f.numero_factura, f.fecha_emision, f.total, v.metodo_pago FROM factura f " .
             "INNER JOIN gpu_ventas v ON v.id_gpu_ventas = f.id_gpu_ventas " .
             "WHERE v.id_gpu_ventas = ? AND v.id_cliente = ? AND f.id_cliente = ? AND v.estado = 'Simulada' LIMIT 1"
         );
@@ -283,7 +331,7 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finalizar compra - GPU FIX &amp; STORE</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=20261026-pago">
+    <link rel="stylesheet" href="style.css?v=20261026-tarjeta">
 </head>
 <body>
     <header>
@@ -303,22 +351,24 @@ try {
         </nav>
     </header>
     <main class="pago-main">
-        <?php if ($errorPago !== ""): ?><p class="pago-error" role="alert"><?= escaparPago($errorPago) ?></p><?php endif; ?>
+        <?php if ($errorPago !== ""): ?><p class="pago-error" role="alert"><?= escaparPago($errorPago) ?></p><?php elseif ($problemaCarrito !== ""): ?><p class="pago-error" role="alert"><?= escaparPago($problemaCarrito) ?></p><?php endif; ?>
         <?php if ($compraConfirmada): ?>
             <section class="pago-panel pago-confirmado">
-                <span class="pago-etiqueta">COMPRA SIMULADA</span>
+                <span class="pago-etiqueta">COMPRA CONFIRMADA</span>
                 <h1>Tu compra quedó registrada</h1>
-                <p>Gracias, <?= escaparPago($datosCliente["nombre"]) ?>. El pago fue simulado y no se realizó ningún cobro real.</p>
+                <p>Gracias, <?= escaparPago($datosCliente["nombre"]) ?>. Podés consultar tu compra desde Mi cuenta.</p>
                 <dl class="pago-datos">
                     <div><dt>Comprobante</dt><dd><?= escaparPago($compraConfirmada["numero_factura"]) ?></dd></div>
                     <div><dt>Fecha</dt><dd><?= escaparPago(date("d/m/Y H:i", strtotime($compraConfirmada["fecha_emision"]))) ?></dd></div>
+                    <div><dt>Método de pago</dt><dd><?= escaparPago(str_replace(" (simulada)", "", $compraConfirmada["metodo_pago"])) ?></dd></div>
                 </dl>
+                <?php if ($compraConfirmada["metodo_pago"] === "Transferencia (simulada)"): ?><p><a class="pago-volver" href="comprobante.php?compra=<?= (int) $idCompra ?>">Descargar comprobante enviado</a></p><?php endif; ?>
                 <ul class="pago-items">
                     <?php foreach ($compraConfirmada["items"] as $detalle): ?>
                         <li><div><strong><?= escaparPago($detalle["descripcion"]) ?></strong><span>Cantidad: <?= (int) $detalle["cantidad"] ?></span></div><strong><?= formatoPago(centavosPago($detalle["subtotal"])) ?></strong></li>
                     <?php endforeach; ?>
                 </ul>
-                <div class="pago-total"><span>Total simulado</span><strong><?= formatoPago(centavosPago($compraConfirmada["total"])) ?></strong></div>
+                <div class="pago-total"><span>Total</span><strong><?= formatoPago(centavosPago($compraConfirmada["total"])) ?></strong></div>
                 <div class="pago-acciones"><a href="mi-cuenta.php" class="pago-boton">Ver mi cuenta</a><a href="productos.php" class="pago-volver">Seguir comprando</a></div>
             </section>
         <?php elseif (!$errorCarga && $idCompra === 0 && $itemsPago): ?>
@@ -332,13 +382,37 @@ try {
                         <div><dt>Correo electrónico</dt><dd><?= escaparPago($datosCliente["correo"]) ?></dd></div>
                         <?php if ($datosCliente["telefono"]): ?><div><dt>Teléfono</dt><dd><?= escaparPago($datosCliente["telefono"]) ?></dd></div><?php endif; ?>
                     </dl>
-                    <form action="pagar.php" method="post" class="pago-formulario">
+                    <form action="pagar.php" method="post" enctype="multipart/form-data" class="pago-formulario" id="formularioPago">
                         <input type="hidden" name="csrf_pago" value="<?= escaparPago($csrfPago) ?>">
                         <input type="hidden" name="resumen_pago" value="<?= escaparPago($_SESSION["resumen_pago"] ?? "") ?>">
-                        <div><label for="direccionFacturacion">Dirección de facturación</label><textarea id="direccionFacturacion" name="direccion" rows="3" minlength="8" maxlength="255" autocomplete="billing street-address" placeholder="Calle, número, localidad, provincia y código postal" required><?= escaparPago($direccionFacturacion) ?></textarea></div>
-                        <div class="pago-simulacion"><strong>Pago de prueba</strong><p>Esta compra es una simulación. No necesitás ingresar una tarjeta ni realizar una transferencia.</p></div>
-                        <?php if ($problemaCarrito): ?><p class="pago-error" role="alert"><?= escaparPago($problemaCarrito) ?></p><?php endif; ?>
-                        <button type="submit" class="pago-boton" <?= $problemaCarrito ? "disabled" : "" ?>>Confirmar compra simulada</button>
+                        <div><label for="direccionFacturacion">Dirección de facturación</label><input type="text" id="direccionFacturacion" name="direccion" minlength="8" maxlength="255" autocomplete="billing street-address" placeholder="Calle, número, localidad y CP" value="<?= escaparPago($direccionFacturacion) ?>" required></div>
+                        <fieldset class="pago-metodos">
+                            <legend>Métodos de pago</legend>
+                            <div class="pago-selector">
+                                <label><input type="radio" name="metodo_pago" value="tarjeta" <?= $metodoSeleccionado === "tarjeta" ? "checked" : "" ?>> Tarjeta</label>
+                                <label><input type="radio" name="metodo_pago" value="transferencia" <?= $metodoSeleccionado === "transferencia" ? "checked" : "" ?>> Transferencia</label>
+                            </div>
+                            <div id="pagoTarjeta" <?= $metodoSeleccionado !== "tarjeta" ? "hidden" : "" ?>>
+                                <label for="numeroTarjeta">Número de tarjeta</label>
+                                <input type="text" id="numeroTarjeta" inputmode="numeric" autocomplete="off" maxlength="23" placeholder="0000 0000 0000 0000" aria-describedby="marcaTarjeta ayudaTarjeta" <?= $metodoSeleccionado === "tarjeta" ? "required" : "disabled" ?>>
+                                <input type="hidden" name="marca_tarjeta" id="marcaTarjetaEnviada" value="">
+                                <p id="marcaTarjeta" class="pago-marca" aria-live="polite">Ingresá el número para detectar Visa o Mastercard.</p>
+                                <div class="pago-datos-tarjeta">
+                                    <div class="pago-titular"><label for="titularTarjeta">Nombre del titular de la tarjeta</label><input type="text" id="titularTarjeta" autocomplete="off" minlength="3" maxlength="100" placeholder="Como figura en la tarjeta" <?= $metodoSeleccionado === "tarjeta" ? "required" : "disabled" ?>></div>
+                                    <div><label for="vencimientoTarjeta">Vencimiento</label><input type="text" id="vencimientoTarjeta" inputmode="numeric" autocomplete="off" maxlength="5" pattern="[0-9]{2}/[0-9]{2}" placeholder="MM/AA" <?= $metodoSeleccionado === "tarjeta" ? "required" : "disabled" ?>></div>
+                                    <div><label for="ccvTarjeta">CCV</label><input type="password" id="ccvTarjeta" inputmode="numeric" autocomplete="off" maxlength="3" pattern="[0-9]{3}" placeholder="3 dígitos" <?= $metodoSeleccionado === "tarjeta" ? "required" : "disabled" ?>></div>
+                                    <div><label for="dniTarjeta">DNI</label><input type="text" id="dniTarjeta" inputmode="numeric" autocomplete="off" minlength="7" maxlength="8" pattern="[0-9]{7,8}" placeholder="Sin puntos ni espacios" <?= $metodoSeleccionado === "tarjeta" ? "required" : "disabled" ?>></div>
+                                </div>
+                                <small id="ayudaTarjeta">Los datos de la tarjeta no se guardan.</small>
+                            </div>
+                            <div id="pagoTransferencia" <?= $metodoSeleccionado !== "transferencia" ? "hidden" : "" ?>>
+                                <p>Alias para la transferencia: <strong class="pago-alias">gpufix.store.mp</strong></p>
+                                <label for="comprobanteTransferencia">Subí el comprobante</label>
+                                <input type="file" id="comprobanteTransferencia" name="comprobante" accept="application/pdf,image/jpeg,image/png" <?= $metodoSeleccionado === "transferencia" ? "required" : "disabled" ?>>
+                                <small>PDF, JPG o PNG, hasta 2 MB.</small>
+                            </div>
+                        </fieldset>
+                        <button type="submit" class="pago-boton" <?= $problemaCarrito ? "disabled" : "" ?>>Confirmar</button>
                     </form>
                 </section>
                 <aside class="pago-panel pago-resumen" aria-label="Resumen de la compra">
@@ -360,7 +434,7 @@ try {
         <?php endif; ?>
     </main>
     <footer><p>GPU FIX &amp; STORE - Reparación y venta de GPUs</p></footer>
-    <script src="script.js?v=20261022-1"></script>
+    <script src="script.js?v=20261026-tarjeta-sin-luhn"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

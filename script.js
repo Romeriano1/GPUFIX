@@ -61,3 +61,116 @@ if (cuentaButton && cuentaMenu) {
         }
     });
 }
+
+const formularioPago = document.getElementById("formularioPago");
+if (formularioPago) {
+    const numeroTarjeta = document.getElementById("numeroTarjeta");
+    const marcaTarjeta = document.getElementById("marcaTarjeta");
+    const marcaEnviada = document.getElementById("marcaTarjetaEnviada");
+    const comprobante = document.getElementById("comprobanteTransferencia");
+    const titularTarjeta = document.getElementById("titularTarjeta");
+    const vencimientoTarjeta = document.getElementById("vencimientoTarjeta");
+    const ccvTarjeta = document.getElementById("ccvTarjeta");
+    const dniTarjeta = document.getElementById("dniTarjeta");
+    const datosTarjeta = [titularTarjeta, vencimientoTarjeta, ccvTarjeta, dniTarjeta];
+
+    function detectarMarcaTarjeta(numero) {
+        if (numero.startsWith("4")) return "Visa";
+        if (/^5[1-5]/.test(numero)) return "Mastercard";
+        const primerosSeis = Number(numero.slice(0, 6));
+        if (numero.length >= 6 && primerosSeis >= 222100 && primerosSeis <= 272099) {
+            return "Mastercard";
+        }
+        return "";
+    }
+
+    function validarTarjeta() {
+        marcaEnviada.value = "";
+        numeroTarjeta.setCustomValidity("");
+        if (numeroTarjeta.disabled) return true;
+        const numero = numeroTarjeta.value.replace(/\D/g, "");
+        const marca = detectarMarcaTarjeta(numero);
+        marcaTarjeta.textContent = marca ? marca + " detectada" : "Ingresá un número Visa o Mastercard.";
+        const longitudValida = marca === "Visa" ? [13, 16, 19].includes(numero.length) : numero.length === 16;
+        if (!marca) {
+            numeroTarjeta.setCustomValidity("Solo se admiten tarjetas Visa o Mastercard.");
+        } else if (!longitudValida) {
+            numeroTarjeta.setCustomValidity("Completá el número de la tarjeta.");
+        } else {
+            marcaEnviada.value = marca;
+            marcaTarjeta.textContent = marca + " detectada · formato válido";
+        }
+        return numeroTarjeta.validity.valid;
+    }
+
+    function validarDatosTarjeta() {
+        datosTarjeta.forEach(function(campo) { campo.setCustomValidity(""); });
+        if (numeroTarjeta.disabled) return true;
+        if (titularTarjeta.value.trim().length < 3) {
+            titularTarjeta.setCustomValidity("Ingresá el nombre del titular de la tarjeta.");
+        }
+        const fecha = /^(\d{2})\/(\d{2})$/.exec(vencimientoTarjeta.value);
+        const hoy = new Date();
+        const mes = fecha ? Number(fecha[1]) : 0;
+        const anio = fecha ? 2000 + Number(fecha[2]) : 0;
+        if (!fecha || mes < 1 || mes > 12) {
+            vencimientoTarjeta.setCustomValidity("Ingresá un vencimiento válido en formato MM/AA.");
+        } else if (anio < hoy.getFullYear() || (anio === hoy.getFullYear() && mes < hoy.getMonth() + 1)) {
+            vencimientoTarjeta.setCustomValidity("La tarjeta está vencida.");
+        }
+        if (!/^\d{3}$/.test(ccvTarjeta.value)) ccvTarjeta.setCustomValidity("El CCV debe tener 3 números.");
+        if (!/^\d{7,8}$/.test(dniTarjeta.value)) dniTarjeta.setCustomValidity("El DNI debe tener 7 u 8 números.");
+        return datosTarjeta.every(function(campo) { return campo.validity.valid; });
+    }
+
+    function actualizarMetodoPago() {
+        const esTarjeta = formularioPago.querySelector('input[name="metodo_pago"]:checked').value === "tarjeta";
+        document.getElementById("pagoTarjeta").hidden = !esTarjeta;
+        document.getElementById("pagoTransferencia").hidden = esTarjeta;
+        numeroTarjeta.disabled = !esTarjeta;
+        numeroTarjeta.required = esTarjeta;
+        datosTarjeta.forEach(function(campo) {
+            campo.disabled = !esTarjeta;
+            campo.required = esTarjeta;
+        });
+        comprobante.disabled = esTarjeta;
+        comprobante.required = !esTarjeta;
+        validarTarjeta();
+        validarDatosTarjeta();
+    }
+
+    formularioPago.querySelectorAll('input[name="metodo_pago"]').forEach(function(opcion) {
+        opcion.addEventListener("change", actualizarMetodoPago);
+    });
+    numeroTarjeta.addEventListener("input", function() {
+        const digitos = numeroTarjeta.value.replace(/\D/g, "").slice(0, 19);
+        numeroTarjeta.value = digitos.replace(/(.{4})/g, "$1 ").trim();
+        validarTarjeta();
+    });
+    datosTarjeta.forEach(function(campo) { campo.addEventListener("input", validarDatosTarjeta); });
+    vencimientoTarjeta.addEventListener("input", function() {
+        const digitos = vencimientoTarjeta.value.replace(/\D/g, "").slice(0, 4);
+        vencimientoTarjeta.value = digitos.length > 2 ? digitos.slice(0, 2) + "/" + digitos.slice(2) : digitos;
+        validarDatosTarjeta();
+    });
+    [ccvTarjeta, dniTarjeta].forEach(function(campo) {
+        campo.addEventListener("input", function() {
+            campo.value = campo.value.replace(/\D/g, "").slice(0, campo.maxLength);
+            validarDatosTarjeta();
+        });
+    });
+    comprobante.addEventListener("change", function() {
+        comprobante.setCustomValidity(comprobante.files[0] && comprobante.files[0].size > 2 * 1024 * 1024
+            ? "El comprobante debe pesar como máximo 2 MB." : "");
+    });
+    formularioPago.addEventListener("submit", function(evento) {
+        if (!validarTarjeta()) {
+            evento.preventDefault();
+            numeroTarjeta.reportValidity();
+        } else if (!validarDatosTarjeta()) {
+            evento.preventDefault();
+            formularioPago.reportValidity();
+        }
+    });
+    actualizarMetodoPago();
+}
