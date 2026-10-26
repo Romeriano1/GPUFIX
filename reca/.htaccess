@@ -1,0 +1,11 @@
+<Files "correo-config.local.php">
+    Require all denied
+</Files>
+
+<Files "conexion-config.local.php">
+    Require all denied
+</Files>
+
+<Files "registro-error.log">
+    Require all denied
+</Files>
