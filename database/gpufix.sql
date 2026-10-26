@@ -324,10 +324,13 @@ CREATE TABLE `empleado` (
   `telefono` varchar(30) DEFAULT NULL,
   `email` varchar(150) DEFAULT NULL,
   `id_puesto` int(11) NOT NULL,
+  `id_correo` int(11) DEFAULT NULL,
   PRIMARY KEY (`id_empleado`),
   UNIQUE KEY `uq_empleado_dni` (`dni`),
+  UNIQUE KEY `uq_empleado_usuario` (`id_correo`),
   KEY `fk_empleado_puesto` (`id_puesto`),
-  CONSTRAINT `fk_empleado_puesto` FOREIGN KEY (`id_puesto`) REFERENCES `puesto` (`id_puesto`)
+  CONSTRAINT `fk_empleado_puesto` FOREIGN KEY (`id_puesto`) REFERENCES `puesto` (`id_puesto`),
+  CONSTRAINT `fk_empleado_usuario` FOREIGN KEY (`id_correo`) REFERENCES `usuarios` (`id_correo`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -768,4 +771,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-10-26  9:41:51
+-- Dump completed on 2026-10-26 19:29:53
