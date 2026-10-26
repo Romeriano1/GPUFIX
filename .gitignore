@@ -3,3 +3,4 @@ conexion-config.local.php
 registro-error.log
 comprobantes/*
 !comprobantes/.htaccess
+correo-config.php
