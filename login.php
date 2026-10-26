@@ -177,10 +177,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $loginError !== "") {
             </form>
 
             <div class="login-enlaces">
-                <p>¿No tenés cuenta?</p>
-                <a class="login-registro-boton" href="registro.php<?php echo $requeridoCarrito ? '?requerido=carrito' : ''; ?>">Registrate</a>
-            </div>
-        </div>
+    <p>¿No tenés cuenta?</p>
+    <a class="login-registro-boton" href="registro.php<?php echo $requeridoCarrito ? '?requerido=carrito' : ''; ?>">Registrate</a>
+
+    <p class="mt-4">¿Trabajás en GPU FIX & STORE?</p>
+    <a class="login-registro-boton" href="login-empleado.php">Soy empleado</a>
+</div>
+
     </section>
 </main>
 
