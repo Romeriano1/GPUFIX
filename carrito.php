@@ -303,7 +303,7 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Carrito - GPU FIX &amp; STORE</title>
-    <link rel="stylesheet" href="style.css?v=20261023-navbar">
+    <link rel="stylesheet" href="style.css?v=20261026-pago">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
@@ -377,7 +377,7 @@ try {
                     <span>Total<?= $totalCompleto ? "" : " parcial" ?></span>
                     <strong><?= $escapar($formatearPrecio($totalCarrito)) ?></strong>
                 </div>
-                <button type="button" class="boton-comprar">Comprar</button>
+                <a href="pagar.php" class="boton-comprar">Comprar</a>
                 <?php if (!$totalCompleto): ?>
                     <p class="acciones-compra-nota">Hay productos sin precio cargado; el total final queda pendiente.</p>
                 <?php endif; ?>
