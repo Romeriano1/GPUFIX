@@ -1,0 +1,11 @@
+#!/bin/sh
+raiz=$(git rev-parse --show-toplevel) || exit 1
+php_xampp="$(dirname "$(dirname "$raiz")")/php/php.exe"
+if [ -f "$php_xampp" ]; then
+    exec "$php_xampp" "$raiz/database/sincronizar.php"
+elif command -v php >/dev/null 2>&1; then
+    exec php "$raiz/database/sincronizar.php"
+else
+    echo "GPUFIX: no se encontro PHP. La base NO se actualizo." >&2
+    exit 1
+fi
