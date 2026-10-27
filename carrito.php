@@ -65,7 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     $tipo = (string) ($_POST["tipo"] ?? "agregar");
-    $cantidadSolicitada = filter_var($_POST["cantidad"] ?? 1, FILTER_VALIDATE_INT);
+    $cantidadSolicitada = filter_var($_POST["cantidad"] ?? null, FILTER_VALIDATE_INT);
 
     if ($accion !== "agregar" || !in_array($tipo, ["agregar", "comprar"], true) || !$idGpu || !$cantidadSolicitada || $cantidadSolicitada < 1) {
         $_SESSION["mensaje_carrito"] = "No pudimos identificar el producto o la cantidad.";

@@ -128,7 +128,7 @@ if ($producto) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $escapar($producto ? $producto["modelo"] : "Producto no disponible") ?> - GPU FIX &amp; STORE</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=20261027-carrito">
+    <link rel="stylesheet" href="style.css?v=20261027-cantidad-producto">
 </head>
 <body>
     <header>
@@ -195,7 +195,6 @@ if ($producto) {
                     <form action="carrito.php" method="post" class="acciones-detalle">
                         <input type="hidden" name="accion" value="agregar">
                         <input type="hidden" name="id_gpu" value="<?= (int) $producto["id"] ?>">
-                        <input type="hidden" name="cantidad" id="cantidadCarrito" value="<?= $stockDisponible > 0 ? 1 : 0 ?>">
                         <input type="hidden" name="csrf_carrito" value="<?= $escapar($csrfCarrito) ?>">
 
                     <div class="cantidad">
@@ -205,7 +204,7 @@ if ($producto) {
                         <?php else: ?>
                             <div class="selector-cantidad">
                                 <button id="menos" type="button" aria-label="Reducir cantidad" <?= ($stockConsultadoError || $stockDisponible <= 1) ? "disabled" : "" ?>>−</button>
-                                <span id="cantidad"><?= $stockDisponible > 0 && !$stockConsultadoError ? "1" : "0" ?></span>
+                                <input type="number" name="cantidad" id="cantidadCarrito" min="1" max="<?= (int) $stockDisponible ?>" value="<?= $stockDisponible > 0 && !$stockConsultadoError ? 1 : 0 ?>" readonly aria-label="Cantidad de unidades" <?= $compraDeshabilitada ? 'disabled' : '' ?>>
                                 <button id="mas" type="button" aria-label="Aumentar cantidad" <?= ($stockConsultadoError || $stockDisponible <= 1) ? "disabled" : "" ?>>+</button>
                             </div>
                         <?php endif; ?>
@@ -259,23 +258,22 @@ if ($producto) {
         <script>
         (function () {
             const stockDisponible = <?= $stockConsultadoError ? "0" : (int) $stockDisponible ?>;
-            const cantidadElemento = document.getElementById("cantidad");
+            const cantidadElemento = document.getElementById("cantidadCarrito");
             const botonMenos = document.getElementById("menos");
             const botonMas = document.getElementById("mas");
             if (!cantidadElemento || !botonMenos || !botonMas) return;
-            let cantidad = stockDisponible > 0 ? 1 : 0;
             function actualizarSelector() {
-                cantidadElemento.textContent = String(cantidad);
-                const campoCantidad = document.getElementById("cantidadCarrito");
-                if (campoCantidad) campoCantidad.value = String(cantidad);
+                const cantidad = Number(cantidadElemento.value);
                 botonMenos.disabled = stockDisponible <= 0 || cantidad <= 1;
                 botonMas.disabled = stockDisponible <= 0 || cantidad >= stockDisponible;
             }
             botonMenos.addEventListener("click", function () {
-                if (cantidad > 1) { cantidad -= 1; actualizarSelector(); }
+                const cantidad = Number(cantidadElemento.value);
+                if (cantidad > 1) { cantidadElemento.value = String(cantidad - 1); actualizarSelector(); }
             });
             botonMas.addEventListener("click", function () {
-                if (cantidad < stockDisponible) { cantidad += 1; actualizarSelector(); }
+                const cantidad = Number(cantidadElemento.value);
+                if (cantidad < stockDisponible) { cantidadElemento.value = String(cantidad + 1); actualizarSelector(); }
             });
             actualizarSelector();
         })();

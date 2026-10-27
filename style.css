@@ -1095,11 +1095,23 @@ body.light-theme .stock {
     background-color: #333333;
 }
 
-.selector-cantidad span {
+.selector-cantidad input {
     width: 40px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
     text-align: center;
     font-size: 13px;
     color: white;
+    appearance: textfield;
+}
+
+.selector-cantidad input::-webkit-inner-spin-button,
+.selector-cantidad input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 body.light-theme .selector-cantidad {
@@ -1115,7 +1127,7 @@ body.light-theme .selector-cantidad button:hover {
     background-color: #dddddd;
 }
 
-body.light-theme .selector-cantidad span {
+body.light-theme .selector-cantidad input {
     color: #111111;
 }
 
