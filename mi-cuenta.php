@@ -342,9 +342,9 @@ function formatoImporteCuenta($importe)
                             <?php endif; ?>
                         </div>
                         <?php if ($presupuesto["total"] !== null): ?>
-                            <p class="presupuesto-consulta-precio"><strong>Precio informado:</strong> <?= escaparCuenta(formatoImporteCuenta($presupuesto["total"])) ?></p>
+                            <p class="presupuesto-consulta-precio"><strong>Total:</strong> <?= escaparCuenta(formatoImporteCuenta($presupuesto["total"])) ?></p>
                         <?php elseif ($presupuesto["respuesta"] !== null): ?>
-                            <p class="presupuesto-consulta-precio">Sin precio informado.</p>
+                            <p class="presupuesto-consulta-precio">Sin total informado.</p>
                         <?php endif; ?>
                     </article>
                 <?php endforeach; ?>

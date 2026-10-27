@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $buscar->close();
             if (!$solicitud || trim((string) $solicitud['respuesta']) === '') throw new RuntimeException('Primero guardá una respuesta para esta solicitud.');
             if (!filter_var($solicitud['correo'], FILTER_VALIDATE_EMAIL)) throw new RuntimeException('El cliente no tiene un correo válido.');
-            $precioCorreo = $solicitud['total'] === null ? 'Sin precio informado.' : 'Precio: $ ' . number_format((float) $solicitud['total'], 2, ',', '.');
+            $precioCorreo = $solicitud['total'] === null ? 'Sin total informado.' : 'Total: $ ' . number_format((float) $solicitud['total'], 2, ',', '.');
             $cuerpo = 'Hola ' . trim($solicitud['nombre'] . ' ' . $solicitud['apellido']) . ",\n\n"
                 . "Respondimos tu solicitud #" . $idPresupuesto . ".\n\nTu consulta:\n" . $solicitud['consulta_cliente']
                 . "\n\nRespuesta de GPUFIX:\n" . $solicitud['respuesta'] . "\n\n" . $precioCorreo
@@ -141,7 +141,7 @@ $solicitudes = $conexion->query("
 admin_layout_inicio('Presupuestos');
 ?>
 <h1 class="h3 mt-3">Presupuestos</h1>
-<p class="text-secondary">Respondé la consulta del cliente. Podés incluir un precio o dejarlo vacío.</p>
+<p class="text-secondary">Respondé la consulta del cliente. Podés informar el total o dejarlo vacío.</p>
 <?php if ($mensaje !== ''): ?><div class="alert alert-success" role="status"><?= admin_e($mensaje) ?></div><?php endif; ?>
 <?php if ($error !== ''): ?><div class="alert alert-danger" role="alert"><?= admin_e($error) ?></div><?php endif; ?>
 <section class="panel" aria-labelledby="tituloSolicitudes">
@@ -178,8 +178,8 @@ admin_layout_inicio('Presupuestos');
                 </div>
                 <div class="row align-items-end g-3">
                     <div class="col-md-5">
-                        <label for="precio-<?= admin_e($idFormulario) ?>" class="form-label">Precio opcional ($)</label>
-                        <input type="text" class="form-control" id="precio-<?= admin_e($idFormulario) ?>" name="precio" inputmode="decimal" maxlength="13" pattern="[0-9]+([.,][0-9]{1,2})?" placeholder="Ej.: 25000,50" value="<?= admin_e($precio) ?>">
+                        <label for="precio-<?= admin_e($idFormulario) ?>" class="form-label">Total ($)</label>
+                        <input type="text" class="form-control" id="precio-<?= admin_e($idFormulario) ?>" name="precio" inputmode="decimal" maxlength="13" pattern="[0-9]+([.,][0-9]{1,2})?" value="<?= admin_e($precio) ?>">
                         <div class="form-text">Dejalo vacío para responder solo la consulta.</div>
                     </div>
                     <div class="col-md-auto"><button type="submit" class="btn btn-primary"><?= $solicitud['respuesta'] === null ? 'Responder' : 'Guardar respuesta' ?></button></div>

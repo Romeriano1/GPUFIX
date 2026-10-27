@@ -23,6 +23,7 @@ $errorCarga = false;
 $transaccionActiva = false;
 $problemaCarrito = "";
 $rutaComprobanteGuardado = null;
+$avisoCorreoCompra = '';
 $idCompra = filter_input(INPUT_GET, "compra", FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]) ?: 0;
 
 function escaparPago($valor): string
@@ -46,6 +47,37 @@ function decimalPago(int $centavos): string
 function formatoPago(int $centavos): string
 {
     return "$ " . number_format($centavos / 100, 2, ",", ".");
+}
+
+function enviarCorreoCompra(array $cliente, array $articulos, int $idVenta, string $numeroComprobante, int $totalCentavos, string $metodoPago, string $estadoVenta, string $direccion): bool
+{
+    try {
+        if (!is_callable('gpufix_enviar_correo') && is_file(__DIR__ . '/correo-config.php')) {
+            require_once __DIR__ . '/correo-config.php';
+        }
+        if (!is_callable('gpufix_enviar_correo')) throw new RuntimeException('El envío de correo no está configurado.');
+        $cuerpo = 'Hola ' . trim($cliente['nombre'] . ' ' . $cliente['apellido']) . ",\n\n"
+            . 'Registramos tu compra #' . $idVenta . ".\n"
+            . 'Comprobante: ' . $numeroComprobante . "\n"
+            . 'Método de pago: ' . $metodoPago . "\n"
+            . 'Estado: ' . $estadoVenta . "\n\nProductos:\n";
+        foreach ($articulos as $articulo) {
+            $precio = centavosPago($articulo['precio_especial']);
+            $cantidad = (int) $articulo['cantidad'];
+            $cuerpo .= '- ' . $articulo['marca'] . ' ' . $articulo['modelo'] . ' — Cantidad: ' . $cantidad
+                . ' — Precio unitario: ' . formatoPago($precio) . ' — Subtotal: ' . formatoPago($precio * $cantidad) . "\n";
+        }
+        $cuerpo .= "\nTotal: " . formatoPago($totalCentavos) . "\nDirección de facturación: " . $direccion;
+        if ($metodoPago === 'Transferencia') $cuerpo .= "\n\nRecibimos tu comprobante de transferencia. El pago queda pendiente de verificación.";
+        $cuerpo .= "\n\nPodés consultar tu compra desde Mi cuenta.\n\nEquipo GPUFIX";
+        if (!gpufix_enviar_correo($cliente['correo'], 'Confirmación de compra GPUFIX #' . $idVenta, $cuerpo)) {
+            throw new RuntimeException('El servicio de correo no pudo enviar el resumen de la compra.');
+        }
+        return true;
+    } catch (Throwable $errorCorreo) {
+        error_log('Error al enviar correo de compra #' . $idVenta . ': ' . $errorCorreo->getMessage());
+        return false;
+    }
 }
 
 function articulosPago(mysqli $conexion, int $idCarrito, bool $bloquear = false): array
@@ -258,6 +290,7 @@ try {
                     $descontarStock->close();
                     $cantidadPendiente -= $descuento;
                 }
+                if ($cantidadPendiente !== 0) throw new RuntimeException('No pudimos descontar el stock completo. Revisá tu carrito e intentá nuevamente.');
             }
             $guardarDireccion = $conexion->prepare("UPDATE cliente SET direccion = ? WHERE id_cliente = ?");
             $guardarDireccion->bind_param("si", $direccionFacturacion, $idCliente);
@@ -281,6 +314,10 @@ try {
             $conexion->commit();
             $transaccionActiva = false;
             unset($_SESSION["csrf_pago"], $_SESSION["resumen_pago"]);
+            $_SESSION['correo_compra'] = [
+                'id_venta' => $idVenta,
+                'enviado' => enviarCorreoCompra($datosCliente, $itemsPago, $idVenta, $numeroComprobante, $totalCentavos, $metodoPago, $estadoVenta, $direccionFacturacion),
+            ];
             header("Location: pagar.php?compra=" . $idVenta, true, 303);
             exit;
         } catch (Throwable $error) {
@@ -291,7 +328,7 @@ try {
             if ($rutaComprobanteGuardado !== null && is_file($rutaComprobanteGuardado)) {
                 unlink($rutaComprobanteGuardado);
             }
-            error_log("Error al confirmar compra simulada: " . $error->getMessage());
+            error_log("Error al confirmar compra: " . $error->getMessage());
             $_SESSION["error_pago"] = $error instanceof mysqli_sql_exception
                 ? "No pudimos guardar la compra. Intentá nuevamente."
                 : ($error instanceof RuntimeException ? $error->getMessage() : "No pudimos completar la compra. Intentá nuevamente.");
@@ -308,7 +345,7 @@ try {
         $consultaCompra = $conexion->prepare(
             "SELECT f.id_factura, f.numero_factura, f.fecha_emision, f.total, v.metodo_pago FROM factura f " .
             "INNER JOIN gpu_ventas v ON v.id_gpu_ventas = f.id_gpu_ventas " .
-            "WHERE v.id_gpu_ventas = ? AND v.id_cliente = ? AND f.id_cliente = ? AND v.estado = 'Simulada' LIMIT 1"
+            "WHERE v.id_gpu_ventas = ? AND v.id_cliente = ? AND f.id_cliente = ? LIMIT 1"
         );
         $consultaCompra->bind_param("iii", $idCompra, $idCliente, $idCliente);
         $consultaCompra->execute();
@@ -318,6 +355,12 @@ try {
             http_response_code(404);
             $errorPago = "No encontramos esa compra en tu cuenta.";
         } else {
+            if ((int) ($_SESSION['correo_compra']['id_venta'] ?? 0) === $idCompra) {
+                $avisoCorreoCompra = !empty($_SESSION['correo_compra']['enviado'])
+                    ? 'Te enviamos el resumen de la compra a ' . $datosCliente['correo'] . '.'
+                    : 'Tu compra quedó registrada, pero no pudimos enviar el correo. Podés consultar el resumen desde Mi cuenta.';
+                unset($_SESSION['correo_compra']);
+            }
             $idFactura = (int) $compraConfirmada["id_factura"];
             $consultaDetalles = $conexion->prepare("SELECT descripcion, cantidad, precio_unitario, subtotal FROM detalle_factura WHERE id_factura = ? ORDER BY id_detalle_factura");
             $consultaDetalles->bind_param("i", $idFactura);
@@ -384,6 +427,7 @@ try {
                 <span class="pago-etiqueta">COMPRA CONFIRMADA</span>
                 <h1>Tu compra quedó registrada</h1>
                 <p>Gracias, <?= escaparPago($datosCliente["nombre"]) ?>. Podés consultar tu compra desde Mi cuenta.</p>
+                <?php if ($avisoCorreoCompra !== ''): ?><p role="status"><?= escaparPago($avisoCorreoCompra) ?></p><?php endif; ?>
                 <dl class="pago-datos">
                     <div><dt>Comprobante</dt><dd><?= escaparPago($compraConfirmada["numero_factura"]) ?></dd></div>
                     <div><dt>Fecha</dt><dd><?= escaparPago(date("d/m/Y H:i", strtotime($compraConfirmada["fecha_emision"]))) ?></dd></div>
