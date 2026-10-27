@@ -184,7 +184,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         if ($error->getMessage() === "sin_stock") {
             $mensajeCarritoError = "Este producto no tiene stock disponible.";
         } elseif ($error->getMessage() === "stock_insuficiente") {
-            $mensajeCarritoError = "No hay suficiente stock para esa cantidad.";
+            $cantidadActualCarrito = $detalleExiste ? (int) $cantidadEnCarrito : 0;
+            $cantidadAdicionalDisponible = max(0, $stockTotal - $cantidadActualCarrito);
+            $mensajeCarritoError = 'No se agregó el producto. Ya tenés ' . $cantidadActualCarrito . ' unidades en el carrito. '
+                . ($cantidadAdicionalDisponible > 0 ? 'Podés agregar hasta ' . $cantidadAdicionalDisponible . ' más.' : 'No podés agregar más unidades con el stock actual.');
         } elseif ($error->getMessage() === "cliente_no_encontrado") {
             $mensajeCarritoError = "No encontramos el perfil de cliente asociado a tu cuenta.";
         }

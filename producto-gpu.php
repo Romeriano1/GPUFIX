@@ -1,11 +1,13 @@
 <?php
 session_start();
+if (!empty($_SESSION['usuario_id'])) header('Cache-Control: no-store');
 if (empty($_SESSION["csrf_carrito"])) {
     $_SESSION["csrf_carrito"] = bin2hex(random_bytes(32));
 }
 $csrfCarrito = $_SESSION["csrf_carrito"];
 
 $producto = null;
+$cantidadEnCarritoProducto = 0;
 $errorConsulta = false;
 $paginaProducto = basename((string) ($_SERVER["SCRIPT_NAME"] ?? ""));
 $buscarPorId = $paginaProducto === "producto-gpu.php";
@@ -54,6 +56,14 @@ try {
     }
 
     $consulta->close();
+    if ($producto !== null && !empty($_SESSION['usuario_id'])) {
+        $consultaCantidadCarrito = $conexion->prepare('SELECT COALESCE(SUM(d.cantidad), 0) FROM detalle_carrito d INNER JOIN carrito ca ON ca.id_carrito = d.id_carrito INNER JOIN cliente c ON c.id_cliente = ca.id_cliente WHERE c.id_correo = ? AND d.id_gpu = ?');
+        $idUsuarioCarrito = (int) $_SESSION['usuario_id'];
+        $consultaCantidadCarrito->bind_param('ii', $idUsuarioCarrito, $producto['id']);
+        $consultaCantidadCarrito->execute();
+        $cantidadEnCarritoProducto = max(0, (int) $consultaCantidadCarrito->get_result()->fetch_row()[0]);
+        $consultaCantidadCarrito->close();
+    }
     $conexion->close();
 } catch (Throwable $error) {
     $errorConsulta = true;
@@ -80,10 +90,11 @@ $lineasEspecificaciones = $producto
     : [];
 $hayStockRegistrado = $producto && $producto["registros_stock"] > 0;
 $stockDisponible = $producto ? $producto["cantidad"] : 0;
+$cantidadDisponibleParaAgregar = max(0, $stockDisponible - $cantidadEnCarritoProducto);
 $sinStock = $hayStockRegistrado && $stockDisponible === 0;
 $stockPendiente = $producto && !$hayStockRegistrado;
 $stockConsultadoError = $errorConsulta;
-$compraDeshabilitada = $stockConsultadoError || $stockPendiente || $sinStock;
+$compraDeshabilitada = $stockConsultadoError || $stockPendiente || $cantidadDisponibleParaAgregar === 0;
 $tituloProducto = $producto
     ? strtoupper("PLACA DE VIDEO " . $producto["modelo"] . " " . $producto["marca"])
     : "Producto no disponible";
@@ -199,13 +210,14 @@ if ($producto) {
 
                     <div class="cantidad">
                         <p>Cantidad</p>
+                        <?php if ($cantidadEnCarritoProducto > 0): ?><p class="acciones-compra-nota">Ya tenés <?= $cantidadEnCarritoProducto ?> en tu carrito. <?= $cantidadDisponibleParaAgregar > 0 ? 'Podés agregar hasta ' . $cantidadDisponibleParaAgregar . ' más.' : 'No podés agregar más unidades con el stock actual.' ?></p><?php endif; ?>
                         <?php if ($stockPendiente): ?>
                             <span class="cantidad-pendiente">A confirmar</span>
                         <?php else: ?>
                             <div class="selector-cantidad">
-                                <button id="menos" type="button" aria-label="Reducir cantidad" <?= ($stockConsultadoError || $stockDisponible <= 1) ? "disabled" : "" ?>>−</button>
-                                <input type="number" name="cantidad" id="cantidadCarrito" min="1" max="<?= (int) $stockDisponible ?>" value="<?= $stockDisponible > 0 && !$stockConsultadoError ? 1 : 0 ?>" readonly aria-label="Cantidad de unidades" <?= $compraDeshabilitada ? 'disabled' : '' ?>>
-                                <button id="mas" type="button" aria-label="Aumentar cantidad" <?= ($stockConsultadoError || $stockDisponible <= 1) ? "disabled" : "" ?>>+</button>
+                                <button id="menos" type="button" aria-label="Reducir cantidad" <?= ($stockConsultadoError || $cantidadDisponibleParaAgregar <= 1) ? "disabled" : "" ?>>−</button>
+                                <input type="number" name="cantidad" id="cantidadCarrito" min="1" max="<?= (int) $cantidadDisponibleParaAgregar ?>" value="<?= $cantidadDisponibleParaAgregar > 0 && !$stockConsultadoError ? 1 : 0 ?>" readonly aria-label="Cantidad de unidades" <?= $compraDeshabilitada ? 'disabled' : '' ?>>
+                                <button id="mas" type="button" aria-label="Aumentar cantidad" <?= ($stockConsultadoError || $cantidadDisponibleParaAgregar <= 1) ? "disabled" : "" ?>>+</button>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -257,15 +269,15 @@ if ($producto) {
     <?php if ($producto !== null && !$stockPendiente): ?>
         <script>
         (function () {
-            const stockDisponible = <?= $stockConsultadoError ? "0" : (int) $stockDisponible ?>;
+            const limiteCantidad = <?= $stockConsultadoError ? "0" : (int) $cantidadDisponibleParaAgregar ?>;
             const cantidadElemento = document.getElementById("cantidadCarrito");
             const botonMenos = document.getElementById("menos");
             const botonMas = document.getElementById("mas");
             if (!cantidadElemento || !botonMenos || !botonMas) return;
             function actualizarSelector() {
                 const cantidad = Number(cantidadElemento.value);
-                botonMenos.disabled = stockDisponible <= 0 || cantidad <= 1;
-                botonMas.disabled = stockDisponible <= 0 || cantidad >= stockDisponible;
+                botonMenos.disabled = limiteCantidad <= 0 || cantidad <= 1;
+                botonMas.disabled = limiteCantidad <= 0 || cantidad >= limiteCantidad;
             }
             botonMenos.addEventListener("click", function () {
                 const cantidad = Number(cantidadElemento.value);
@@ -273,9 +285,12 @@ if ($producto) {
             });
             botonMas.addEventListener("click", function () {
                 const cantidad = Number(cantidadElemento.value);
-                if (cantidad < stockDisponible) { cantidadElemento.value = String(cantidad + 1); actualizarSelector(); }
+                if (cantidad < limiteCantidad) { cantidadElemento.value = String(cantidad + 1); actualizarSelector(); }
             });
             actualizarSelector();
+            window.addEventListener('pageshow', function (evento) {
+                if (evento.persisted) window.location.reload();
+            });
         })();
         </script>
     <?php endif; ?>
