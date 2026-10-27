@@ -5,3 +5,4 @@ comprobantes/*
 !comprobantes/.htaccess
 reca/comprobantes/*
 !reca/comprobantes/.htaccess
+correo-config.php
