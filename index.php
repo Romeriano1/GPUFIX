@@ -1,4 +1,16 @@
-<?php session_start(); ?>
+<?php
+session_start();
+$productosCarrusel = [];
+try {
+    require_once __DIR__ . '/conexion.php';
+    $resultadoCarrusel = $conexion->query('SELECT id_gpu, marca, modelo, imagen FROM gpu WHERE id_gpu IN (10, 15, 13, 18, 19) ORDER BY FIELD(id_gpu, 10, 15, 13, 18, 19)');
+    $productosCarrusel = $resultadoCarrusel->fetch_all(MYSQLI_ASSOC);
+    $resultadoCarrusel->free();
+    $conexion->close();
+} catch (Throwable $errorCarrusel) {
+    error_log('Error al consultar carrusel: ' . $errorCarrusel->getMessage());
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 
@@ -10,7 +22,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
         crossorigin="anonymous">
-    <link rel="stylesheet" href="style.css?v=20261023-navbar">
+    <link rel="stylesheet" href="style.css?v=20261027-carrito">
 
 
 </head>
@@ -58,38 +70,17 @@
         <section class="buscados">
             <h2>Los más buscados</h2>
 
+            <?php if ($productosCarrusel): ?>
             <div id="carruselProductos" class="carousel slide"
                 data-bs-ride="carousel" data-bs-interval="5000">
                 <div class="carousel-inner">
-                    <div class="carousel-item active">
-                        <a href="producto-gpu.php?id=10">
-                            <img src="https://i.ibb.co/fYmP0g9N/rtx5090-Maorus.png" class="carrusel-imagen" alt="Aorus RTX 5090 Master Ice 32GB">
+                    <?php foreach ($productosCarrusel as $indiceCarrusel => $productoCarrusel): ?>
+                    <div class="carousel-item<?= $indiceCarrusel === 0 ? ' active' : '' ?>">
+                        <a href="producto-gpu.php?id=<?= (int) $productoCarrusel['id_gpu'] ?>">
+                            <img src="<?= htmlspecialchars((string) $productoCarrusel['imagen'], ENT_QUOTES, 'UTF-8') ?>" class="carrusel-imagen" alt="<?= htmlspecialchars($productoCarrusel['marca'] . ' ' . $productoCarrusel['modelo'], ENT_QUOTES, 'UTF-8') ?>">
                         </a>
                     </div>
-
-                    <div class="carousel-item">
-                        <a href="producto-gpu.php?id=15">
-                            <img src="https://i.ibb.co/pjZY0nn5/rtx3060asus.png" class="carrusel-imagen" alt="ASUS RTX 3060 Dual V2 OC 12GB">
-                        </a>
-                    </div>
-
-                    <div class="carousel-item">
-                        <a href="producto-gpu.php?id=13">
-                            <img src="https://i.ibb.co/zWCMT08N/rx9070sapphire.png" class="carrusel-imagen" alt="Sapphire RX 9070 Pulse 16GB">
-                        </a>
-                    </div>
-
-                    <div class="carousel-item">
-                        <a href="producto-gpu.php?id=18">
-                            <img src="https://i.ibb.co/RkfFXM3z/rx9070tipowercolor.png" class="carrusel-imagen" alt="PowerColor RX 9070 XT Hellhound OC 16GB">
-                        </a>
-                    </div>
-
-                    <div class="carousel-item">
-                        <a href="producto-gpu.php?id=19">
-                            <img src="https://i.ibb.co/XxGWdzyt/rtx3080inno3d.webp" class="carrusel-imagen" alt="INNO3D RTX 3080 X3 LHR 10GB">
-                        </a>
-                    </div>
+                    <?php endforeach; ?>
                 </div>
 
                 <button class="carousel-control-prev" type="button"
@@ -104,6 +95,9 @@
                     <span class="visually-hidden">Siguiente</span>
                 </button>
             </div>
+            <?php else: ?>
+                <p>No hay productos destacados disponibles.</p>
+            <?php endif; ?>
         </section>
 
         <section class="marcas-section">

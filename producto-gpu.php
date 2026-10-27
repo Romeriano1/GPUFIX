@@ -128,7 +128,7 @@ if ($producto) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $escapar($producto ? $producto["modelo"] : "Producto no disponible") ?> - GPU FIX &amp; STORE</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=20261023-navbar">
+    <link rel="stylesheet" href="style.css?v=20261027-carrito">
 </head>
 <body>
     <header>

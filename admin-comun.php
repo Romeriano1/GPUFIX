@@ -7,6 +7,28 @@ function admin_requerir_acceso(): void {
         header('Location: login-empleado.php');
         exit;
     }
+    global $conexion;
+    require_once __DIR__ . '/conexion.php';
+    $validar = $conexion->prepare('SELECT e.id_empleado FROM empleado e INNER JOIN usuarios u ON u.id_correo = e.id_correo WHERE e.id_empleado = ? LIMIT 1');
+    $idEmpleado = (int) $_SESSION['empleado_id'];
+    $validar->bind_param('i', $idEmpleado);
+    $validar->execute();
+    $existe = $validar->get_result()->fetch_assoc();
+    $validar->close();
+    if (!$existe) {
+        unset($_SESSION['empleado_id'], $_SESSION['empleado_nombre'], $_SESSION['empleado_apellido'], $_SESSION['gpufix_admin'], $_SESSION['admin_correo'], $_SESSION['admin_csrf']);
+        header('Location: login-empleado.php');
+        exit;
+    }
+}
+function admin_es_cuenta_principal(mysqli $conexion): bool {
+    $consulta = $conexion->prepare("SELECT e.id_empleado FROM empleado e INNER JOIN usuarios u ON u.id_correo = e.id_correo INNER JOIN puesto p ON p.id_puesto = e.id_puesto WHERE e.id_empleado = ? AND u.correo = 'gpufixstore@gmail.com' AND p.nombre = 'Administrador' LIMIT 1");
+    $idEmpleado = (int) ($_SESSION['empleado_id'] ?? 0);
+    $consulta->bind_param('i', $idEmpleado);
+    $consulta->execute();
+    $principal = (bool) $consulta->get_result()->fetch_assoc();
+    $consulta->close();
+    return $principal;
 }
 function admin_csrf(): string {
     if (empty($_SESSION['admin_csrf'])) $_SESSION['admin_csrf'] = bin2hex(random_bytes(32));
@@ -27,6 +49,8 @@ function admin_e($v): string {
 
 function admin_layout_inicio(string $titulo): void {
     $csrf = admin_csrf();
+    $enlaceCuentas = isset($GLOBALS['conexion']) && admin_es_cuenta_principal($GLOBALS['conexion'])
+        ? '<a class="nav-link" href="admin-cuentas.php">Cuentas</a>' : '';
 
     echo '<!doctype html>
 <html lang="es">
@@ -90,6 +114,7 @@ function admin_layout_inicio(string $titulo): void {
                     <a class="nav-link" href="admin.php">Inicio</a>
                     <a class="nav-link" href="admin-productos.php">Productos y stock</a>
                     <a class="nav-link" href="admin-proveedores.php">Proveedores</a>
+                    '.$enlaceCuentas.'
                     <a class="nav-link" href="admin-reparaciones.php">Reparaciones</a>
                     <a class="nav-link" href="admin-presupuestos.php">Presupuestos</a>
                     <a class="nav-link" href="admin-facturacion.php">Facturación</a>

@@ -129,6 +129,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ];
     }
     try {
+        if ($accion === 'eliminar') {
+            if (!$idProducto) throw new RuntimeException('Seleccioná un producto válido para eliminar.');
+            $conexion->begin_transaction();
+            $transaccionActiva = true;
+            $buscar = $conexion->prepare('SELECT id_gpu FROM gpu WHERE id_gpu = ? FOR UPDATE');
+            $buscar->bind_param('i', $idProducto);
+            $buscar->execute();
+            $existe = $buscar->get_result()->fetch_assoc();
+            $buscar->close();
+            if (!$existe) throw new RuntimeException('El producto seleccionado ya no existe.');
+            $historial = $conexion->prepare('SELECT EXISTS (SELECT 1 FROM detalle_venta WHERE id_gpu = ?) OR EXISTS (SELECT 1 FROM detalle_compra WHERE id_gpu = ?) AS tiene_movimientos');
+            $historial->bind_param('ii', $idProducto, $idProducto);
+            $historial->execute();
+            $tieneMovimientos = (bool) $historial->get_result()->fetch_assoc()['tiene_movimientos'];
+            $historial->close();
+            if ($tieneMovimientos) throw new RuntimeException('Este producto tiene ventas o compras registradas y no se puede eliminar para conservar el historial.');
+            foreach (['detalle_carrito', 'stock_gpu', 'gpu'] as $tablaProducto) {
+                $eliminar = $conexion->prepare('DELETE FROM ' . $tablaProducto . ' WHERE id_gpu = ?');
+                $eliminar->bind_param('i', $idProducto);
+                $eliminar->execute();
+                $eliminar->close();
+            }
+            $conexion->commit();
+            $transaccionActiva = false;
+            $_SESSION['mensaje_producto_admin'] = 'Producto eliminado junto con su stock y las entradas en carritos.';
+            header('Location: admin-productos.php#catalogo-productos', true, 303);
+            exit;
+        }
         if (!in_array($accion, ['agregar', 'editar'], true) || ($modoEdicion && !$idProducto)) {
             throw new RuntimeException('Seleccioná un producto válido para guardar los cambios.');
         }
@@ -186,8 +214,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     } catch (Throwable $fallo) {
         if ($transaccionActiva) $conexion->rollback();
-        error_log('Error al guardar producto: ' . $fallo->getMessage());
-        $error = $fallo instanceof mysqli_sql_exception ? 'No pudimos guardar el producto. Intentá nuevamente.' : $fallo->getMessage();
+        error_log('Error al modificar producto: ' . $fallo->getMessage());
+        $error = $fallo instanceof mysqli_sql_exception ? 'No pudimos completar el cambio del producto. Intentá nuevamente.' : $fallo->getMessage();
     }
 } elseif ($modoEdicion) {
     $buscar = $conexion->prepare('SELECT g.*, (SELECT COALESCE(SUM(s.cantidad), 0) FROM stock_gpu s WHERE s.id_gpu = g.id_gpu) AS cantidad FROM gpu g WHERE g.id_gpu = ? LIMIT 1');
@@ -219,11 +247,11 @@ admin_layout_inicio('Productos y stock');
 </div>
 <p class="text-secondary mt-2">Cargá o editá la ficha completa. Las especificaciones usan el mismo formato del catálogo.</p>
 <?php if ($mensaje !== ''): ?><div class="alert alert-success" role="status"><?= admin_e($mensaje) ?></div><?php endif; ?>
+<?php if ($error !== ''): ?><div class="alert alert-danger mt-3" role="alert"><?= admin_e($error) ?></div><?php endif; ?>
 
 <?php if ($mostrarFormulario): ?>
 <section class="panel" id="ficha-producto" aria-labelledby="tituloFicha">
     <h2 class="h5 mb-3" id="tituloFicha"><?= $modoEdicion ? 'Editar ficha del producto #' . $idProducto : 'Agregar producto' ?></h2>
-    <?php if ($error !== ''): ?><div class="alert alert-danger" role="alert"><?= admin_e($error) ?></div><?php endif; ?>
     <form method="post" action="admin-productos.php<?= $modoEdicion ? '?editar=' . $idProducto : '' ?>#ficha-producto" class="row g-3">
         <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">
         <input type="hidden" name="accion" value="<?= $modoEdicion ? 'editar' : 'agregar' ?>">
@@ -261,12 +289,12 @@ admin_layout_inicio('Productos y stock');
         </div>
     </form>
 </section>
-<?php elseif ($error !== ''): ?><div class="alert alert-danger mt-3" role="alert"><?= admin_e($error) ?></div><?php endif; ?>
+<?php endif; ?>
 
 <section class="panel" id="catalogo-productos" aria-labelledby="tituloCatalogo">
     <h2 class="h5 mb-3" id="tituloCatalogo">Catálogo actual</h2>
     <div class="table-responsive"><table class="table table-striped align-middle">
-        <thead><tr><th>ID</th><th>Producto</th><th>Precio</th><th>Stock</th><th>Editar</th></tr></thead>
+        <thead><tr><th>ID</th><th>Producto</th><th>Precio</th><th>Stock</th><th>Acciones</th></tr></thead>
         <tbody>
         <?php while ($productoCatalogo = $catalogo->fetch_assoc()): ?>
             <tr>
@@ -274,7 +302,15 @@ admin_layout_inicio('Productos y stock');
                 <td><a href="producto-gpu.php?id=<?= (int) $productoCatalogo['id_gpu'] ?>" target="_blank" rel="noopener"><?= admin_e($productoCatalogo['marca'] . ' ' . $productoCatalogo['modelo']) ?></a></td>
                 <td><?= $productoCatalogo['precio_especial'] === null ? 'Sin precio' : '$ ' . number_format((float) $productoCatalogo['precio_especial'], 2, ',', '.') ?></td>
                 <td><?= (int) $productoCatalogo['cantidad'] ?></td>
-                <td><a class="btn btn-sm btn-outline-primary" href="admin-productos.php?editar=<?= (int) $productoCatalogo['id_gpu'] ?>#ficha-producto">Editar ficha</a></td>
+                <td><div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-sm btn-outline-primary" href="admin-productos.php?editar=<?= (int) $productoCatalogo['id_gpu'] ?>#ficha-producto">Editar ficha</a>
+                    <form method="post" action="admin-productos.php#catalogo-productos">
+                        <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">
+                        <input type="hidden" name="accion" value="eliminar">
+                        <input type="hidden" name="id_gpu" value="<?= (int) $productoCatalogo['id_gpu'] ?>">
+                        <button type="submit" class="btn btn-sm btn-danger" aria-label="<?= admin_e('Eliminar ' . $productoCatalogo['marca'] . ' ' . $productoCatalogo['modelo']) ?>">Eliminar producto</button>
+                    </form>
+                </div></td>
             </tr>
         <?php endwhile; ?>
         </tbody>

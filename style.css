@@ -170,6 +170,32 @@ body.light-theme .theme-button:hover {
     background-color: #333333;
 }
 
+.carrito-navbar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    border: 1px solid #00bfff;
+    border-radius: 8px;
+    background-color: #00bfff;
+    color: #082333;
+    text-decoration: none;
+    transition: background-color .2s, border-color .2s;
+}
+
+.carrito-navbar:hover {
+    background-color: #45d3ff;
+    border-color: #45d3ff;
+    color: #082333;
+}
+
+.carrito-navbar:focus-visible {
+    outline: 3px solid #80ddff;
+    outline-offset: 3px;
+}
+
 .cuenta-contenedor {
     position: relative;
     display: flex;
@@ -791,8 +817,22 @@ body.light-theme .mensaje-carrito {
     }
 }
 
-.carrito-contenido > a.boton-comprar {
-    display: block;
+.carrito-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.carrito-acciones > a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    margin: 0;
+    padding: 10px 18px;
+    font-size: 14px;
+    line-height: 20px;
     text-align: center;
     text-decoration: none;
 }
