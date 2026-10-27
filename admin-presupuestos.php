@@ -2,654 +2,203 @@
 require_once __DIR__ . '/admin-comun.php';
 admin_requerir_acceso();
 require_once __DIR__ . '/conexion.php';
+
 $correoDisponible = false;
-$archivoCorreo = __DIR__ . '/correo-config.php';
-if (is_file($archivoCorreo)) {
+if (is_file(__DIR__ . '/correo-config.php')) {
     try {
-        require_once $archivoCorreo;
+        require_once __DIR__ . '/correo-config.php';
         $correoDisponible = is_callable('gpufix_enviar_correo');
     } catch (Throwable $errorCorreo) {
-        error_log('No se pudo cargar el envío de presupuestos: ' . $errorCorreo->getMessage());
+        error_log('Error al cargar el correo de presupuestos: ' . $errorCorreo->getMessage());
     }
 }
-
 admin_validar_csrf();
 
-$mensaje = '';
+$mensaje = (string) ($_SESSION['mensaje_presupuesto_admin'] ?? '');
+unset($_SESSION['mensaje_presupuesto_admin']);
 $error = '';
-
-$estadosPresupuesto = [
-    'Pendiente',
-    'Aprobado',
-    'Rechazado'
-];
+$formularioEditado = '';
+$respuestaIngresada = '';
+$precioIngresado = '';
+$transaccionActiva = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $accion = (string)($_POST['accion'] ?? '');
+    $accion = is_string($_POST['accion'] ?? null) ? $_POST['accion'] : '';
+    $idPresupuesto = filter_input(INPUT_POST, 'id_presupuesto', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+    $idOrden = filter_input(INPUT_POST, 'id_orden_reparacion', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+    $formularioEditado = $idPresupuesto ? 'p-' . $idPresupuesto : 'o-' . $idOrden;
 
-    // Crear presupuesto
-    if ($accion === 'crear') {
-        $idOrden = filter_input(
-            INPUT_POST,
-            'id_orden_reparacion',
-            FILTER_VALIDATE_INT
-        );
-
-        $manoObraTexto = trim((string)($_POST['mano_obra'] ?? ''));
-        $manoObraTexto = str_replace(',', '.', $manoObraTexto);
-        $estado = trim((string)($_POST['estado'] ?? ''));
-
-        if (
-            !$idOrden ||
-            $manoObraTexto === '' ||
-            !is_numeric($manoObraTexto) ||
-            (float)$manoObraTexto <= 0 ||
-            !in_array($estado, $estadosPresupuesto, true)
-        ) {
-            $error = 'Completá los datos correctamente. La mano de obra debe ser mayor a cero.';
-        } else {
-            $manoObra = (float)$manoObraTexto;
-
-            $stmt = $conexion->prepare(
-                'SELECT id_orden_reparacion
-                 FROM orden_reparacion
-                 WHERE id_orden_reparacion = ?'
-            );
-
-            if ($stmt) {
-                $stmt->bind_param('i', $idOrden);
-                $stmt->execute();
-                $ordenExiste = $stmt->get_result()->num_rows > 0;
-                $stmt->close();
-
-                if (!$ordenExiste) {
-                    $error = 'La orden seleccionada no existe.';
-                } else {
-                    $stmt = $conexion->prepare(
-                        'SELECT id_presupuesto
-                         FROM presupuesto
-                         WHERE id_orden_reparacion = ?'
-                    );
-
-                    if ($stmt) {
-                        $stmt->bind_param('i', $idOrden);
-                        $stmt->execute();
-                        $yaTienePresupuesto =
-                            $stmt->get_result()->num_rows > 0;
-                        $stmt->close();
-
-                        if ($yaTienePresupuesto) {
-                            $error = 'Esta orden ya tiene un presupuesto registrado.';
-                        } else {
-                            $stmt = $conexion->prepare(
-                                'INSERT INTO presupuesto
-                                    (id_orden_reparacion, fecha_emision,
-                                     mano_obra, total, estado)
-                                 VALUES (?, NOW(), ?, ?, ?)'
-                            );
-
-                            if ($stmt) {
-                                $total = $manoObra;
-                                $stmt->bind_param(
-                                    'idds',
-                                    $idOrden,
-                                    $manoObra,
-                                    $total,
-                                    $estado
-                                );
-
-                                if ($stmt->execute()) {
-                                    $stmt->close();
-
-                                    $stmt = $conexion->prepare(
-                                        "UPDATE orden_reparacion
-                                         SET estado = 'Presupuestada'
-                                         WHERE id_orden_reparacion = ?"
-                                    );
-
-                                    if ($stmt) {
-                                        $stmt->bind_param('i', $idOrden);
-                                        $stmt->execute();
-                                        $stmt->close();
-                                    }
-
-                                    $mensaje =
-                                        'El presupuesto se registró correctamente.';
-                                } else {
-                                    $error =
-                                        'No se pudo registrar el presupuesto.';
-                                    $stmt->close();
-                                }
-                            } else {
-                                $error =
-                                    'No se pudo preparar el registro del presupuesto.';
-                            }
-                        }
-                    } else {
-                        $error =
-                            'No se pudo verificar si la orden ya tiene presupuesto.';
-                    }
-                }
-            } else {
-                $error = 'No se pudo verificar la orden seleccionada.';
+    try {
+        if ($accion === 'responder_consulta') {
+            $respuestaIngresada = is_string($_POST['respuesta'] ?? null) ? trim($_POST['respuesta']) : '';
+            $precioIngresado = is_string($_POST['precio'] ?? null) ? trim($_POST['precio']) : '';
+            $precio = $precioIngresado === '' ? null : str_replace(',', '.', $precioIngresado);
+            if ((!$idPresupuesto && !$idOrden) || $respuestaIngresada === '' || mb_strlen($respuestaIngresada, 'UTF-8') > 5000) {
+                throw new RuntimeException('Escribí una respuesta de hasta 5000 caracteres para una solicitud válida.');
             }
-        }
-    }
-
-    // Actualizar estado del presupuesto
-    elseif ($accion === 'actualizar_estado') {
-        $idPresupuesto = filter_input(
-            INPUT_POST,
-            'id_presupuesto',
-            FILTER_VALIDATE_INT
-        );
-
-        $estado = trim((string)($_POST['estado'] ?? ''));
-
-        if (
-            !$idPresupuesto ||
-            !in_array($estado, $estadosPresupuesto, true)
-        ) {
-            $error = 'Los datos enviados no son válidos.';
-        } else {
-            $stmt = $conexion->prepare(
-                'UPDATE presupuesto
-                 SET estado = ?
-                 WHERE id_presupuesto = ?'
-            );
-
-            if ($stmt) {
-                $stmt->bind_param('si', $estado, $idPresupuesto);
-
-                if ($stmt->execute()) {
-                    $mensaje =
-                        'El estado del presupuesto se actualizó correctamente.';
-                } else {
-                    $error =
-                        'No se pudo actualizar el estado del presupuesto.';
-                }
-
-                $stmt->close();
-            } else {
-                $error =
-                    'No se pudo preparar la actualización.';
+            if ($precio !== null && !preg_match('/^[0-9]{1,10}(?:\.[0-9]{1,2})?$/', $precio)) {
+                throw new RuntimeException('El precio debe ser un importe entre 0 y 9.999.999.999,99, con hasta dos decimales. También podés dejarlo vacío.');
             }
-        }
-    }
 
-    // Enviar presupuesto por correo electrónico
-    elseif ($accion === 'enviar') {
-        $idPresupuesto = filter_input(
-            INPUT_POST,
-            'id_presupuesto',
-            FILTER_VALIDATE_INT
-        );
-
-        if (!$correoDisponible) {
-            $error = 'El envío de correo no está configurado. El cliente puede consultar el presupuesto desde Mi cuenta.';
-        } elseif (!$idPresupuesto) {
-            $error = 'El presupuesto seleccionado no es válido.';
-        } else {
-            $stmt = $conexion->prepare(
-                "SELECT
-                    p.id_presupuesto,
-                    p.id_orden_reparacion,
-                    p.fecha_emision,
-                    p.mano_obra,
-                    p.total,
-                    p.estado,
-                    g.marca,
-                    g.modelo,
-                    g.numero_serie,
-                    u.nombre AS nombre_cliente,
-                    u.apellido AS apellido_cliente,
-                    u.correo AS correo_cliente
-                 FROM presupuesto p
-                 INNER JOIN orden_reparacion o
-                    ON p.id_orden_reparacion = o.id_orden_reparacion
-                 INNER JOIN gpu_cliente g
-                    ON o.id_gpu_cliente = g.id_gpu_cliente
-                 INNER JOIN cliente c
-                    ON g.id_cliente = c.id_cliente
-                 INNER JOIN usuarios u
-                    ON c.id_correo = u.id_correo
-                 WHERE p.id_presupuesto = ?"
-            );
-
-            if ($stmt) {
-                $stmt->bind_param('i', $idPresupuesto);
-                $stmt->execute();
-                $resultadoEnvio = $stmt->get_result();
-                $presupuestoEnvio = $resultadoEnvio->fetch_assoc();
-                $stmt->close();
-
-                if (!$presupuestoEnvio) {
-                    $error = 'No se encontró el presupuesto.';
-                } else {
-                    $destinatario = trim(
-                        (string)$presupuestoEnvio['correo_cliente']
-                    );
-
-                    if (!filter_var($destinatario, FILTER_VALIDATE_EMAIL)) {
-                        $error =
-                            'El cliente no tiene un correo válido registrado.';
-                    } else {
-                        $nombreCliente =
-                            $presupuestoEnvio['nombre_cliente'] . ' ' .
-                            $presupuestoEnvio['apellido_cliente'];
-
-                        $numeroPresupuesto =
-                            (int)$presupuestoEnvio['id_presupuesto'];
-
-                        $numeroOrden =
-                            (int)$presupuestoEnvio['id_orden_reparacion'];
-
-                        $placa =
-                            $presupuestoEnvio['marca'] . ' ' .
-                            $presupuestoEnvio['modelo'];
-
-                        $manoObra = number_format(
-                            (float)$presupuestoEnvio['mano_obra'],
-                            2,
-                            ',',
-                            '.'
-                        );
-
-                        $total = number_format(
-                            (float)$presupuestoEnvio['total'],
-                            2,
-                            ',',
-                            '.'
-                        );
-
-                        $fecha = $presupuestoEnvio['fecha_emision'];
-                        $estadoPresupuesto = $presupuestoEnvio['estado'];
-
-                        $asunto =
-                            'Presupuesto de reparación GPUFIX #' .
-                            $numeroPresupuesto;
-
-                        $cuerpo =
-                            "Hola {$nombreCliente},\n\n" .
-                            "Te enviamos los datos del presupuesto de reparación de tu placa gráfica.\n\n" .
-                            "Número de presupuesto: #{$numeroPresupuesto}\n" .
-                            "Orden de reparación: #{$numeroOrden}\n" .
-                            "Placa gráfica: {$placa}\n" .
-                            "Número de serie: {$presupuestoEnvio['numero_serie']}\n" .
-                            "Fecha de emisión: {$fecha}\n" .
-                            "Mano de obra: \${$manoObra}\n" .
-                            "Total: \${$total}\n" .
-                            "Estado del presupuesto: {$estadoPresupuesto}\n\n" .
-                            "Para consultar o confirmar el presupuesto, comunicate con nuestro equipo.\n\n" .
-                            "Saludos,\n" .
-                            "Equipo GPUFIX";
-
-                        if (
-                            gpufix_enviar_correo(
-                                $destinatario,
-                                $asunto,
-                                $cuerpo
-                            )
-                        ) {
-                            $mensaje =
-                                'El presupuesto #' . $numeroPresupuesto .
-                                ' se envió correctamente a ' . $destinatario . '.';
-                        } else {
-                            $error =
-                                'No se pudo enviar el correo. Revisá la configuración de Gmail y los registros de errores de PHP.';
-                        }
-                    }
-                }
+            $conexion->begin_transaction();
+            $transaccionActiva = true;
+            if ($idPresupuesto) {
+                $buscar = $conexion->prepare('SELECT id_presupuesto FROM presupuesto WHERE id_presupuesto = ? FOR UPDATE');
+                $buscar->bind_param('i', $idPresupuesto);
+                $buscar->execute();
+                $existe = $buscar->get_result()->fetch_assoc();
+                $buscar->close();
+                if (!$existe) throw new RuntimeException('La solicitud ya no está disponible.');
             } else {
-                $error =
-                    'No se pudo preparar la información del presupuesto.';
+                // Las solicitudes anteriores de reparacion usan el mismo formulario.
+                $buscar = $conexion->prepare('SELECT g.id_cliente, o.motivo FROM orden_reparacion o INNER JOIN gpu_cliente g ON g.id_gpu_cliente = o.id_gpu_cliente WHERE o.id_orden_reparacion = ? FOR UPDATE');
+                $buscar->bind_param('i', $idOrden);
+                $buscar->execute();
+                $orden = $buscar->get_result()->fetch_assoc();
+                $buscar->close();
+                if (!$orden) throw new RuntimeException('La solicitud ya no está disponible.');
+                $buscar = $conexion->prepare('SELECT id_presupuesto FROM presupuesto WHERE id_orden_reparacion = ? ORDER BY id_presupuesto LIMIT 1 FOR UPDATE');
+                $buscar->bind_param('i', $idOrden);
+                $buscar->execute();
+                $existente = $buscar->get_result()->fetch_assoc();
+                $buscar->close();
+                $idPresupuesto = (int) ($existente['id_presupuesto'] ?? 0);
+                if (!$idPresupuesto) {
+                    $clienteId = (int) $orden['id_cliente'];
+                    $crear = $conexion->prepare("INSERT INTO presupuesto (id_orden_reparacion, id_cliente, consulta, total, estado) VALUES (?, ?, ?, NULL, 'Pendiente de respuesta')");
+                    $crear->bind_param('iis', $idOrden, $clienteId, $orden['motivo']);
+                    $crear->execute();
+                    $idPresupuesto = (int) $conexion->insert_id;
+                    $crear->close();
+                }
             }
+            $guardar = $conexion->prepare("UPDATE presupuesto SET respuesta = ?, total = ?, fecha_respuesta = NOW(), estado = 'Respondida' WHERE id_presupuesto = ?");
+            $guardar->bind_param('ssi', $respuestaIngresada, $precio, $idPresupuesto);
+            $guardar->execute();
+            $guardar->close();
+            $conexion->commit();
+            $transaccionActiva = false;
+            $_SESSION['mensaje_presupuesto_admin'] = 'Respuesta guardada. El cliente ya puede verla en Mi cuenta.';
+            header('Location: admin-presupuestos.php#solicitud-p-' . $idPresupuesto, true, 303);
+            exit;
+        } elseif ($accion === 'enviar') {
+            if (!$correoDisponible) throw new RuntimeException('El envío por correo no está configurado. La respuesta está disponible en Mi cuenta.');
+            if (!$idPresupuesto) throw new RuntimeException('Seleccioná una solicitud respondida.');
+            $buscar = $conexion->prepare("SELECT p.id_presupuesto, p.total, p.respuesta, COALESCE(p.consulta, o.motivo, '') AS consulta_cliente, u.nombre, u.apellido, u.correo FROM presupuesto p LEFT JOIN orden_reparacion o ON o.id_orden_reparacion = p.id_orden_reparacion LEFT JOIN gpu_cliente g ON g.id_gpu_cliente = o.id_gpu_cliente INNER JOIN cliente c ON c.id_cliente = COALESCE(p.id_cliente, g.id_cliente) INNER JOIN usuarios u ON u.id_correo = c.id_correo WHERE p.id_presupuesto = ? LIMIT 1");
+            $buscar->bind_param('i', $idPresupuesto);
+            $buscar->execute();
+            $solicitud = $buscar->get_result()->fetch_assoc();
+            $buscar->close();
+            if (!$solicitud || trim((string) $solicitud['respuesta']) === '') throw new RuntimeException('Primero guardá una respuesta para esta solicitud.');
+            if (!filter_var($solicitud['correo'], FILTER_VALIDATE_EMAIL)) throw new RuntimeException('El cliente no tiene un correo válido.');
+            $precioCorreo = $solicitud['total'] === null ? 'Sin precio informado.' : 'Precio: $ ' . number_format((float) $solicitud['total'], 2, ',', '.');
+            $cuerpo = 'Hola ' . trim($solicitud['nombre'] . ' ' . $solicitud['apellido']) . ",\n\n"
+                . "Respondimos tu solicitud #" . $idPresupuesto . ".\n\nTu consulta:\n" . $solicitud['consulta_cliente']
+                . "\n\nRespuesta de GPUFIX:\n" . $solicitud['respuesta'] . "\n\n" . $precioCorreo
+                . "\n\nTambién podés consultar esta respuesta desde Mi cuenta.\n\nEquipo GPUFIX";
+            if (!gpufix_enviar_correo($solicitud['correo'], 'Respuesta a tu solicitud GPUFIX #' . $idPresupuesto, $cuerpo)) {
+                throw new RuntimeException('No se pudo enviar el correo. La respuesta sigue guardada y disponible en Mi cuenta.');
+            }
+            $_SESSION['mensaje_presupuesto_admin'] = 'Respuesta enviada por correo al cliente.';
+            header('Location: admin-presupuestos.php#solicitud-p-' . $idPresupuesto, true, 303);
+            exit;
+        } else {
+            throw new RuntimeException('No se reconoció la acción solicitada.');
         }
+    } catch (Throwable $fallo) {
+        if ($transaccionActiva) {
+            $conexion->rollback();
+            $transaccionActiva = false;
+        }
+        error_log('Error en presupuestos de administración: ' . $fallo->getMessage());
+        $error = $fallo instanceof mysqli_sql_exception ? 'No pudimos guardar la respuesta. Intentá nuevamente.' : $fallo->getMessage();
     }
 }
 
-// Órdenes que todavía no tienen presupuesto
-$sqlOrdenes = "
-    SELECT
-        o.id_orden_reparacion,
-        o.fecha_ingreso,
-        o.estado,
-        g.marca,
-        g.modelo,
-        g.numero_serie,
-        u.nombre AS nombre_cliente,
-        u.apellido AS apellido_cliente,
-        u.correo AS correo_cliente
-    FROM orden_reparacion o
-    INNER JOIN gpu_cliente g
-        ON o.id_gpu_cliente = g.id_gpu_cliente
-    INNER JOIN cliente c
-        ON g.id_cliente = c.id_cliente
-    INNER JOIN usuarios u
-        ON c.id_correo = u.id_correo
-    LEFT JOIN presupuesto p
-        ON o.id_orden_reparacion = p.id_orden_reparacion
-    WHERE p.id_presupuesto IS NULL
-    ORDER BY o.fecha_ingreso DESC
-";
-
-$ordenes = $conexion->query($sqlOrdenes);
-
-// Presupuestos registrados
-$sqlPresupuestos = "
-    SELECT
-        p.id_presupuesto,
-        p.id_orden_reparacion,
-        p.fecha_emision,
-        p.mano_obra,
-        p.total,
-        p.estado,
-        g.marca,
-        g.modelo,
-        g.numero_serie,
-        u.nombre AS nombre_cliente,
-        u.apellido AS apellido_cliente,
-        u.correo AS correo_cliente
+// Una sola lista para todas las solicitudes, incluidas las anteriores.
+$solicitudes = $conexion->query("
+    SELECT p.id_presupuesto, p.id_orden_reparacion, p.fecha_emision,
+           COALESCE(p.consulta, o.motivo, '') AS consulta, p.respuesta, p.fecha_respuesta,
+           p.total, p.estado, u.nombre, u.apellido, u.correo,
+           (p.fecha_respuesta IS NULL) AS sin_respuesta
     FROM presupuesto p
-    INNER JOIN orden_reparacion o
-        ON p.id_orden_reparacion = o.id_orden_reparacion
-    INNER JOIN gpu_cliente g
-        ON o.id_gpu_cliente = g.id_gpu_cliente
-    INNER JOIN cliente c
-        ON g.id_cliente = c.id_cliente
-    INNER JOIN usuarios u
-        ON c.id_correo = u.id_correo
-    ORDER BY p.fecha_emision DESC
-";
-
-$presupuestos = $conexion->query($sqlPresupuestos);
+    LEFT JOIN orden_reparacion o ON o.id_orden_reparacion = p.id_orden_reparacion
+    LEFT JOIN gpu_cliente g ON g.id_gpu_cliente = o.id_gpu_cliente
+    INNER JOIN cliente c ON c.id_cliente = COALESCE(p.id_cliente, g.id_cliente)
+    INNER JOIN usuarios u ON u.id_correo = c.id_correo
+    UNION ALL
+    SELECT NULL, o.id_orden_reparacion, o.fecha_ingreso, o.motivo, NULL, NULL,
+           NULL, o.estado, u.nombre, u.apellido, u.correo, 1
+    FROM orden_reparacion o
+    INNER JOIN gpu_cliente g ON g.id_gpu_cliente = o.id_gpu_cliente
+    INNER JOIN cliente c ON c.id_cliente = g.id_cliente
+    INNER JOIN usuarios u ON u.id_correo = c.id_correo
+    LEFT JOIN presupuesto p ON p.id_orden_reparacion = o.id_orden_reparacion
+    WHERE p.id_presupuesto IS NULL
+    ORDER BY sin_respuesta DESC, fecha_emision DESC, id_presupuesto DESC
+");
 
 admin_layout_inicio('Presupuestos');
 ?>
-
 <h1 class="h3 mt-3">Presupuestos</h1>
-
-<p class="text-secondary">
-    Registrá presupuestos y administrá sus estados.
-    El importe corresponde únicamente a la mano de obra.
-</p>
-
-<?php if (!$correoDisponible): ?>
-    <div class="alert alert-info" role="status">
-        El envío por correo no está configurado. Podés gestionar los presupuestos desde este panel y el cliente puede consultarlos en Mi cuenta.
-    </div>
-<?php endif; ?>
-
-<?php if ($mensaje !== ''): ?>
-    <div class="alert alert-success">
-        <?= admin_e($mensaje) ?>
-    </div>
-<?php endif; ?>
-
-<?php if ($error !== ''): ?>
-    <div class="alert alert-danger">
-        <?= admin_e($error) ?>
-    </div>
-<?php endif; ?>
-
-<div class="panel">
-    <h2 class="h5 mb-3">Crear presupuesto</h2>
-
-    <?php if (!$ordenes): ?>
-        <div class="alert alert-danger mb-0">
-            No se pudieron cargar las órdenes disponibles.
-        </div>
-
-    <?php elseif ($ordenes->num_rows === 0): ?>
-        <p class="mb-0">
-            No hay órdenes pendientes de presupuesto.
-        </p>
-
-    <?php else: ?>
-        <form method="post">
-            <input
-                type="hidden"
-                name="admin_csrf"
-                value="<?= admin_e(admin_csrf()) ?>"
-            >
-            <input type="hidden" name="accion" value="crear">
-
-            <div class="mb-3">
-                <label for="id_orden_reparacion" class="form-label">
-                    Orden de reparación
-                </label>
-
-                <select
-                    name="id_orden_reparacion"
-                    id="id_orden_reparacion"
-                    class="form-select"
-                    required
-                >
-                    <option value="">Seleccioná una orden</option>
-
-                    <?php while ($orden = $ordenes->fetch_assoc()): ?>
-                        <option value="<?= (int)$orden['id_orden_reparacion'] ?>">
-                            <?= '#' . (int)$orden['id_orden_reparacion'] ?>
-                            -
-                            <?= admin_e(
-                                $orden['nombre_cliente'] . ' ' .
-                                $orden['apellido_cliente']
-                            ) ?>
-                            -
-                            <?= admin_e($orden['marca'] . ' ' . $orden['modelo']) ?>
-                            (Serie: <?= admin_e($orden['numero_serie']) ?>)
-                        </option>
-                    <?php endwhile; ?>
-                </select>
+<p class="text-secondary">Respondé la consulta del cliente. Podés incluir un precio o dejarlo vacío.</p>
+<?php if ($mensaje !== ''): ?><div class="alert alert-success" role="status"><?= admin_e($mensaje) ?></div><?php endif; ?>
+<?php if ($error !== ''): ?><div class="alert alert-danger" role="alert"><?= admin_e($error) ?></div><?php endif; ?>
+<section class="panel" aria-labelledby="tituloSolicitudes">
+    <h2 class="h5 mb-3" id="tituloSolicitudes">Solicitudes de clientes</h2>
+    <?php if ($solicitudes->num_rows === 0): ?>
+        <p class="mb-0">Todavía no hay solicitudes de clientes.</p>
+    <?php else: while ($solicitud = $solicitudes->fetch_assoc()):
+        $idPresupuesto = (int) ($solicitud['id_presupuesto'] ?? 0);
+        $idOrden = (int) ($solicitud['id_orden_reparacion'] ?? 0);
+        $idFormulario = $idPresupuesto ? 'p-' . $idPresupuesto : 'o-' . $idOrden;
+        $respuesta = $formularioEditado === $idFormulario ? $respuestaIngresada : (string) ($solicitud['respuesta'] ?? '');
+        $precio = $formularioEditado === $idFormulario ? $precioIngresado : (string) ($solicitud['total'] ?? '');
+    ?>
+        <article class="border rounded p-3 mb-3" id="solicitud-<?= admin_e($idFormulario) ?>">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+                <div>
+                    <h3 class="h6 mb-1">Solicitud #<?= $idPresupuesto ?: $idOrden ?> · <?= admin_e(trim($solicitud['nombre'] . ' ' . $solicitud['apellido'])) ?></h3>
+                    <div class="small text-secondary"><?= admin_e($solicitud['correo']) ?> · <?= admin_e($solicitud['fecha_emision']) ?></div>
+                </div>
+                <span class="badge text-bg-secondary"><?= admin_e($solicitud['estado'] ?: 'Pendiente de respuesta') ?></span>
             </div>
-
-            <div class="mb-3">
-                <label for="mano_obra" class="form-label">
-                    Mano de obra ($)
-                </label>
-                <input
-                    type="number"
-                    name="mano_obra"
-                    id="mano_obra"
-                    class="form-control"
-                    min="0.01"
-                    step="0.01"
-                    placeholder="Ej.: 25000"
-                    required
-                >
+            <div class="p-3 bg-light border rounded mb-3" style="overflow-wrap:anywhere">
+                <strong>Motivo o consulta</strong>
+                <p class="mb-0 mt-2"><?= nl2br(admin_e($solicitud['consulta'])) ?></p>
             </div>
-
-            <div class="mb-3">
-                <label for="estado" class="form-label">
-                    Estado inicial
-                </label>
-                <select
-                    name="estado"
-                    id="estado"
-                    class="form-select"
-                    required
-                >
-                    <?php foreach ($estadosPresupuesto as $estado): ?>
-                        <option value="<?= admin_e($estado) ?>">
-                            <?= admin_e($estado) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <button type="submit" class="btn btn-primary">
-                Registrar presupuesto
-            </button>
-        </form>
-    <?php endif; ?>
-</div>
-
-<div class="panel">
-    <h2 class="h5 mb-3">Presupuestos registrados</h2>
-
-    <?php if (!$presupuestos): ?>
-        <div class="alert alert-danger mb-0">
-            No se pudieron cargar los presupuestos.
-        </div>
-
-    <?php elseif ($presupuestos->num_rows === 0): ?>
-        <p class="mb-0">
-            Todavía no hay presupuestos registrados.
-        </p>
-
-    <?php else: ?>
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>N.º presupuesto</th>
-                        <th>Orden</th>
-                        <th>Cliente</th>
-                        <th>Placa</th>
-                        <th>Fecha</th>
-                        <th>Mano de obra</th>
-                        <th>Total</th>
-                        <th>Estado</th>
-                        <th>Actualizar</th>
-                        <th>Enviar</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    <?php while ($p = $presupuestos->fetch_assoc()): ?>
-                        <tr>
-                            <td>#<?= (int)$p['id_presupuesto'] ?></td>
-
-                            <td>#<?= (int)$p['id_orden_reparacion'] ?></td>
-
-                            <td>
-                                <?= admin_e(
-                                    $p['nombre_cliente'] . ' ' .
-                                    $p['apellido_cliente']
-                                ) ?>
-                                <div class="small-muted">
-                                    <?= admin_e($p['correo_cliente']) ?>
-                                </div>
-                            </td>
-
-                            <td>
-                                <?= admin_e($p['marca'] . ' ' . $p['modelo']) ?>
-                                <div class="small-muted">
-                                    Serie: <?= admin_e($p['numero_serie']) ?>
-                                </div>
-                            </td>
-
-                            <td><?= admin_e($p['fecha_emision']) ?></td>
-
-                            <td>
-                                $<?= number_format(
-                                    (float)$p['mano_obra'],
-                                    2,
-                                    ',',
-                                    '.'
-                                ) ?>
-                            </td>
-
-                            <td>
-                                $<?= number_format(
-                                    (float)$p['total'],
-                                    2,
-                                    ',',
-                                    '.'
-                                ) ?>
-                            </td>
-
-                            <td><?= admin_e($p['estado'] ?: 'Sin estado') ?></td>
-
-                            <td>
-                                <form method="post" class="d-flex gap-2">
-                                    <input
-                                        type="hidden"
-                                        name="admin_csrf"
-                                        value="<?= admin_e(admin_csrf()) ?>"
-                                    >
-                                    <input
-                                        type="hidden"
-                                        name="accion"
-                                        value="actualizar_estado"
-                                    >
-                                    <input
-                                        type="hidden"
-                                        name="id_presupuesto"
-                                        value="<?= (int)$p['id_presupuesto'] ?>"
-                                    >
-
-                                    <select
-                                        name="estado"
-                                        class="form-select form-select-sm"
-                                        required
-                                    >
-                                        <?php foreach ($estadosPresupuesto as $opcion): ?>
-                                            <option
-                                                value="<?= admin_e($opcion) ?>"
-                                                <?= $p['estado'] === $opcion ? 'selected' : '' ?>
-                                            >
-                                                <?= admin_e($opcion) ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-
-                                    <button
-                                        type="submit"
-                                        class="btn btn-primary btn-sm"
-                                    >
-                                        Guardar
-                                    </button>
-                                </form>
-                            </td>
-
-                            <td>
-                                <form
-                                    method="post"
-                                    onsubmit="return confirm('¿Querés enviar este presupuesto por correo electrónico al cliente?');"
-                                >
-                                    <input
-                                        type="hidden"
-                                        name="admin_csrf"
-                                        value="<?= admin_e(admin_csrf()) ?>"
-                                    >
-                                    <input
-                                        type="hidden"
-                                        name="accion"
-                                        value="enviar"
-                                    >
-                                    <input
-                                        type="hidden"
-                                        name="id_presupuesto"
-                                        value="<?= (int)$p['id_presupuesto'] ?>"
-                                    >
-
-                                    <button
-                                        type="submit"
-                                        class="btn btn-success btn-sm"
-                                        <?= $correoDisponible ? '' : 'disabled' ?>
-                                    >
-                                        Enviar presupuesto
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
-        </div>
-    <?php endif; ?>
-</div>
-
+            <form method="post" action="admin-presupuestos.php#solicitud-<?= admin_e($idFormulario) ?>">
+                <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">
+                <input type="hidden" name="accion" value="responder_consulta">
+                <input type="hidden" name="id_presupuesto" value="<?= $idPresupuesto ?>">
+                <input type="hidden" name="id_orden_reparacion" value="<?= $idOrden ?>">
+                <div class="mb-3">
+                    <label for="respuesta-<?= admin_e($idFormulario) ?>" class="form-label">Respuesta al cliente</label>
+                    <textarea class="form-control" id="respuesta-<?= admin_e($idFormulario) ?>" name="respuesta" rows="3" maxlength="5000" placeholder="Escribí la respuesta que verá el cliente en Mi cuenta." required><?= admin_e($respuesta) ?></textarea>
+                </div>
+                <div class="row align-items-end g-3">
+                    <div class="col-md-5">
+                        <label for="precio-<?= admin_e($idFormulario) ?>" class="form-label">Precio opcional ($)</label>
+                        <input type="text" class="form-control" id="precio-<?= admin_e($idFormulario) ?>" name="precio" inputmode="decimal" maxlength="13" pattern="[0-9]+([.,][0-9]{1,2})?" placeholder="Ej.: 25000,50" value="<?= admin_e($precio) ?>">
+                        <div class="form-text">Dejalo vacío para responder solo la consulta.</div>
+                    </div>
+                    <div class="col-md-auto"><button type="submit" class="btn btn-primary"><?= $solicitud['respuesta'] === null ? 'Responder' : 'Guardar respuesta' ?></button></div>
+                </div>
+                <?php if ($solicitud['fecha_respuesta'] !== null): ?><p class="small text-secondary mt-3 mb-0">Última respuesta: <?= admin_e($solicitud['fecha_respuesta']) ?></p><?php endif; ?>
+            </form>
+            <?php if ($idPresupuesto && $solicitud['respuesta'] !== null): ?>
+                <form method="post" class="mt-3">
+                    <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">
+                    <input type="hidden" name="accion" value="enviar">
+                    <input type="hidden" name="id_presupuesto" value="<?= $idPresupuesto ?>">
+                    <button type="submit" class="btn btn-outline-success btn-sm" <?= $correoDisponible ? '' : 'disabled' ?>>Enviar respuesta por correo</button>
+                    <?php if (!$correoDisponible): ?><small class="text-secondary ms-2">Correo no configurado. La respuesta está disponible en Mi cuenta.</small><?php endif; ?>
+                </form>
+            <?php endif; ?>
+        </article>
+    <?php endwhile; endif; ?>
+</section>
 <?php
-if ($ordenes instanceof mysqli_result) {
-    $ordenes->free();
-}
-
-if ($presupuestos instanceof mysqli_result) {
-    $presupuestos->free();
-}
-
+$solicitudes->free();
 $conexion->close();
 admin_layout_fin();
-?>

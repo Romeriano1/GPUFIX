@@ -26,8 +26,7 @@ if (!in_array($editarCuenta, ["correo", "contrasena"], true)) {
 $correoNuevo = "";
 $accion = "";
 $solicitarPresupuesto = (($_GET["solicitar"] ?? "") === "presupuesto") || (($_POST["accion"] ?? "") === "solicitar_presupuesto");
-$equipoPresupuesto = ["marca" => "", "modelo" => "", "numero_serie" => "", "motivo" => ""];
-$transaccionPresupuesto = false;
+$motivoPresupuesto = "";
 if (empty($_SESSION["csrf_presupuesto"])) {
     $_SESSION["csrf_presupuesto"] = bin2hex(random_bytes(32));
 }
@@ -55,65 +54,22 @@ try {
 
     if ($_SERVER["REQUEST_METHOD"] === "POST" && ($_POST["accion"] ?? "") === "solicitar_presupuesto") {
         $accion = "solicitar_presupuesto";
-        foreach ($equipoPresupuesto as $campo => $valor) {
-            $equipoPresupuesto[$campo] = is_string($_POST[$campo] ?? null) ? trim($_POST[$campo]) : "";
-        }
+        $motivoPresupuesto = is_string($_POST["motivo"] ?? null) ? trim($_POST["motivo"]) : "";
         $tokenPresupuesto = $_POST["csrf_presupuesto"] ?? null;
         if (!is_string($tokenPresupuesto) || !hash_equals($_SESSION["csrf_presupuesto"], $tokenPresupuesto)) {
             $errorCuenta = "La solicitud venció o ya fue enviada. Revisá tus presupuestos antes de intentar otra vez.";
-        } elseif ($equipoPresupuesto["marca"] === "" || mb_strlen($equipoPresupuesto["marca"]) > 100
-            || $equipoPresupuesto["modelo"] === "" || mb_strlen($equipoPresupuesto["modelo"]) > 150
-            || $equipoPresupuesto["numero_serie"] === "" || mb_strlen($equipoPresupuesto["numero_serie"]) > 100) {
-            $errorCuenta = "Completá la marca, el modelo y el número de serie de tu placa.";
-        } elseif (mb_strlen($equipoPresupuesto["motivo"]) < 10 || mb_strlen($equipoPresupuesto["motivo"]) > 3000) {
-            $errorCuenta = "Describí la falla usando entre 10 y 3000 caracteres.";
+        } elseif (mb_strlen($motivoPresupuesto, "UTF-8") < 10 || mb_strlen($motivoPresupuesto, "UTF-8") > 3000) {
+            $errorCuenta = "Escribí tu motivo o consulta usando entre 10 y 3000 caracteres.";
         } else {
-            $conexion->begin_transaction();
-            $transaccionPresupuesto = true;
-            $buscarEquipo = $conexion->prepare("SELECT id_gpu_cliente, id_cliente, marca, modelo FROM gpu_cliente WHERE numero_serie = ? FOR UPDATE");
-            $buscarEquipo->bind_param("s", $equipoPresupuesto["numero_serie"]);
-            $buscarEquipo->execute();
-            $equipoExistente = $buscarEquipo->get_result()->fetch_assoc();
-            $buscarEquipo->close();
-            if ($equipoExistente && (int) $equipoExistente["id_cliente"] !== (int) $clienteId) {
-                $errorCuenta = "Ya existe un equipo registrado con ese número de serie. Revisá el dato ingresado.";
-            } elseif ($equipoExistente && (strcasecmp($equipoExistente["marca"], $equipoPresupuesto["marca"]) !== 0
-                || strcasecmp($equipoExistente["modelo"], $equipoPresupuesto["modelo"]) !== 0)) {
-                $errorCuenta = "La marca o el modelo no coinciden con el equipo registrado con ese número de serie.";
-            } else {
-                $idEquipo = (int) ($equipoExistente["id_gpu_cliente"] ?? 0);
-                if ($idEquipo > 0) {
-                    $buscarPendiente = $conexion->prepare("SELECT id_orden_reparacion FROM orden_reparacion WHERE id_gpu_cliente = ? AND fecha_egreso IS NULL AND (estado IS NULL OR estado NOT IN ('Cancelada', 'Finalizada', 'Entregada')) LIMIT 1 FOR UPDATE");
-                    $buscarPendiente->bind_param("i", $idEquipo);
-                    $buscarPendiente->execute();
-                    $hayPendiente = $buscarPendiente->get_result()->fetch_assoc();
-                    $buscarPendiente->close();
-                    if ($hayPendiente) {
-                        $errorCuenta = "Ya tenés una solicitud o reparación pendiente para esa placa.";
-                    }
-                } else {
-                    $crearEquipo = $conexion->prepare("INSERT INTO gpu_cliente (marca, modelo, numero_serie, estado, id_cliente) VALUES (?, ?, ?, 'Pendiente de presupuesto', ?)");
-                    $crearEquipo->bind_param("sssi", $equipoPresupuesto["marca"], $equipoPresupuesto["modelo"], $equipoPresupuesto["numero_serie"], $clienteId);
-                    $crearEquipo->execute();
-                    $idEquipo = (int) $conexion->insert_id;
-                    $crearEquipo->close();
-                }
-                if ($errorCuenta === "") {
-                    $crearSolicitud = $conexion->prepare("INSERT INTO orden_reparacion (id_gpu_cliente, id_empleado_recepcion, motivo, estado) VALUES (?, NULL, ?, 'Pendiente de presupuesto')");
-                    $crearSolicitud->bind_param("is", $idEquipo, $equipoPresupuesto["motivo"]);
-                    $crearSolicitud->execute();
-                    $idSolicitud = (int) $conexion->insert_id;
-                    $crearSolicitud->close();
-                    $conexion->commit();
-                    $transaccionPresupuesto = false;
-                    unset($_SESSION["csrf_presupuesto"]);
-                    $_SESSION["mensaje_cuenta"] = "Solicitud #" . $idSolicitud . " recibida. Podés consultar su estado en tus presupuestos; el importe queda pendiente de cotización.";
-                    header("Location: mi-cuenta.php#presupuestos", true, 303);
-                    exit;
-                }
-            }
-            $conexion->rollback();
-            $transaccionPresupuesto = false;
+            $crearConsulta = $conexion->prepare("INSERT INTO presupuesto (id_cliente, consulta, total, estado) VALUES (?, ?, NULL, 'Pendiente de respuesta')");
+            $crearConsulta->bind_param("is", $clienteId, $motivoPresupuesto);
+            $crearConsulta->execute();
+            $idConsulta = (int) $conexion->insert_id;
+            $crearConsulta->close();
+            unset($_SESSION["csrf_presupuesto"]);
+            $_SESSION["mensaje_cuenta"] = "Consulta #" . $idConsulta . " enviada. Podés ver nuestra respuesta en tus presupuestos.";
+            header("Location: mi-cuenta.php#presupuestos", true, 303);
+            exit;
         }
     }
 
@@ -204,16 +160,22 @@ try {
 
     $presupuestos = [];
     $consultaPresupuestos = $conexion->prepare(
-        "SELECT p.id_presupuesto, COALESCE(p.fecha_emision, o.fecha_ingreso) AS fecha_emision,
+        "SELECT p.id_presupuesto, p.fecha_emision, p.total, p.estado,
+                NULL AS id_orden_reparacion, p.consulta AS motivo, NULL AS marca, NULL AS modelo,
+                p.respuesta, p.fecha_respuesta
+         FROM presupuesto p
+         WHERE p.id_cliente = ? AND p.id_orden_reparacion IS NULL
+         UNION ALL
+         SELECT p.id_presupuesto, COALESCE(p.fecha_emision, o.fecha_ingreso) AS fecha_emision,
                 p.total, COALESCE(p.estado, o.estado) AS estado,
-                o.id_orden_reparacion, o.motivo, g.marca, g.modelo
+                o.id_orden_reparacion, o.motivo, g.marca, g.modelo, p.respuesta, p.fecha_respuesta
          FROM orden_reparacion o
          INNER JOIN gpu_cliente g ON g.id_gpu_cliente = o.id_gpu_cliente
          LEFT JOIN presupuesto p ON p.id_orden_reparacion = o.id_orden_reparacion
          WHERE g.id_cliente = ?
-         ORDER BY fecha_emision DESC, o.id_orden_reparacion DESC, p.id_presupuesto DESC"
+         ORDER BY fecha_emision DESC, id_presupuesto DESC"
     );
-    $consultaPresupuestos->bind_param("i", $clienteId);
+    $consultaPresupuestos->bind_param("ii", $clienteId, $clienteId);
     $consultaPresupuestos->execute();
     $resultadoPresupuestos = $consultaPresupuestos->get_result();
     while ($presupuesto = $resultadoPresupuestos->fetch_assoc()) {
@@ -224,16 +186,13 @@ try {
 } catch (Throwable $error) {
     if (isset($conexion) && $conexion instanceof mysqli) {
         try {
-            if ($transaccionPresupuesto) {
-                $conexion->rollback();
-            }
             $conexion->close();
         } catch (Throwable $errorCierre) {
         }
     }
     error_log("Error al cargar Mi cuenta: " . $error->getMessage());
     $errorCuenta = $accion === "solicitar_presupuesto"
-        ? "No pudimos registrar la solicitud. Revisá los datos del equipo e intentá nuevamente."
+        ? "No pudimos registrar tu consulta. Intentá nuevamente."
         : (($accion === "cambiar_correo" && $error instanceof mysqli_sql_exception && (int) $error->getCode() === 1062)
         ? "Ya existe una cuenta registrada con ese correo."
         : "No pudimos cargar tu cuenta. Intentá nuevamente más tarde.");
@@ -263,7 +222,7 @@ function formatoImporteCuenta($importe)
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi cuenta - GPU FIX & STORE</title>
-    <link rel="stylesheet" href="style.css?v=20261026-metodos">
+    <link rel="stylesheet" href="style.css?v=20261026-consultas">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
         crossorigin="anonymous">
@@ -305,7 +264,7 @@ function formatoImporteCuenta($importe)
         </div>
     </section>
 
-    <?php if ($errorCuenta !== ""): ?>
+    <?php if ($errorCuenta !== "" && $accion !== "solicitar_presupuesto"): ?>
         <div class="mi-cuenta-mensaje error" role="alert"><?= escaparCuenta($errorCuenta) ?></div>
     <?php elseif ($mensajeCuenta !== ""): ?>
         <div class="mi-cuenta-mensaje exito" role="status"><?= escaparCuenta($mensajeCuenta) ?></div>
@@ -353,35 +312,42 @@ function formatoImporteCuenta($importe)
             </div>
             <?php if ($solicitarPresupuesto): ?>
                 <form action="mi-cuenta.php?solicitar=presupuesto#presupuestos" method="post" class="presupuesto-formulario">
-                    <h3>Contanos qué le pasa a tu placa</h3>
+                    <h3>Contanos en qué podemos ayudarte</h3>
+                    <?php if ($accion === "solicitar_presupuesto" && $errorCuenta !== ""): ?><div class="mi-cuenta-mensaje error" role="alert"><?= escaparCuenta($errorCuenta) ?></div><?php endif; ?>
                     <input type="hidden" name="accion" value="solicitar_presupuesto">
                     <input type="hidden" name="csrf_presupuesto" value="<?= escaparCuenta($_SESSION["csrf_presupuesto"]) ?>">
-                    <div><label for="presupuestoMarca">Marca</label><input id="presupuestoMarca" name="marca" maxlength="100" placeholder="Ej.: Sapphire" value="<?= escaparCuenta($equipoPresupuesto["marca"]) ?>" required></div>
-                    <div><label for="presupuestoModelo">Modelo</label><input id="presupuestoModelo" name="modelo" maxlength="150" placeholder="Ej.: Radeon RX 7600 Pulse" value="<?= escaparCuenta($equipoPresupuesto["modelo"]) ?>" required></div>
-                    <div><label for="presupuestoSerie">Número de serie</label><input id="presupuestoSerie" name="numero_serie" maxlength="100" value="<?= escaparCuenta($equipoPresupuesto["numero_serie"]) ?>" required><small>Lo encontrás en la etiqueta de la placa.</small></div>
-                    <div><label for="presupuestoMotivo">Falla o consulta</label><textarea id="presupuestoMotivo" name="motivo" rows="4" minlength="10" maxlength="3000" placeholder="Describí qué sucede y desde cuándo." required><?= escaparCuenta($equipoPresupuesto["motivo"]) ?></textarea></div>
+                    <div><label for="presupuestoMotivo">Motivo o consulta</label><textarea id="presupuestoMotivo" name="motivo" rows="4" minlength="10" maxlength="3000" placeholder="Escribí tu comentario o consulta." required><?= escaparCuenta($motivoPresupuesto) ?></textarea></div>
                     <div class="mi-cuenta-acciones"><button type="submit" class="pago-boton">Enviar solicitud</button><a href="mi-cuenta.php#presupuestos" class="mi-cuenta-cancelar">Cancelar</a></div>
                 </form>
             <?php endif; ?>
             <?php if ($presupuestos === []): ?>
                 <p class="mi-cuenta-vacio">Todavía no tenés presupuestos asociados a tu cuenta.</p>
             <?php else: ?>
-                <div class="mi-cuenta-tabla-scroll">
-                    <table class="mi-cuenta-tabla">
-                        <thead><tr><th>Presupuesto</th><th>Equipo</th><th>Fecha</th><th>Estado</th><th>Total</th></tr></thead>
-                        <tbody>
-                        <?php foreach ($presupuestos as $presupuesto): ?>
-                            <tr>
-                                <td><?= $presupuesto["id_presupuesto"] === null ? "Solicitud #" . (int) $presupuesto["id_orden_reparacion"] : "#" . (int) $presupuesto["id_presupuesto"] ?></td>
-                                <td><?= escaparCuenta(trim((string) $presupuesto["marca"] . " " . (string) $presupuesto["modelo"])) ?><details><summary>Ver falla informada</summary><p><?= nl2br(escaparCuenta($presupuesto["motivo"])) ?></p></details></td>
-                                <td><?= escaparCuenta(formatoFechaCuenta($presupuesto["fecha_emision"])) ?></td>
-                                <td><?= escaparCuenta($presupuesto["estado"] ?: "Pendiente") ?></td>
-                                <td><?= $presupuesto["id_presupuesto"] === null ? "Pendiente de cotización" : escaparCuenta(formatoImporteCuenta($presupuesto["total"])) ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
+                <?php foreach ($presupuestos as $presupuesto): ?>
+                    <article class="presupuesto-consulta">
+                        <div class="presupuesto-consulta-cabecera">
+                            <h3><?= $presupuesto["id_presupuesto"] === null ? "Solicitud #" . (int) $presupuesto["id_orden_reparacion"] : "Consulta #" . (int) $presupuesto["id_presupuesto"] ?></h3>
+                            <span><?= escaparCuenta($presupuesto["estado"] ?: "Pendiente") ?></span>
+                        </div>
+                        <small><?= escaparCuenta(formatoFechaCuenta($presupuesto["fecha_emision"])) ?></small>
+                        <?php if ($presupuesto["marca"] !== null): ?><p><strong><?= escaparCuenta(trim($presupuesto["marca"] . " " . $presupuesto["modelo"])) ?></strong></p><?php endif; ?>
+                        <div><strong>Tu consulta</strong><p><?= nl2br(escaparCuenta($presupuesto["motivo"])) ?></p></div>
+                        <div class="presupuesto-consulta-respuesta">
+                            <strong>Respuesta de GPUFIX</strong>
+                            <?php if ($presupuesto["respuesta"] !== null && $presupuesto["respuesta"] !== ""): ?>
+                                <p><?= nl2br(escaparCuenta($presupuesto["respuesta"])) ?></p>
+                                <small><?= escaparCuenta(formatoFechaCuenta($presupuesto["fecha_respuesta"])) ?></small>
+                            <?php else: ?>
+                                <p>Todavía no hay una respuesta. Podés consultarla acá cuando esté disponible.</p>
+                            <?php endif; ?>
+                        </div>
+                        <?php if ($presupuesto["total"] !== null): ?>
+                            <p class="presupuesto-consulta-precio"><strong>Precio informado:</strong> <?= escaparCuenta(formatoImporteCuenta($presupuesto["total"])) ?></p>
+                        <?php elseif ($presupuesto["respuesta"] !== null): ?>
+                            <p class="presupuesto-consulta-precio">Sin precio informado.</p>
+                        <?php endif; ?>
+                    </article>
+                <?php endforeach; ?>
             <?php endif; ?>
         </section>
 

@@ -76,7 +76,7 @@ $formatearPrecio = static function ($precio): string {
     return $precio === null || $precio === "" ? "Consultar precio" : "$ " . number_format((float) $precio, 2, ",", ".");
 };
 $lineasEspecificaciones = $producto
-    ? array_values(array_filter(array_map("trim", preg_split("/\\R/", $producto["especificaciones"]))))
+    ? array_values(array_filter(array_map("trim", preg_split('/\R|\s*\|\s*(?=[^:|\r\n]{1,100}:)/u', $producto["especificaciones"]))))
     : [];
 $hayStockRegistrado = $producto && $producto["registros_stock"] > 0;
 $stockDisponible = $producto ? $producto["cantidad"] : 0;

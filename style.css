@@ -840,6 +840,14 @@ body.light-theme .mensaje-carrito {
 .presupuesto-formulario h3 { margin: 0; font-size: 20px; }
 .presupuesto-formulario label { display: block; margin-bottom: 8px; font-size: 14px; }
 .presupuesto-formulario textarea { resize: vertical; min-height: 110px; }
+.presupuesto-consulta { display: grid; gap: 14px; margin-top: 22px; padding: 20px 0; border-top: 1px solid #627482; overflow-wrap: anywhere; }
+.presupuesto-consulta-cabecera { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.presupuesto-consulta-cabecera h3 { margin: 0; font-size: 18px; }
+.presupuesto-consulta-cabecera span { padding: 6px 10px; border: 1px solid #627482; border-radius: 7px; font-size: 12px; }
+.presupuesto-consulta p { margin: 8px 0 0; line-height: 1.65; }
+.presupuesto-consulta small { font-size: 12px; opacity: .8; }
+.presupuesto-consulta-respuesta { padding: 16px; border-left: 3px solid #00a9d6; border-radius: 5px; background: rgba(0, 169, 214, .08); }
+.presupuesto-consulta-precio { font-size: 14px; }
 .mi-cuenta-tabla details { margin-top: 8px; font-size: 12px; }
 .mi-cuenta-tabla details p { margin: 10px 0 0; white-space: normal; overflow-wrap: anywhere; }
 .mi-cuenta-tabla summary { cursor: pointer; color: #45d3ff; }
@@ -1404,6 +1412,7 @@ body.light-theme .acceso-reparaciones p {
 
 .mi-cuenta-grid {
     display: grid;
+    align-items: start;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 22px;
 }

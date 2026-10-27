@@ -56,7 +56,7 @@ CREATE TABLE `cliente` (
   PRIMARY KEY (`id_cliente`),
   UNIQUE KEY `uq_cliente_correo` (`id_correo`),
   CONSTRAINT `fk_cliente_usuarios` FOREIGN KEY (`id_correo`) REFERENCES `usuarios` (`id_correo`)
-) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -65,7 +65,7 @@ CREATE TABLE `cliente` (
 
 LOCK TABLES `cliente` WRITE;
 /*!40000 ALTER TABLE `cliente` DISABLE KEYS */;
-INSERT INTO `cliente` VALUES (24,24,NULL);
+INSERT INTO `cliente` VALUES (24,24,NULL),(27,28,NULL);
 /*!40000 ALTER TABLE `cliente` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -329,7 +329,7 @@ CREATE TABLE `empleado` (
   KEY `fk_empleado_puesto` (`id_puesto`),
   CONSTRAINT `fk_empleado_puesto` FOREIGN KEY (`id_puesto`) REFERENCES `puesto` (`id_puesto`),
   CONSTRAINT `fk_empleado_usuario` FOREIGN KEY (`id_correo`) REFERENCES `usuarios` (`id_correo`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -425,7 +425,7 @@ CREATE TABLE `gpu` (
   `pagina` varchar(100) DEFAULT NULL,
   `imagen` varchar(500) DEFAULT NULL,
   PRIMARY KEY (`id_gpu`)
-) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -434,7 +434,7 @@ CREATE TABLE `gpu` (
 
 LOCK TABLES `gpu` WRITE;
 /*!40000 ALTER TABLE `gpu` DISABLE KEYS */;
-INSERT INTO `gpu` VALUES (1,'Sapphire','Radeon RX 7600 8GB PULSE OC',688210.91,'GPU: AMD Radeon RX 7600\nArquitectura: RDNA 3\nProcesadores de flujo: 2048\nMemoria: 8 GB GDDR6, bus de 128 bits, 18 Gbps\nInterfaz: PCI Express 4.0 x8\nSalidas: 1 x HDMI 2.1 y 3 x DisplayPort 1.4\nFuente recomendada: 550 W\nRefrigeración: Sapphire PULSE','rx7600pulse.php','https://i.ibb.co/FLh9TvWx/rx7600.png'),(2,'Gigabyte','Radeon RX 6700 XT Gaming OC 12GB',619850.00,'GPU: AMD Radeon RX 6700 XT | Arquitectura: RDNA 2 | Unidades de cómputo: 40 | Procesadores de flujo: 2560 | Memoria: 12 GB GDDR6, bus de 192 bits, 16 Gbps | Ancho de banda: hasta 384 GB/s | Interfaz: PCI Express 4.0 x16 | Reloj: hasta 2622 MHz Boost / 2514 MHz Game | Refrigeración: GIGABYTE WINDFORCE 3X | Salidas: 2 x DisplayPort 1.4a y 2 x HDMI 2.1 | Conectores de alimentación: 1 x 8 pines + 1 x 6 pines | Consumo típico: 230 W | Fuente recomendada: 650 W | Dimensiones: 281 x 115 x 49 mm','rx6700xtgigabyte.php','https://i.ibb.co/PG9n10ws/rx6700xtgiga.png'),(3,'Gigabyte','Radeon RX 7700 XT Gaming OC 12GB',951982.07,'GPU: AMD Radeon RX 7700 XT\nArquitectura: RDNA 3\nProcesadores de flujo: 3456\nMemoria: 12 GB GDDR6, bus de 192 bits, 18 Gbps\nInterfaz: PCI Express 4.0 x16\nFrecuencia: hasta 2599 MHz (Boost) / 2276 MHz (Game)\nSalidas: 2 x DisplayPort 2.1 y 2 x HDMI 2.1\nFuente recomendada: 700 W\nDimensiones: 302 x 130 x 56 mm','rx7700xtgigabyte.php','https://i.ibb.co/k2y57HVk/rx7700xtgiga.png'),(4,'Gigabyte','Radeon RX 9070 Gaming OC 16GB',1430999.97,'GPU: AMD Radeon RX 9070\nArquitectura: RDNA 4\nProcesadores de flujo: 3584\nMemoria: 16 GB GDDR6, bus de 256 bits, 20 Gbps\nInterfaz: PCI Express 5.0 x16\nFrecuencia: hasta 2700 MHz (Boost) / 2210 MHz (Game)\nSalidas: 2 x DisplayPort 2.1a y 2 x HDMI 2.1b\nFuente recomendada: 750 W\nDimensiones: 288 x 132 x 50 mm','rx9070gigabyte.php','https://i.ibb.co/VKJVtxk/rx9070giga.png'),(5,'Gigabyte','GeForce RTX 3060 Windforce OC 12GB',838984.07,'GPU: NVIDIA GeForce RTX 3060\nNúcleos CUDA: 3584\nMemoria: 12 GB GDDR6, bus de 192 bits, 15 Gbps\nInterfaz: PCI Express 4.0 x16\nFrecuencia Boost: hasta 1792 MHz\nSalidas: 2 x DisplayPort 1.4a y 2 x HDMI 2.1\nFuente recomendada: 550 W\nDimensiones: 198 x 121 x 39 mm','rtx3060gigabyte.php','https://i.ibb.co/ZkBQXRG/rtx3060giga.png'),(6,'Gigabyte','GeForce RTX 4090 Gaming OC 24GB',4452882.00,'GPU: NVIDIA GeForce RTX 4090\nNúcleos CUDA: 16384\nMemoria: 24 GB GDDR6X, bus de 384 bits, 21 Gbps\nInterfaz: PCI Express 4.0 x16\nFrecuencia Boost: hasta 2535 MHz\nSalidas: 3 x DisplayPort 1.4a y 1 x HDMI 2.1a\nFuente recomendada: 1000 W\nDimensiones: 340 x 150,2 x 75,2 mm','rtx4090gigabyte.php','https://i.ibb.co/hFRn79qL/rtx4090giga.png'),(7,'Gigabyte','GeForce RTX 5090 Gaming OC 32GB',7707938.65,'GPU: NVIDIA GeForce RTX 5090, arquitectura Blackwell\nNúcleos CUDA: 21760\nMemoria: 32 GB GDDR7, bus de 512 bits, 28 Gbps\nInterfaz: PCI Express 5.0 x16\nFrecuencia Boost: hasta 2550 MHz\nSalidas: 3 x DisplayPort 2.1b y 1 x HDMI 2.1b\nFuente recomendada: 1000 W\nDimensiones: 342 x 152 x 70 mm','rtx5090gigabyte.php','https://i.ibb.co/zW3XrChN/rtx5090giga.png'),(8,'Aorus','Radeon RX 9070 XT AORUS Elite OC 16GB',1705990.00,'GPU: AMD Radeon RX 9070 XT\nArquitectura: RDNA 4\nProcesadores de flujo: 4096\nMemoria: 16 GB GDDR6, bus de 256 bits, 20 Gbps\nInterfaz: PCI Express 5.0 x16\nFrecuencia: hasta 3100 MHz (Boost) / 2570 MHz (Game)\nSalidas: 2 x DisplayPort 2.1a y 2 x HDMI 2.1b\nFuente recomendada: 850 W\nDimensiones: 339 x 136 x 59 mm','rx9070xtaorus.php','https://i.ibb.co/9kHJZvQr/rx9070tiaorus.png'),(9,'Aorus','GeForce RTX 5090 AORUS Master 32GB',7346606.97,'GPU: NVIDIA GeForce RTX 5090, arquitectura Blackwell\nNúcleos CUDA: 21760\nMemoria: 32 GB GDDR7, bus de 512 bits, 28 Gbps\nInterfaz: PCI Express 5.0 x16\nFrecuencia Boost: hasta 2655 MHz\nSalidas: 3 x DisplayPort 2.1b y 1 x HDMI 2.1b\nFuente recomendada: 1000 W\nDimensiones: 360 x 150 x 75 mm','rtx5090aorusmaster.php','https://i.ibb.co/GQxbC738/rtx5090aorus.png'),(10,'Aorus','GeForce RTX 5090 AORUS Master Ice 32GB',6286612.00,'GPU: NVIDIA GeForce RTX 5090, arquitectura Blackwell\nNúcleos CUDA: 21760\nMemoria: 32 GB GDDR7, bus de 512 bits, 28 Gbps\nInterfaz: PCI Express 5.0 x16\nFrecuencia: no indicada en la ficha de Katech consultada\nSalidas: 3 x DisplayPort y 1 x HDMI\nFuente recomendada: 1000 W\nDimensiones: 360 x 150 x 75 mm\nExtras: pantalla LCD lateral, iluminación RGB y BIOS dual','rtx5090aorusmasterice.php','https://i.ibb.co/fYmP0g9N/rtx5090-Maorus.png'),(11,'Sapphire','Radeon RX 6700 XT Nitro+ 12GB',550000.00,'GPU: AMD Radeon RX 6700 XT\nArquitectura: RDNA 2\nProcesadores de flujo: 2560\nMemoria: 12 GB GDDR6, bus de 192 bits, 16 Gbps\nInterfaz: PCI Express 4.0 x16\nFrecuencia: hasta 2622 MHz (Boost) / 2548 MHz (Game)\nSalidas: 1 x HDMI 2.1 y 3 x DisplayPort 1.4\nFuente recomendada: 650 W\nDimensiones: 310,05 x 130,75 x 51,4 mm','rx6700xtsapphire.php','https://i.ibb.co/BHcHR02F/rx6700xtsapphire.png'),(12,'Sapphire','Radeon RX 7700 XT PULSE 12GB',861098.08,'GPU: AMD Radeon RX 7700 XT\nArquitectura: RDNA 3\nProcesadores de flujo: 3456\nMemoria: 12 GB GDDR6, bus de 192 bits, 18 Gbps\nInterfaz: PCI Express 4.0 x16\nFrecuencia de referencia: hasta 2544 MHz (Boost) / 2171 MHz (Game)\nSalidas: 2 x HDMI 2.1 y 2 x DisplayPort 2.1\nFuente recomendada: 700 W\nRefrigeración: Sapphire Dual-X','rx7700xtsapphire.php','https://i.ibb.co/mVsQH3bN/rx7700xtsapphire.png'),(13,'Sapphire','Radeon RX 9070 PULSE 16GB',1441659.94,'GPU: AMD Radeon RX 9070\nArquitectura: RDNA 4\nProcesadores de flujo: 3584\nMemoria: 16 GB GDDR6, bus de 256 bits, 20 Gbps\nInterfaz: PCI Express 5.0 x16\nFrecuencia de referencia: hasta 2520 MHz (Boost) / 2070 MHz (Game)\nSalidas: 2 x HDMI y 2 x DisplayPort 2.1a\nFuente recomendada: 650 W\nDimensiones: 280 x 120,25 x 51,5 mm\nRefrigeración: Sapphire Dual-X','rx9070sapphire.php','https://i.ibb.co/zWCMT08N/rx9070sapphire.png'),(14,'ASUS','Radeon RX 9070 Prime EVO OC 16GB',1279683.89,'GPU: AMD Radeon RX 9070\nArquitectura: RDNA 4\nProcesadores de flujo: 3584\nMemoria: 16 GB GDDR6, bus de 256 bits, 20 Gbps\nInterfaz: PCI Express 5.0 x16\nFrecuencia OC: hasta 2610 MHz (Boost) / 2140 MHz (Game)\nSalidas: 1 x HDMI 2.1b y 3 x DisplayPort 2.1a\nFuente recomendada: 650 W\nRefrigeración: ASUS Axial-tech','rx9070asus.php','https://i.ibb.co/r2mtH7D7/rx9070asus.png'),(15,'ASUS','GeForce RTX 3060 Dual V2 OC 12GB',983489.97,'GPU: NVIDIA GeForce RTX 3060\nNúcleos CUDA: 3584\nMemoria: 12 GB GDDR6, bus de 192 bits, 15 Gbps\nInterfaz: PCI Express 4.0 x16\nFrecuencia: hasta 1867 MHz (OC) / 1837 MHz (Gaming)\nSalidas: 1 x HDMI 2.1 y 3 x DisplayPort 1.4a\nFuente recomendada: 650 W\nDimensiones: 200 x 123 x 38 mm','rtx3060asus.php','https://i.ibb.co/pjZY0nn5/rtx3060asus.png'),(16,'ASUS','GeForce RTX 5090 TUF Gaming OC 32GB',7612112.30,'GPU: NVIDIA GeForce RTX 5090, arquitectura Blackwell\nNúcleos CUDA: 21760\nMemoria: 32 GB GDDR7, bus de 512 bits, 28 Gbps\nInterfaz: PCI Express 5.0 x16\nFrecuencia OC: hasta 2580 MHz\nSalidas: 2 x HDMI 2.1b y 3 x DisplayPort 2.1b\nDimensiones: 348 x 146 x 72 mm\nFuente recomendada: 1000 W\nRefrigeración: Axial-tech, cámara de vapor y BIOS dual','rtx5090asus.php','https://i.ibb.co/ccFJgLFW/rtx5090asus.png'),(17,'PowerColor','Radeon RX 7600 Fighter 8GB',566804.57,'GPU: AMD Radeon RX 7600\nArquitectura: RDNA 3\nProcesadores de flujo: 2048\nMemoria: 8 GB GDDR6, bus de 128 bits, 18 Gbps\nInterfaz: PCI Express 4.0 x8\nFrecuencia: hasta 2655 MHz (Boost) / 2250 MHz (Game)\nSalidas: 1 x HDMI 2.1 y 3 x DisplayPort 2.1\nFuente recomendada: 550 W\nDimensiones: 241 x 116 x 49 mm','rx7600powercolor.php','https://i.ibb.co/TB58QSbm/rx7600powercolor.png'),(18,'PowerColor','Radeon RX 9070 XT Hellhound OC 16GB',1556412.54,'GPU: AMD Radeon RX 9070 XT\nArquitectura: RDNA 4\nProcesadores de flujo: 4096\nMemoria: 16 GB GDDR6, bus de 256 bits, 20 Gbps\nInterfaz: PCI Express 5.0 x16\nFrecuencia OC: hasta 3010 MHz (Boost) / 2460 MHz (Game)\nSalidas: 1 x HDMI 2.1b y 3 x DisplayPort 2.1a\nFuente mínima recomendada: 800 W\nDimensiones: 327 x 128 x 49 mm (340 mm con soporte)','rx9070xtpowercolor.php','https://i.ibb.co/RkfFXM3z/rx9070tipowercolor.png'),(19,'INNO3D','GeForce RTX 3080 X3 LHR 10GB',706930.00,'GPU: NVIDIA GeForce RTX 3080, arquitectura Ampere\nNúcleos CUDA: 8704\nMemoria: 10 GB GDDR6X, bus de 320 bits, 19 Gbps\nInterfaz: PCI Express 4.0 x16\nFrecuencia base/Boost: 1440/1710 MHz\nSalidas: 3 x DisplayPort 1.4a y 1 x HDMI 2.1a\nFuente recomendada: 750 W\nAlimentación: 2 x 8 pines\nDimensiones: 300 x 112 mm; diseño de 2 ranuras','rtx3080inno3d.php','https://i.ibb.co/XxGWdzyt/rtx3080inno3d.webp'),(20,'INNO3D','GeForce RTX 5090 X3 32GB',5268897.11,'GPU: NVIDIA GeForce RTX 5090, arquitectura Blackwell\nNúcleos CUDA: 21760\nMemoria: 32 GB GDDR7, bus de 512 bits, 28 Gbps\nInterfaz: PCI Express 5.0 x16\nFrecuencia Boost: hasta 2400 MHz (dato de la ficha de referencia)\nRefrigeración: triple ventilador X3 y cámara de vapor\nFuente recomendada para RTX 5090: 1000 W','rtx5090inno3d.php','https://i.ibb.co/VcvZLh7P/rtx5090inno.png'),(21,'MSI','GeForce RTX 3060 Ventus 2X OC 12GB',987599.85,'GPU: NVIDIA GeForce RTX 3060\nNúcleos CUDA: 3584\nMemoria: 12 GB GDDR6, bus de 192 bits, 15 Gbps\nInterfaz: PCI Express 4.0 x16\nFrecuencia Boost: hasta 1807 MHz\nSalidas: 3 x DisplayPort 1.4a y 1 x HDMI 2.1\nFuente recomendada: 550 W\nDimensiones: 235 x 124 x 42 mm\nRefrigeración: doble ventilador TORX 3.0','rtx3060msi.php','https://i.ibb.co/cXgnjqcT/rtx3060msi.png'),(22,'MSI','GeForce RTX 4090 Gaming Slim 24GB',3669574.00,'GPU: NVIDIA GeForce RTX 4090\nNúcleos CUDA: 16384\nMemoria: 24 GB GDDR6X, bus de 384 bits, 21 Gbps\nInterfaz: PCI Express 4.0 x16\nFrecuencia Boost: hasta 2595 MHz\nSalidas: 2 x DisplayPort 1.4a y 2 x HDMI 2.1a\nFuente recomendada: 850 W\nDimensiones: 322 x 136 x 62 mm\nRefrigeración: MSI TRI FROZR 3','rtx4090msi.php','https://i.ibb.co/T3wFcqF/rtx4090msi.webp'),(23,'Zotac','GeForce RTX 5090 AMP Extreme Infinity 32GB',5274705.14,'GPU: NVIDIA GeForce RTX 5090, arquitectura Blackwell\nNúcleos CUDA: 21760\nMemoria: 32 GB GDDR7, bus de 512 bits, 28 Gbps\nInterfaz: PCI Express 5.0 x16\nFrecuencia Boost: hasta 2467 MHz\nSalidas: 3 x DisplayPort 2.1b y 1 x HDMI 2.1b\nFuente recomendada: 1000 W\nConsumo: 600 W\nDimensiones: 332,1 x 137,5 x 69,6 mm\nRefrigeración: ZOTAC IceStorm 3.0','rtx5090zotac.php','https://i.ibb.co/pv2htQdF/rtx5090zotac.jpg'),(24,'Zotac','GeForce RTX 3080 Trinity 10GB',706930.00,'GPU: NVIDIA GeForce RTX 3080, arquitectura Ampere\nNúcleos CUDA: 8704\nMemoria: 10 GB GDDR6X, bus de 320 bits, 19 Gbps\nInterfaz: PCI Express 4.0 x16\nFrecuencia Boost: 1710 MHz\nSalidas: 3 x DisplayPort 1.4a y 1 x HDMI 2.1\nFuente recomendada: 750 W\nConsumo: 320 W\nAlimentación: 2 x 8 pines\nDimensiones: 317,8 x 120,7 x 58 mm\nRefrigeración: Zotac IceStorm 2.0','rtx3080zotac.php','https://i.ibb.co/q3LKyGQq/rtx3080zotac.png');
+INSERT INTO `gpu` VALUES (1,'Sapphire','Radeon RX 7600 8GB PULSE OC',688210.91,'GPU: AMD Radeon RX 7600\nArquitectura: RDNA 3\nProcesadores de flujo: 2048\nMemoria: 8 GB GDDR6, bus de 128 bits, 18 Gbps\nInterfaz: PCI Express 4.0 x8\nSalidas: 1 x HDMI 2.1 y 3 x DisplayPort 1.4\nFuente recomendada: 550 W\nRefrigeración: Sapphire PULSE','rx7600pulse.php','https://i.ibb.co/FLh9TvWx/rx7600.png'),(2,'Gigabyte','Radeon RX 6700 XT Gaming OC 12GB',619850.00,'GPU: AMD Radeon RX 6700 XT | Arquitectura: RDNA 2 | Unidades de cómputo: 40 | Procesadores de flujo: 2560 | Memoria: 12 GB GDDR6, bus de 192 bits, 16 Gbps | Ancho de banda: hasta 384 GB/s | Interfaz: PCI Express 4.0 x16 | Reloj: hasta 2622 MHz Boost / 2514 MHz Game | Refrigeración: GIGABYTE WINDFORCE 3X | Salidas: 2 x DisplayPort 1.4a y 2 x HDMI 2.1 | Conectores de alimentación: 1 x 8 pines + 1 x 6 pines | Consumo típico: 230 W | Fuente recomendada: 650 W | Dimensiones: 281 x 115 x 49 mm','rx6700xtgigabyte.php','https://i.ibb.co/PG9n10ws/rx6700xtgiga.png'),(3,'Gigabyte','Radeon RX 7700 XT Gaming OC 12GB',951982.07,'GPU: AMD Radeon RX 7700 XT\nArquitectura: RDNA 3\nProcesadores de flujo: 3456\nMemoria: 12 GB GDDR6, bus de 192 bits, 18 Gbps\nInterfaz: PCI Express 4.0 x16\nFrecuencia: hasta 2599 MHz (Boost) / 2276 MHz (Game)\nSalidas: 2 x DisplayPort 2.1 y 2 x HDMI 2.1\nFuente recomendada: 700 W\nDimensiones: 302 x 130 x 56 mm','rx7700xtgigabyte.php','https://i.ibb.co/k2y57HVk/rx7700xtgiga.png'),(4,'Gigabyte','Radeon RX 9070 Gaming OC 16GB',1430999.97,'GPU: AMD Radeon RX 9070\nArquitectura: RDNA 4\nProcesadores de flujo: 3584\nMemoria: 16 GB GDDR6, bus de 256 bits, 20 Gbps\nInterfaz: PCI Express 5.0 x16\nFrecuencia: hasta 2700 MHz (Boost) / 2210 MHz (Game)\nSalidas: 2 x DisplayPort 2.1a y 2 x HDMI 2.1b\nFuente recomendada: 750 W\nDimensiones: 288 x 132 x 50 mm','rx9070gigabyte.php','https://i.ibb.co/VKJVtxk/rx9070giga.png'),(5,'Gigabyte','GeForce RTX 3060 Windforce OC 12GB',838984.07,'GPU: NVIDIA GeForce RTX 3060\nNúcleos CUDA: 3584\nMemoria: 12 GB GDDR6, bus de 192 bits, 15 Gbps\nInterfaz: PCI Express 4.0 x16\nFrecuencia Boost: hasta 1792 MHz\nSalidas: 2 x DisplayPort 1.4a y 2 x HDMI 2.1\nFuente recomendada: 550 W\nDimensiones: 198 x 121 x 39 mm','rtx3060gigabyte.php','https://i.ibb.co/ZkBQXRG/rtx3060giga.png'),(6,'Gigabyte','GeForce RTX 4090 Gaming OC 24GB',4452882.00,'GPU: NVIDIA GeForce RTX 4090\nNúcleos CUDA: 16384\nMemoria: 24 GB GDDR6X, bus de 384 bits, 21 Gbps\nInterfaz: PCI Express 4.0 x16\nFrecuencia Boost: hasta 2535 MHz\nSalidas: 3 x DisplayPort 1.4a y 1 x HDMI 2.1a\nFuente recomendada: 1000 W\nDimensiones: 340 x 150,2 x 75,2 mm','rtx4090gigabyte.php','https://i.ibb.co/hFRn79qL/rtx4090giga.png'),(7,'Gigabyte','GeForce RTX 5090 Gaming OC 32GB',7707938.65,'GPU: NVIDIA GeForce RTX 5090, arquitectura Blackwell\nNúcleos CUDA: 21760\nMemoria: 32 GB GDDR7, bus de 512 bits, 28 Gbps\nInterfaz: PCI Express 5.0 x16\nFrecuencia Boost: hasta 2550 MHz\nSalidas: 3 x DisplayPort 2.1b y 1 x HDMI 2.1b\nFuente recomendada: 1000 W\nDimensiones: 342 x 152 x 70 mm','rtx5090gigabyte.php','https://i.ibb.co/zW3XrChN/rtx5090giga.png'),(8,'Aorus','Radeon RX 9070 XT AORUS Elite OC 16GB',1705990.00,'GPU: AMD Radeon RX 9070 XT\nArquitectura: RDNA 4\nProcesadores de flujo: 4096\nMemoria: 16 GB GDDR6, bus de 256 bits, 20 Gbps\nInterfaz: PCI Express 5.0 x16\nFrecuencia: hasta 3100 MHz (Boost) / 2570 MHz (Game)\nSalidas: 2 x DisplayPort 2.1a y 2 x HDMI 2.1b\nFuente recomendada: 850 W\nDimensiones: 339 x 136 x 59 mm','rx9070xtaorus.php','https://i.ibb.co/9kHJZvQr/rx9070tiaorus.png'),(9,'Aorus','GeForce RTX 5090 AORUS Master 32GB',7346606.97,'GPU: NVIDIA GeForce RTX 5090, arquitectura Blackwell\nNúcleos CUDA: 21760\nMemoria: 32 GB GDDR7, bus de 512 bits, 28 Gbps\nInterfaz: PCI Express 5.0 x16\nFrecuencia Boost: hasta 2655 MHz\nSalidas: 3 x DisplayPort 2.1b y 1 x HDMI 2.1b\nFuente recomendada: 1000 W\nDimensiones: 360 x 150 x 75 mm','rtx5090aorusmaster.php','https://i.ibb.co/GQxbC738/rtx5090aorus.png'),(10,'Aorus','GeForce RTX 5090 AORUS Master Ice 32GB',6286612.00,'GPU: NVIDIA GeForce RTX 5090, arquitectura Blackwell\nNúcleos CUDA: 21760\nMemoria: 32 GB GDDR7, bus de 512 bits, 28 Gbps\nInterfaz: PCI Express 5.0 x16\nFrecuencia: no indicada en la ficha de Katech consultada\nSalidas: 3 x DisplayPort y 1 x HDMI\nFuente recomendada: 1000 W\nDimensiones: 360 x 150 x 75 mm\nExtras: pantalla LCD lateral, iluminación RGB y BIOS dual','rtx5090aorusmasterice.php','https://i.ibb.co/fYmP0g9N/rtx5090-Maorus.png'),(11,'Sapphire','Radeon RX 6700 XT Nitro+ 12GB',550000.00,'GPU: AMD Radeon RX 6700 XT\nArquitectura: RDNA 2\nProcesadores de flujo: 2560\nMemoria: 12 GB GDDR6, bus de 192 bits, 16 Gbps\nInterfaz: PCI Express 4.0 x16\nFrecuencia: hasta 2622 MHz (Boost) / 2548 MHz (Game)\nSalidas: 1 x HDMI 2.1 y 3 x DisplayPort 1.4\nFuente recomendada: 650 W\nDimensiones: 310,05 x 130,75 x 51,4 mm','rx6700xtsapphire.php','https://i.ibb.co/BHcHR02F/rx6700xtsapphire.png'),(12,'Sapphire','Radeon RX 7700 XT PULSE 12GB',861098.08,'GPU: AMD Radeon RX 7700 XT\nArquitectura: RDNA 3\nProcesadores de flujo: 3456\nMemoria: 12 GB GDDR6, bus de 192 bits, 18 Gbps\nInterfaz: PCI Express 4.0 x16\nFrecuencia de referencia: hasta 2544 MHz (Boost) / 2171 MHz (Game)\nSalidas: 2 x HDMI 2.1 y 2 x DisplayPort 2.1\nFuente recomendada: 700 W\nRefrigeración: Sapphire Dual-X','rx7700xtsapphire.php','https://i.ibb.co/mVsQH3bN/rx7700xtsapphire.png'),(13,'Sapphire','Radeon RX 9070 PULSE 16GB',1441659.94,'GPU: AMD Radeon RX 9070\nArquitectura: RDNA 4\nProcesadores de flujo: 3584\nMemoria: 16 GB GDDR6, bus de 256 bits, 20 Gbps\nInterfaz: PCI Express 5.0 x16\nFrecuencia de referencia: hasta 2520 MHz (Boost) / 2070 MHz (Game)\nSalidas: 2 x HDMI y 2 x DisplayPort 2.1a\nFuente recomendada: 650 W\nDimensiones: 280 x 120,25 x 51,5 mm\nRefrigeración: Sapphire Dual-X','rx9070sapphire.php','https://i.ibb.co/zWCMT08N/rx9070sapphire.png'),(14,'ASUS','Radeon RX 9070 Prime EVO OC 16GB',1279683.89,'GPU: AMD Radeon RX 9070\nArquitectura: RDNA 4\nProcesadores de flujo: 3584\nMemoria: 16 GB GDDR6, bus de 256 bits, 20 Gbps\nInterfaz: PCI Express 5.0 x16\nFrecuencia OC: hasta 2610 MHz (Boost) / 2140 MHz (Game)\nSalidas: 1 x HDMI 2.1b y 3 x DisplayPort 2.1a\nFuente recomendada: 650 W\nRefrigeración: ASUS Axial-tech','rx9070asus.php','https://i.ibb.co/r2mtH7D7/rx9070asus.png'),(15,'ASUS','GeForce RTX 3060 Dual V2 OC 12GB',983489.97,'GPU: NVIDIA GeForce RTX 3060\nNúcleos CUDA: 3584\nMemoria: 12 GB GDDR6, bus de 192 bits, 15 Gbps\nInterfaz: PCI Express 4.0 x16\nFrecuencia: hasta 1867 MHz (OC) / 1837 MHz (Gaming)\nSalidas: 1 x HDMI 2.1 y 3 x DisplayPort 1.4a\nFuente recomendada: 650 W\nDimensiones: 200 x 123 x 38 mm','rtx3060asus.php','https://i.ibb.co/pjZY0nn5/rtx3060asus.png'),(16,'ASUS','GeForce RTX 5090 TUF Gaming OC 32GB',7612112.30,'GPU: NVIDIA GeForce RTX 5090, arquitectura Blackwell\nNúcleos CUDA: 21760\nMemoria: 32 GB GDDR7, bus de 512 bits, 28 Gbps\nInterfaz: PCI Express 5.0 x16\nFrecuencia OC: hasta 2580 MHz\nSalidas: 2 x HDMI 2.1b y 3 x DisplayPort 2.1b\nDimensiones: 348 x 146 x 72 mm\nFuente recomendada: 1000 W\nRefrigeración: Axial-tech, cámara de vapor y BIOS dual','rtx5090asus.php','https://i.ibb.co/ccFJgLFW/rtx5090asus.png'),(17,'PowerColor','Radeon RX 7600 Fighter 8GB',566804.57,'GPU: AMD Radeon RX 7600\nArquitectura: RDNA 3\nProcesadores de flujo: 2048\nMemoria: 8 GB GDDR6, bus de 128 bits, 18 Gbps\nInterfaz: PCI Express 4.0 x8\nFrecuencia: hasta 2655 MHz (Boost) / 2250 MHz (Game)\nSalidas: 1 x HDMI 2.1 y 3 x DisplayPort 2.1\nFuente recomendada: 550 W\nDimensiones: 241 x 116 x 49 mm','rx7600powercolor.php','https://i.ibb.co/TB58QSbm/rx7600powercolor.png'),(18,'PowerColor','Radeon RX 9070 XT Hellhound OC 16GB',1556412.54,'GPU: AMD Radeon RX 9070 XT\nArquitectura: RDNA 4\nProcesadores de flujo: 4096\nMemoria: 16 GB GDDR6, bus de 256 bits, 20 Gbps\nInterfaz: PCI Express 5.0 x16\nFrecuencia OC: hasta 3010 MHz (Boost) / 2460 MHz (Game)\nSalidas: 1 x HDMI 2.1b y 3 x DisplayPort 2.1a\nFuente mínima recomendada: 800 W\nDimensiones: 327 x 128 x 49 mm (340 mm con soporte)','rx9070xtpowercolor.php','https://i.ibb.co/RkfFXM3z/rx9070tipowercolor.png'),(19,'INNO3D','GeForce RTX 3080 X3 LHR 10GB',706930.00,'GPU: NVIDIA GeForce RTX 3080, arquitectura Ampere\nNúcleos CUDA: 8704\nMemoria: 10 GB GDDR6X, bus de 320 bits, 19 Gbps\nInterfaz: PCI Express 4.0 x16\nFrecuencia base/Boost: 1440/1710 MHz\nSalidas: 3 x DisplayPort 1.4a y 1 x HDMI 2.1a\nFuente recomendada: 750 W\nAlimentación: 2 x 8 pines\nDimensiones: 300 x 112 mm; diseño de 2 ranuras','rtx3080inno3d.php','https://i.ibb.co/XxGWdzyt/rtx3080inno3d.webp'),(20,'INNO3D','GeForce RTX 5090 X3 32GB',5268897.11,'GPU: NVIDIA GeForce RTX 5090, arquitectura Blackwell\nNúcleos CUDA: 21760\nMemoria: 32 GB GDDR7, bus de 512 bits, 28 Gbps\nInterfaz: PCI Express 5.0 x16\nFrecuencia Boost: hasta 2400 MHz (dato de la ficha de referencia)\nRefrigeración: triple ventilador X3 y cámara de vapor\nFuente recomendada para RTX 5090: 1000 W','rtx5090inno3d.php','https://i.ibb.co/VcvZLh7P/rtx5090inno.png'),(21,'MSI','GeForce RTX 3060 Ventus 2X OC 12GB',987599.85,'GPU: NVIDIA GeForce RTX 3060\nNúcleos CUDA: 3584\nMemoria: 12 GB GDDR6, bus de 192 bits, 15 Gbps\nInterfaz: PCI Express 4.0 x16\nFrecuencia Boost: hasta 1807 MHz\nSalidas: 3 x DisplayPort 1.4a y 1 x HDMI 2.1\nFuente recomendada: 550 W\nDimensiones: 235 x 124 x 42 mm\nRefrigeración: doble ventilador TORX 3.0','rtx3060msi.php','https://i.ibb.co/cXgnjqcT/rtx3060msi.png'),(22,'MSI','GeForce RTX 4090 Gaming Slim 24GB',3669574.00,'GPU: NVIDIA GeForce RTX 4090\nNúcleos CUDA: 16384\nMemoria: 24 GB GDDR6X, bus de 384 bits, 21 Gbps\nInterfaz: PCI Express 4.0 x16\nFrecuencia Boost: hasta 2595 MHz\nSalidas: 2 x DisplayPort 1.4a y 2 x HDMI 2.1a\nFuente recomendada: 850 W\nDimensiones: 322 x 136 x 62 mm\nRefrigeración: MSI TRI FROZR 3','rtx4090msi.php','https://i.ibb.co/T3wFcqF/rtx4090msi.webp'),(23,'Zotac','GeForce RTX 5090 AMP Extreme Infinity 32GB',5274705.14,'GPU: NVIDIA GeForce RTX 5090, arquitectura Blackwell\nNúcleos CUDA: 21760\nMemoria: 32 GB GDDR7, bus de 512 bits, 28 Gbps\nInterfaz: PCI Express 5.0 x16\nFrecuencia Boost: hasta 2467 MHz\nSalidas: 3 x DisplayPort 2.1b y 1 x HDMI 2.1b\nFuente recomendada: 1000 W\nConsumo: 600 W\nDimensiones: 332,1 x 137,5 x 69,6 mm\nRefrigeración: ZOTAC IceStorm 3.0','rtx5090zotac.php','https://i.ibb.co/pv2htQdF/rtx5090zotac.jpg'),(24,'Zotac','GeForce RTX 3080 Trinity 10GB',706930.00,'GPU: NVIDIA GeForce RTX 3080, arquitectura Ampere\nNúcleos CUDA: 8704\nMemoria: 10 GB GDDR6X, bus de 320 bits, 19 Gbps\nInterfaz: PCI Express 4.0 x16\nFrecuencia Boost: 1710 MHz\nSalidas: 3 x DisplayPort 1.4a y 1 x HDMI 2.1\nFuente recomendada: 750 W\nConsumo: 320 W\nAlimentación: 2 x 8 pines\nDimensiones: 317,8 x 120,7 x 58 mm\nRefrigeración: Zotac IceStorm 2.0','rtx3080zotac.php','https://i.ibb.co/q3LKyGQq/rtx3080zotac.png'),(25,'ASUS','RTX 3070',630000.00,'Marca: Asus Modelo: DUAL-RTX3070-O8G -Núcleos CUDA: 5888 -Velocidad de reloj: 1770 MHz -Velocidad Boost: 1800 MHz -Velocidad de memoria (Gbps): 14 Gbps -Tamaño de memoria: 8GB GDDR6 -Interfaz de memoria: 256 bits -Ancho de banda de memoria (GB / seg): 448 GB/s -Fuente recomendada: 750W -NVLink: No compatible -Salidas: DisplayPort 1.4 (x3), HDMI 2.1 (x2) -Multipantalla: 4 -Resolución: 7680 × 4320 @ 60Hz (digital) -Entrada de alimentación: 2x 8 pines -Tipo de bus PCI-Express 4.0 × 16 -Dimensiones de la tarjeta 267 x 135 x 52 mm; 2.7 ranuras',NULL,'');
 /*!40000 ALTER TABLE `gpu` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -458,7 +458,7 @@ CREATE TABLE `gpu_cliente` (
   UNIQUE KEY `uq_gpu_cliente_serie` (`numero_serie`),
   KEY `fk_gpu_cliente_cliente` (`id_cliente`),
   CONSTRAINT `fk_gpu_cliente_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -523,7 +523,7 @@ CREATE TABLE `orden_compra` (
   KEY `fk_orden_compra_empleado` (`id_empleado_recepcion`),
   CONSTRAINT `fk_orden_compra_empleado` FOREIGN KEY (`id_empleado_recepcion`) REFERENCES `empleado` (`id_empleado`),
   CONSTRAINT `fk_orden_compra_proveedor` FOREIGN KEY (`id_proveedor`) REFERENCES `proveedor` (`id_proveedor`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -555,7 +555,7 @@ CREATE TABLE `orden_reparacion` (
   KEY `fk_orden_rep_empleado` (`id_empleado_recepcion`),
   CONSTRAINT `fk_orden_rep_empleado` FOREIGN KEY (`id_empleado_recepcion`) REFERENCES `empleado` (`id_empleado`),
   CONSTRAINT `fk_orden_rep_gpu_cliente` FOREIGN KEY (`id_gpu_cliente`) REFERENCES `gpu_cliente` (`id_gpu_cliente`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -576,15 +576,21 @@ DROP TABLE IF EXISTS `presupuesto`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `presupuesto` (
   `id_presupuesto` int(11) NOT NULL AUTO_INCREMENT,
-  `id_orden_reparacion` int(11) NOT NULL,
+  `id_orden_reparacion` int(11) DEFAULT NULL,
   `fecha_emision` datetime NOT NULL DEFAULT current_timestamp(),
   `mano_obra` decimal(12,2) NOT NULL DEFAULT 0.00,
-  `total` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `total` decimal(12,2) DEFAULT NULL,
   `estado` varchar(50) DEFAULT NULL,
+  `id_cliente` int(11) DEFAULT NULL,
+  `consulta` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `respuesta` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `fecha_respuesta` datetime DEFAULT NULL,
   PRIMARY KEY (`id_presupuesto`),
   KEY `fk_presupuesto_orden` (`id_orden_reparacion`),
+  KEY `fk_presupuesto_cliente` (`id_cliente`),
+  CONSTRAINT `fk_presupuesto_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`),
   CONSTRAINT `fk_presupuesto_orden` FOREIGN KEY (`id_orden_reparacion`) REFERENCES `orden_reparacion` (`id_orden_reparacion`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -593,6 +599,7 @@ CREATE TABLE `presupuesto` (
 
 LOCK TABLES `presupuesto` WRITE;
 /*!40000 ALTER TABLE `presupuesto` DISABLE KEYS */;
+INSERT INTO `presupuesto` VALUES (5,NULL,'2026-10-26 23:03:14',0.00,1000000.00,'Respondida',27,'asdasdasdasdasd','si','2026-10-26 23:03:49');
 /*!40000 ALTER TABLE `presupuesto` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -606,13 +613,11 @@ DROP TABLE IF EXISTS `proveedor`;
 CREATE TABLE `proveedor` (
   `id_proveedor` int(11) NOT NULL AUTO_INCREMENT,
   `razon_social` varchar(150) NOT NULL,
-  `cuit` varchar(20) NOT NULL,
   `telefono` varchar(30) DEFAULT NULL,
   `email` varchar(150) DEFAULT NULL,
   `direccion` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`id_proveedor`),
-  UNIQUE KEY `uq_proveedor_cuit` (`cuit`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+  PRIMARY KEY (`id_proveedor`)
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -621,6 +626,7 @@ CREATE TABLE `proveedor` (
 
 LOCK TABLES `proveedor` WRITE;
 /*!40000 ALTER TABLE `proveedor` DISABLE KEYS */;
+INSERT INTO `proveedor` VALUES (1,'Gigabyte',NULL,NULL,NULL),(2,'Aorus',NULL,NULL,NULL),(3,'Sapphire',NULL,NULL,NULL),(4,'ASUS',NULL,NULL,NULL),(5,'PowerColor',NULL,NULL,NULL),(6,'INNO3D',NULL,NULL,NULL),(7,'MSI',NULL,NULL,NULL),(8,'Zotac',NULL,NULL,NULL);
 /*!40000 ALTER TABLE `proveedor` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -724,7 +730,7 @@ CREATE TABLE `stock_gpu` (
   PRIMARY KEY (`id_stock_gpu`),
   KEY `fk_stock_gpu_gpu` (`id_gpu`),
   CONSTRAINT `fk_stock_gpu_gpu` FOREIGN KEY (`id_gpu`) REFERENCES `gpu` (`id_gpu`)
-) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -733,7 +739,7 @@ CREATE TABLE `stock_gpu` (
 
 LOCK TABLES `stock_gpu` WRITE;
 /*!40000 ALTER TABLE `stock_gpu` DISABLE KEYS */;
-INSERT INTO `stock_gpu` VALUES (1,1,'Disponible',NULL,3),(2,2,'Disponible',NULL,2),(3,3,'Disponible',NULL,3),(4,4,'Disponible',NULL,5),(5,5,'Disponible',NULL,4),(6,6,'Disponible',NULL,2),(7,7,'Disponible',NULL,3),(8,8,'Disponible',NULL,4),(9,9,'Sin stock',NULL,0),(10,10,'Disponible',NULL,4),(11,11,'Disponible',NULL,3),(12,12,'Disponible',NULL,4),(13,13,'Disponible',NULL,2),(14,14,'Disponible',NULL,5),(15,15,'Disponible',NULL,3),(16,16,'Disponible',NULL,2),(17,17,'Disponible',NULL,5),(18,18,'Disponible',NULL,3),(19,19,'Disponible',NULL,4),(20,20,'Disponible',NULL,2),(21,21,'Disponible',NULL,5),(22,22,'Disponible',NULL,3),(23,23,'Disponible',NULL,4),(24,24,'Disponible',NULL,2);
+INSERT INTO `stock_gpu` VALUES (1,1,'Disponible',NULL,3),(2,2,'Disponible',NULL,2),(3,3,'Disponible',NULL,3),(4,4,'Disponible',NULL,5),(5,5,'Disponible',NULL,4),(6,6,'Disponible',NULL,2),(7,7,'Disponible',NULL,3),(8,8,'Disponible',NULL,4),(9,9,'Sin stock',NULL,0),(10,10,'Disponible',NULL,4),(11,11,'Disponible',NULL,3),(12,12,'Disponible',NULL,4),(13,13,'Disponible',NULL,2),(14,14,'Disponible',NULL,5),(15,15,'Disponible',NULL,3),(16,16,'Disponible',NULL,2),(17,17,'Disponible',NULL,5),(18,18,'Disponible',NULL,3),(19,19,'Disponible',NULL,4),(20,20,'Disponible',NULL,2),(21,21,'Disponible',NULL,5),(22,22,'Disponible',NULL,3),(23,23,'Disponible',NULL,4),(24,24,'Disponible',NULL,2),(25,25,'Disponible','A',6);
 /*!40000 ALTER TABLE `stock_gpu` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -754,7 +760,7 @@ CREATE TABLE `usuarios` (
   `telefono` varchar(30) DEFAULT NULL,
   PRIMARY KEY (`id_correo`),
   UNIQUE KEY `uq_usuarios_correo` (`correo`)
-) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -763,7 +769,7 @@ CREATE TABLE `usuarios` (
 
 LOCK TABLES `usuarios` WRITE;
 /*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
-INSERT INTO `usuarios` VALUES (24,'gpufixstore@gmail.com','$2y$10$ow9ZPHNC2IyfyDxj1cDNn.rcha4pkvVpUt.z0HLsqCxdH29vCLtqu','Admin','GpuFix','12341234','1158390537');
+INSERT INTO `usuarios` VALUES (24,'gpufixstore@gmail.com','$2y$10$ow9ZPHNC2IyfyDxj1cDNn.rcha4pkvVpUt.z0HLsqCxdH29vCLtqu','Admin','GpuFix','12341234','1158390537'),(28,'lucasnicolas2002@gmail.com','$2y$10$CZvFncnrBYmDpAmV4QTyAeZ4WIWNFyJCeQGIdsj2Wi0r2eGy2Mx0C','lucas','calvano','43434343','+541160209263');
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -776,4 +782,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-10-26 22:02:12
+-- Dump completed on 2026-10-26 23:40:30
