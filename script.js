@@ -172,13 +172,30 @@ if (formularioPago) {
         comprobante.setCustomValidity(comprobante.files[0] && comprobante.files[0].size > 2 * 1024 * 1024
             ? "El comprobante debe pesar como máximo 2 MB." : "");
     });
+    let pagoEnviado = false;
+    const botonConfirmarPago = formularioPago.querySelector('button[type="submit"]');
     formularioPago.addEventListener("submit", function(evento) {
+        if (pagoEnviado) {
+            evento.preventDefault();
+            return;
+        }
         if (!validarTarjeta()) {
             evento.preventDefault();
             numeroTarjeta.reportValidity();
         } else if (!validarDatosTarjeta()) {
             evento.preventDefault();
             formularioPago.reportValidity();
+        } else {
+            pagoEnviado = true;
+            botonConfirmarPago.disabled = true;
+            botonConfirmarPago.textContent = "Confirmando…";
+        }
+    });
+    window.addEventListener("pageshow", function() {
+        if (pagoEnviado) {
+            pagoEnviado = false;
+            botonConfirmarPago.disabled = false;
+            botonConfirmarPago.textContent = "Confirmar";
         }
     });
     actualizarMetodoPago();

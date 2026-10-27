@@ -1,5 +1,6 @@
 <?php
 session_start();
+header('Cache-Control: no-store');
 
 if (empty($_SESSION["usuario_id"])) {
     header("Location: login.php?requerido=carrito");
@@ -152,6 +153,21 @@ try {
         $direccionFacturacion = is_string($direccionEnviada) ? trim($direccionEnviada) : "";
         try {
             $csrfEnviado = $_POST["csrf_pago"] ?? null;
+            $claveSolicitud = is_string($csrfEnviado) ? hash('sha256', $csrfEnviado) : '';
+            $compraAnterior = $_SESSION['compras_confirmadas'][$claveSolicitud] ?? null;
+            if (is_array($compraAnterior) && (int) ($compraAnterior['usuario_id'] ?? 0) === $usuarioId) {
+                $ventaAnterior = (int) ($compraAnterior['id_venta'] ?? 0);
+                $buscarAnterior = $conexion->prepare('SELECT v.id_gpu_ventas FROM gpu_ventas v INNER JOIN factura f ON f.id_gpu_ventas = v.id_gpu_ventas WHERE v.id_gpu_ventas = ? AND v.id_cliente = ? AND f.id_cliente = ? LIMIT 1');
+                $buscarAnterior->bind_param('iii', $ventaAnterior, $idCliente, $idCliente);
+                $buscarAnterior->execute();
+                $existeAnterior = (bool) $buscarAnterior->get_result()->fetch_row();
+                $buscarAnterior->close();
+                if ($existeAnterior) {
+                    header('Location: pagar.php?compra=' . $ventaAnterior, true, 303);
+                    exit;
+                }
+                unset($_SESSION['compras_confirmadas'][$claveSolicitud]);
+            }
             $csrfValido = is_string($csrfEnviado) && hash_equals($csrfPago, $csrfEnviado);
             if (!$csrfValido) {
                 throw new RuntimeException("La solicitud venció. Revisá el resumen y volvé a confirmar.");
@@ -313,6 +329,8 @@ try {
             }
             $conexion->commit();
             $transaccionActiva = false;
+            $_SESSION['compras_confirmadas'][$claveSolicitud] = ['usuario_id' => $usuarioId, 'id_venta' => $idVenta];
+            $_SESSION['compras_confirmadas'] = array_slice($_SESSION['compras_confirmadas'], -10, null, true);
             unset($_SESSION["csrf_pago"], $_SESSION["resumen_pago"]);
             $_SESSION['correo_compra'] = [
                 'id_venta' => $idVenta,
@@ -507,7 +525,7 @@ try {
         <?php endif; ?>
     </main>
     <footer><p>GPU FIX &amp; STORE - Reparación y venta de GPUs</p></footer>
-    <script src="script.js?v=20261026-resumen-pago"></script>
+    <script src="script.js?v=20261027-confirmar-compra"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
