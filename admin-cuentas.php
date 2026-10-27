@@ -1,17 +1,12 @@
 <?php
 require_once __DIR__ . '/admin-comun.php';
 admin_requerir_acceso();
-if (!admin_es_cuenta_principal($conexion)) {
-    http_response_code(403);
-    admin_layout_inicio('Cuentas');
-    echo '<div class="alert alert-danger mt-3">Solo la cuenta principal de GPUFIX puede administrar las cuentas.</div>';
-    admin_layout_fin();
-    exit;
-}
+$esAdministradorPrincipal = admin_es_cuenta_principal($conexion);
 
 function buscarCuentaAdmin(mysqli $conexion, int $id, bool $bloquear = false): ?array
 {
     $consulta = $conexion->prepare('SELECT u.id_correo, u.nombre, u.apellido, u.correo, u.dni, u.telefono,
+        (u.correo = "gpufixstore@gmail.com") AS es_principal,
         c.id_cliente, c.direccion, e.id_empleado, e.id_puesto, p.nombre AS puesto
         FROM usuarios u LEFT JOIN cliente c ON c.id_correo = u.id_correo
         LEFT JOIN empleado e ON e.id_correo = u.id_correo LEFT JOIN puesto p ON p.id_puesto = e.id_puesto
@@ -59,8 +54,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$cuentaEditada) throw new RuntimeException('La cuenta seleccionada ya no existe.');
         $esPrincipal = strtolower($cuentaEditada['correo']) === 'gpufixstore@gmail.com';
         $idPuestoActual = (int) ($cuentaEditada['id_puesto'] ?? 0);
+        if ($esPrincipal && !$esAdministradorPrincipal) throw new RuntimeException('Solo GPUFIX puede modificar la cuenta principal.');
         if ($accion === 'eliminar') {
             if ($esPrincipal) throw new RuntimeException('La cuenta principal de GPUFIX no se puede eliminar.');
+            if ($cuentaEditada['id_empleado'] && !$esAdministradorPrincipal) throw new RuntimeException('Solo GPUFIX puede eliminar cuentas de empleados.');
             if ($cuentaEditada['id_cliente']) {
                 foreach (['gpu_ventas', 'factura', 'envios', 'presupuesto', 'gpu_cliente'] as $tabla) {
                     if (cuentaTieneReferencias($conexion, $tabla, 'id_cliente', (int) $cuentaEditada['id_cliente'])) {
@@ -99,6 +96,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $cuentaEditada['tipo_cuenta'] = $tipoCuenta;
         $cuentaEditada['id_puesto'] = $idPuesto;
         if (!in_array($tipoCuenta, ['cliente', 'empleado'], true)) throw new RuntimeException('Seleccioná si la cuenta es de cliente o empleado.');
+        if (!$esAdministradorPrincipal && $cuentaEditada['id_empleado'] && $tipoCuenta !== 'empleado') {
+            $cuentaEditada['tipo_cuenta'] = 'empleado';
+            throw new RuntimeException('Solo GPUFIX puede retirar el acceso de un empleado o pasarlo a cliente.');
+        }
         if ($esPrincipal && ($tipoCuenta !== 'empleado' || $idPuesto !== $idPuestoActual)) {
             $cuentaEditada['tipo_cuenta'] = 'empleado';
             $cuentaEditada['id_puesto'] = $idPuestoActual;
@@ -175,7 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $conexion->commit();
         $transaccionActiva = false;
-        if ($esPrincipal) {
+        if ((int) ($cuentaEditada['id_empleado'] ?? 0) === (int) $_SESSION['empleado_id']) {
             $_SESSION['empleado_nombre'] = $cuentaEditada['nombre'];
             $_SESSION['empleado_apellido'] = $cuentaEditada['apellido'];
         }
@@ -194,6 +195,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cuentaEditada = buscarCuentaAdmin($conexion, $idCuenta);
     if (!$cuentaEditada) { http_response_code(404); $error = 'La cuenta seleccionada no existe.'; }
 }
+if ($cuentaEditada && $cuentaEditada['es_principal'] && !$esAdministradorPrincipal) {
+    http_response_code(403);
+    $error = 'Solo GPUFIX puede modificar la cuenta principal.';
+    $cuentaEditada = null;
+}
 
 $patronBusqueda = '%' . str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $busquedaCuentas) . '%';
 $condicionTipo = $tipoFiltro === 'empleado' ? ' AND e.id_empleado IS NOT NULL' : ($tipoFiltro === 'cliente' ? ' AND e.id_empleado IS NULL' : '');
@@ -209,12 +215,13 @@ $cuentas = $consultaCuentas->get_result();
 admin_layout_inicio('Cuentas');
 ?>
 <h1 class="h3 mt-3">Cuentas de clientes y empleados</h1>
-<p class="text-secondary">Solo la cuenta principal de GPUFIX puede editar y eliminar cuentas. Las cuentas con historial registrado se conservan.</p>
+<p class="text-secondary">Podés editar cuentas y eliminar clientes sin historial asociado. Solo GPUFIX puede eliminar empleados. La cuenta principal está protegida.</p>
 <?php if ($mensaje !== ''): ?><div class="alert alert-success" role="status"><?= admin_e($mensaje) ?></div><?php endif; ?>
 <?php if ($error !== ''): ?><div class="alert alert-danger" role="alert"><?= admin_e($error) ?></div><?php endif; ?>
 <?php if ($cuentaEditada):
     $tipoEditado = $cuentaEditada['tipo_cuenta'] ?? ($cuentaEditada['id_empleado'] ? 'empleado' : 'cliente');
-    $principalEditada = (int) ($cuentaEditada['id_empleado'] ?? 0) === (int) $_SESSION['empleado_id'];
+    $principalEditada = (bool) $cuentaEditada['es_principal'];
+    $tipoProtegido = $principalEditada || (!$esAdministradorPrincipal && $cuentaEditada['id_empleado']);
 ?>
 <section class="panel" id="editar-cuenta" aria-labelledby="tituloEditarCuenta">
     <h2 class="h5 mb-3" id="tituloEditarCuenta">Editar cuenta #<?= (int) $cuentaEditada['id_correo'] ?></h2>
@@ -225,11 +232,11 @@ admin_layout_inicio('Cuentas');
         <input type="hidden" name="id_correo" value="<?= (int) $cuentaEditada['id_correo'] ?>">
         <div class="col-md-6">
             <label class="form-label" for="cuentaTipo">Tipo de cuenta</label>
-            <select class="form-select" id="cuentaTipo" name="tipo_cuenta" required <?= $principalEditada ? 'disabled' : '' ?>>
+            <select class="form-select" id="cuentaTipo" name="tipo_cuenta" required <?= $tipoProtegido ? 'disabled' : '' ?>>
                 <option value="cliente" <?= $tipoEditado === 'cliente' ? 'selected' : '' ?>>Cliente</option>
                 <option value="empleado" <?= $tipoEditado === 'empleado' ? 'selected' : '' ?>>Empleado</option>
             </select>
-            <?php if ($principalEditada): ?><input type="hidden" name="tipo_cuenta" value="empleado"><div class="form-text">Administrador principal: su rango está protegido.</div><?php endif; ?>
+            <?php if ($tipoProtegido): ?><input type="hidden" name="tipo_cuenta" value="empleado"><div class="form-text"><?= $principalEditada ? 'Administrador principal: su rango está protegido.' : 'Solo GPUFIX puede pasar un empleado a cliente.' ?></div><?php endif; ?>
         </div>
         <div class="col-md-6" id="grupoCuentaPuesto" <?= $tipoEditado !== 'empleado' ? 'hidden' : '' ?>>
             <label class="form-label" for="cuentaPuesto">Puesto del empleado</label>
@@ -290,15 +297,15 @@ admin_layout_inicio('Cuentas');
                 <td><?= admin_e($cuenta['correo']) ?></td>
                 <td><?= admin_e($cuenta['dni']) ?></td>
                 <td><div class="d-flex flex-wrap gap-2">
-                    <a class="btn btn-sm btn-outline-primary" href="<?= admin_e($urlListado . '&editar=' . (int) $cuenta['id_correo']) ?>#editar-cuenta">Editar datos</a>
-                    <?php if (!$esPrincipal): ?>
+                    <?php if (!$esPrincipal || $esAdministradorPrincipal): ?><a class="btn btn-sm btn-outline-primary" href="<?= admin_e($urlListado . '&editar=' . (int) $cuenta['id_correo']) ?>#editar-cuenta">Editar datos</a><?php endif; ?>
+                    <?php if (!$esPrincipal && (!$cuenta['id_empleado'] || $esAdministradorPrincipal)): ?>
                     <form method="post" action="<?= admin_e($urlListado) ?>#lista-cuentas">
                         <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">
                         <input type="hidden" name="accion" value="eliminar">
                         <input type="hidden" name="id_correo" value="<?= (int) $cuenta['id_correo'] ?>">
                         <button class="btn btn-sm btn-danger" type="submit" aria-label="<?= admin_e('Eliminar cuenta de ' . $cuenta['correo']) ?>">Eliminar cuenta</button>
                     </form>
-                    <?php else: ?><span class="small text-secondary align-self-center">Cuenta protegida</span><?php endif; ?>
+                    <?php else: ?><span class="small text-secondary align-self-center"><?= $esPrincipal ? 'Cuenta protegida' : 'Solo GPUFIX puede eliminar' ?></span><?php endif; ?>
                 </div></td>
             </tr>
         <?php endwhile; ?>

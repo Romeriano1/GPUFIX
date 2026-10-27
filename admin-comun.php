@@ -49,8 +49,7 @@ function admin_e($v): string {
 
 function admin_layout_inicio(string $titulo): void {
     $csrf = admin_csrf();
-    $enlaceCuentas = isset($GLOBALS['conexion']) && admin_es_cuenta_principal($GLOBALS['conexion'])
-        ? '<a class="nav-link" href="admin-cuentas.php">Cuentas</a>' : '';
+    $enlaceCuentas = '<a class="nav-link" href="admin-cuentas.php">Cuentas</a>';
 
     echo '<!doctype html>
 <html lang="es">
