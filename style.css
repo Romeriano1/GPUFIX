@@ -1245,6 +1245,38 @@ body.light-theme .bloque-informacion p {
     margin-bottom: 15px;
 }
 
+.consulta-reparacion {
+    text-align: left;
+}
+
+.consulta-reparacion .presupuesto-formulario {
+    margin: 22px 0;
+}
+
+.consulta-reparacion select {
+    width: 100%;
+    padding: 11px 13px;
+    border: 1px solid #44515a;
+    border-radius: 9px;
+    background: #101820;
+    color: #ffffff;
+    font: inherit;
+}
+
+.consulta-reparacion textarea {
+    margin-bottom: 16px;
+}
+
+.consulta-reparacion a {
+    color: #45d3ff;
+}
+
+body.light-theme .consulta-reparacion select {
+    background: #ffffff;
+    color: #111111;
+    border-color: #cccccc;
+}
+
 .acceso-reparaciones p {
     color: #aaaaaa;
     line-height: 1.6;
@@ -1480,6 +1512,14 @@ body.light-theme .acceso-reparaciones p {
 
 .mi-cuenta-seguridad {
     grid-column: 1 / -1;
+}
+
+.mi-cuenta-reparaciones {
+    grid-column: 1 / -1;
+}
+
+.mi-cuenta-documentos {
+    align-self: stretch;
 }
 
 .mi-cuenta-opciones {

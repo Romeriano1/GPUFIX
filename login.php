@@ -6,12 +6,15 @@ $correoIngresado = $_SESSION["login_correo_flash"] ?? "";
 $registroCreado = !empty($_SESSION["registro_creado"]);
 unset($_SESSION["login_error_flash"], $_SESSION["login_correo_flash"], $_SESSION["registro_creado"]);
 $requeridoCarrito = (($_GET["requerido"] ?? "") === "carrito") || (($_POST["requerido"] ?? "") === "carrito");
+$requeridoReparacion = (($_GET['requerido'] ?? '') === 'reparacion') || (($_POST['requerido'] ?? '') === 'reparacion');
+$contextoLogin = $requeridoReparacion ? 'reparacion' : ($requeridoCarrito ? 'carrito' : '');
 $destinoCarrito = !empty($_SESSION["carrito_pendiente"])
     ? "carrito.php?continuar_pendiente=1"
     : "carrito.php";
+$destinoLogin = $requeridoReparacion ? 'reparar.php#consulta-reparacion' : (($requeridoCarrito || !empty($_SESSION['carrito_pendiente'])) ? $destinoCarrito : 'mi-cuenta.php');
 
 if (!empty($_SESSION["usuario_id"])) {
-    header("Location: " . (($requeridoCarrito || !empty($_SESSION["carrito_pendiente"])) ? $destinoCarrito : "mi-cuenta.php"));
+    header('Location: ' . $destinoLogin);
     exit;
 }
 
@@ -56,7 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $_SESSION["usuario_apellido"] = $apellidoUsuario;
 
                 $conexion->close();
-                header("Location: " . (($requeridoCarrito || !empty($_SESSION["carrito_pendiente"])) ? $destinoCarrito : "mi-cuenta.php"));
+                header('Location: ' . $destinoLogin);
                 exit;
             }
             $conexion->close();
@@ -70,7 +73,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 if ($_SERVER["REQUEST_METHOD"] === "POST" && $loginError !== "") {
     $_SESSION["login_error_flash"] = $loginError;
     $_SESSION["login_correo_flash"] = $correoIngresado;
-    header("Location: login.php" . ($requeridoCarrito ? "?requerido=carrito" : ""));
+    header('Location: login.php' . ($contextoLogin !== '' ? '?requerido=' . $contextoLogin : ''));
     exit;
 }
 ?>
@@ -158,8 +161,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $loginError !== "") {
             <?php endif; ?>
 
             <form id="loginForm" class="login-form" action="login.php" method="POST" novalidate>
-                <?php if ($requeridoCarrito): ?>
-                    <input type="hidden" name="requerido" value="carrito">
+                <?php if ($contextoLogin !== ''): ?>
+                    <input type="hidden" name="requerido" value="<?= htmlspecialchars($contextoLogin, ENT_QUOTES, 'UTF-8') ?>">
                 <?php endif; ?>
                 <div class="login-campo">
                     <label for="correo">Correo electrónico</label>
@@ -178,7 +181,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $loginError !== "") {
 
             <div class="login-enlaces">
     <p>¿No tenés cuenta?</p>
-    <a class="login-registro-boton" href="registro.php<?php echo $requeridoCarrito ? '?requerido=carrito' : ''; ?>">Registrate</a>
+    <a class="login-registro-boton" href="registro.php<?php echo $contextoLogin !== '' ? '?requerido=' . $contextoLogin : ''; ?>">Registrate</a>
 
     <p class="mt-4">¿Trabajás en GPU FIX & STORE?</p>
     <a class="login-registro-boton" href="login-empleado.php">Soy empleado</a>
@@ -229,4 +232,4 @@ loginForm.addEventListener("submit", function(event) {
 </body>
 </html>
 
-    
+

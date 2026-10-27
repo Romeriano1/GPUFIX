@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $conexion->begin_transaction();
             $transaccionActiva = true;
             if ($idPresupuesto) {
-                $buscar = $conexion->prepare('SELECT id_presupuesto FROM presupuesto WHERE id_presupuesto = ? FOR UPDATE');
+                $buscar = $conexion->prepare("SELECT id_presupuesto FROM presupuesto WHERE id_presupuesto = ? AND COALESCE(estado, '') NOT IN ('Consulta de garantía', 'Reparación en garantía') FOR UPDATE");
                 $buscar->bind_param('i', $idPresupuesto);
                 $buscar->execute();
                 $existe = $buscar->get_result()->fetch_assoc();
@@ -57,11 +57,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $orden = $buscar->get_result()->fetch_assoc();
                 $buscar->close();
                 if (!$orden) throw new RuntimeException('La solicitud ya no está disponible.');
-                $buscar = $conexion->prepare('SELECT id_presupuesto FROM presupuesto WHERE id_orden_reparacion = ? ORDER BY id_presupuesto LIMIT 1 FOR UPDATE');
+                $buscar = $conexion->prepare('SELECT id_presupuesto, estado FROM presupuesto WHERE id_orden_reparacion = ? ORDER BY id_presupuesto LIMIT 1 FOR UPDATE');
                 $buscar->bind_param('i', $idOrden);
                 $buscar->execute();
                 $existente = $buscar->get_result()->fetch_assoc();
                 $buscar->close();
+                if ($existente && in_array($existente['estado'], ['Consulta de garantía', 'Reparación en garantía'], true)) throw new RuntimeException('Esta consulta se gestiona desde Reparaciones.');
                 $idPresupuesto = (int) ($existente['id_presupuesto'] ?? 0);
                 if (!$idPresupuesto) {
                     $clienteId = (int) $orden['id_cliente'];
@@ -126,6 +127,7 @@ $solicitudes = $conexion->query("
     LEFT JOIN gpu_cliente g ON g.id_gpu_cliente = o.id_gpu_cliente
     INNER JOIN cliente c ON c.id_cliente = COALESCE(p.id_cliente, g.id_cliente)
     INNER JOIN usuarios u ON u.id_correo = c.id_correo
+    WHERE COALESCE(p.estado, '') NOT IN ('Consulta de garantía', 'Reparación en garantía')
     UNION ALL
     SELECT NULL, o.id_orden_reparacion, o.fecha_ingreso, o.motivo, NULL, NULL,
            NULL, o.estado, u.nombre, u.apellido, u.correo, 1
@@ -155,14 +157,15 @@ admin_layout_inicio('Presupuestos');
         $respuesta = $formularioEditado === $idFormulario ? $respuestaIngresada : (string) ($solicitud['respuesta'] ?? '');
         $precio = $formularioEditado === $idFormulario ? $precioIngresado : (string) ($solicitud['total'] ?? '');
     ?>
-        <article class="border rounded p-3 mb-3" id="solicitud-<?= admin_e($idFormulario) ?>">
-            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
-                <div>
+        <details class="presupuesto-admin border rounded mb-3" id="solicitud-<?= admin_e($idFormulario) ?>" <?= $formularioEditado === $idFormulario && $error !== '' ? 'open' : '' ?>>
+            <summary>
+                <div class="presupuesto-admin-resumen">
                     <h3 class="h6 mb-1">Solicitud #<?= $idPresupuesto ?: $idOrden ?> · <?= admin_e(trim($solicitud['nombre'] . ' ' . $solicitud['apellido'])) ?></h3>
                     <div class="small text-secondary"><?= admin_e($solicitud['correo']) ?> · <?= admin_e($solicitud['fecha_emision']) ?></div>
                 </div>
                 <span class="badge text-bg-secondary"><?= admin_e($solicitud['estado'] ?: 'Pendiente de respuesta') ?></span>
-            </div>
+            </summary>
+            <div class="presupuesto-admin-contenido">
             <div class="p-3 bg-light border rounded mb-3" style="overflow-wrap:anywhere">
                 <strong>Motivo o consulta</strong>
                 <p class="mb-0 mt-2"><?= nl2br(admin_e($solicitud['consulta'])) ?></p>
@@ -195,9 +198,20 @@ admin_layout_inicio('Presupuestos');
                     <?php if (!$correoDisponible): ?><small class="text-secondary ms-2">Correo no configurado. La respuesta está disponible en Mi cuenta.</small><?php endif; ?>
                 </form>
             <?php endif; ?>
-        </article>
+            </div>
+        </details>
     <?php endwhile; endif; ?>
 </section>
+<script>
+(function () {
+    function abrirPresupuestoEnlazado() {
+        const presupuesto = document.getElementById(window.location.hash.slice(1));
+        if (presupuesto && presupuesto.matches('details.presupuesto-admin')) presupuesto.open = true;
+    }
+    window.addEventListener('hashchange', abrirPresupuestoEnlazado);
+    abrirPresupuestoEnlazado();
+})();
+</script>
 <?php
 $solicitudes->free();
 $conexion->close();

@@ -12,6 +12,7 @@ $errorCuenta = "";
 $nombre = $apellido = $correo = "";
 $facturas = [];
 $presupuestos = [];
+$reparacionesCliente = [];
 $mensajeCuenta = $_SESSION["mensaje_cuenta"] ?? "";
 unset($_SESSION["mensaje_cuenta"]);
 
@@ -165,6 +166,7 @@ try {
                 p.respuesta, p.fecha_respuesta
          FROM presupuesto p
          WHERE p.id_cliente = ? AND p.id_orden_reparacion IS NULL
+           AND COALESCE(p.estado, '') NOT IN ('Consulta de garantía', 'Reparación en garantía')
          UNION ALL
          SELECT p.id_presupuesto, COALESCE(p.fecha_emision, o.fecha_ingreso) AS fecha_emision,
                 p.total, COALESCE(p.estado, o.estado) AS estado,
@@ -172,7 +174,7 @@ try {
          FROM orden_reparacion o
          INNER JOIN gpu_cliente g ON g.id_gpu_cliente = o.id_gpu_cliente
          LEFT JOIN presupuesto p ON p.id_orden_reparacion = o.id_orden_reparacion
-         WHERE g.id_cliente = ?
+         WHERE g.id_cliente = ? AND COALESCE(p.estado, '') NOT IN ('Consulta de garantía', 'Reparación en garantía')
          ORDER BY fecha_emision DESC, id_presupuesto DESC"
     );
     $consultaPresupuestos->bind_param("ii", $clienteId, $clienteId);
@@ -182,6 +184,31 @@ try {
         $presupuestos[] = $presupuesto;
     }
     $consultaPresupuestos->close();
+    $consultarGarantia = $conexion->prepare("SELECT id_presupuesto, fecha_emision, consulta, respuesta, fecha_respuesta FROM presupuesto WHERE id_cliente = ? AND id_orden_reparacion IS NULL AND estado IN ('Consulta de garantía', 'Reparación en garantía')");
+    $consultarGarantia->bind_param('i', $clienteId);
+    $consultarGarantia->execute();
+    foreach ($consultarGarantia->get_result()->fetch_all(MYSQLI_ASSOC) as $consultaGarantia) {
+        $reparacionesCliente[] = [
+            'tipo' => 'consulta', 'id' => (int) $consultaGarantia['id_presupuesto'], 'fecha' => $consultaGarantia['fecha_emision'],
+            'problema' => $consultaGarantia['consulta'], 'respuesta' => $consultaGarantia['respuesta'], 'fecha_respuesta' => $consultaGarantia['fecha_respuesta'],
+            'estado' => $consultaGarantia['respuesta'] === null ? 'Consulta enviada' : 'Consulta respondida',
+            'marca' => '', 'modelo' => '', 'numero_serie' => '', 'fecha_egreso' => null,
+        ];
+    }
+    $consultarGarantia->close();
+    $consultarReparaciones = $conexion->prepare("SELECT o.id_orden_reparacion, o.fecha_ingreso, o.fecha_egreso, o.motivo, o.estado, g.marca, g.modelo, g.numero_serie, p.respuesta, p.fecha_respuesta FROM orden_reparacion o INNER JOIN gpu_cliente g ON g.id_gpu_cliente = o.id_gpu_cliente LEFT JOIN presupuesto p ON p.id_presupuesto = (SELECT MAX(pg.id_presupuesto) FROM presupuesto pg WHERE pg.id_orden_reparacion = o.id_orden_reparacion AND pg.estado IN ('Consulta de garantía', 'Reparación en garantía')) WHERE g.id_cliente = ?");
+    $consultarReparaciones->bind_param('i', $clienteId);
+    $consultarReparaciones->execute();
+    foreach ($consultarReparaciones->get_result()->fetch_all(MYSQLI_ASSOC) as $reparacionCliente) {
+        $reparacionesCliente[] = [
+            'tipo' => 'orden', 'id' => (int) $reparacionCliente['id_orden_reparacion'], 'fecha' => $reparacionCliente['fecha_ingreso'],
+            'problema' => $reparacionCliente['motivo'], 'respuesta' => $reparacionCliente['respuesta'], 'fecha_respuesta' => $reparacionCliente['fecha_respuesta'],
+            'estado' => $reparacionCliente['estado'] ?: 'Pendiente', 'marca' => $reparacionCliente['marca'], 'modelo' => $reparacionCliente['modelo'],
+            'numero_serie' => $reparacionCliente['numero_serie'], 'fecha_egreso' => $reparacionCliente['fecha_egreso'],
+        ];
+    }
+    $consultarReparaciones->close();
+    usort($reparacionesCliente, static fn($a, $b) => strcmp($b['fecha'], $a['fecha']) ?: $b['id'] <=> $a['id']);
     $conexion->close();
 } catch (Throwable $error) {
     if (isset($conexion) && $conexion instanceof mysqli) {
@@ -198,6 +225,7 @@ try {
         : "No pudimos cargar tu cuenta. Intentá nuevamente más tarde.");
     $facturas = [];
     $presupuestos = [];
+    $reparacionesCliente = [];
 }
 
 function escaparCuenta($valor)
@@ -222,7 +250,7 @@ function formatoImporteCuenta($importe)
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi cuenta - GPU FIX & STORE</title>
-    <link rel="stylesheet" href="style.css?v=20261027-carrito">
+    <link rel="stylesheet" href="style.css?v=20261027-consultas-reparacion">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
         crossorigin="anonymous">
@@ -302,7 +330,7 @@ function formatoImporteCuenta($importe)
         <section class="mi-cuenta-seccion mi-cuenta-documentos" id="presupuestos">
             <div class="mi-cuenta-seccion-titulo">
                 <div>
-                    <p class="mi-cuenta-etiqueta">REPARACIONES</p>
+                    <p class="mi-cuenta-etiqueta">PRESUPUESTOS</p>
                     <h2>Historial de presupuestos</h2>
                 </div>
                 <span class="mi-cuenta-contador"><?= count($presupuestos) ?></span>
@@ -349,6 +377,34 @@ function formatoImporteCuenta($importe)
                     </article>
                 <?php endforeach; ?>
             <?php endif; ?>
+        </section>
+
+        <section class="mi-cuenta-seccion mi-cuenta-reparaciones" id="reparaciones">
+            <div class="mi-cuenta-seccion-titulo">
+                <div><p class="mi-cuenta-etiqueta">SERVICIO TÉCNICO</p><h2>Consultas y reparaciones</h2></div>
+                <span class="mi-cuenta-contador"><?= count($reparacionesCliente) ?></span>
+            </div>
+            <div class="mi-cuenta-opciones"><a href="reparar.php#consulta-reparacion">Consultar por una reparación</a></div>
+            <?php if (!$reparacionesCliente): ?><p class="mi-cuenta-vacio">Todavía no tenés consultas ni reparaciones registradas.</p><?php endif; ?>
+            <?php foreach ($reparacionesCliente as $reparacionCliente):
+                $finalizadaCliente = in_array($reparacionCliente['estado'], ['Finalizada', 'Entregada', 'Cancelada'], true);
+            ?>
+                <article class="presupuesto-consulta" id="<?= $reparacionCliente['tipo'] === 'consulta' ? 'consulta-garantia-' : 'reparacion-' ?><?= $reparacionCliente['id'] ?>">
+                    <div class="presupuesto-consulta-cabecera">
+                        <h3><?= $reparacionCliente['tipo'] === 'consulta' ? 'Consulta de garantía #' : 'Reparación #' ?><?= $reparacionCliente['id'] ?></h3>
+                        <span><?= escaparCuenta($finalizadaCliente ? 'Finalizado' : $reparacionCliente['estado']) ?></span>
+                    </div>
+                    <small><?= escaparCuenta(formatoFechaCuenta($reparacionCliente['fecha'])) ?></small>
+                    <?php if ($reparacionCliente['estado'] === 'Cancelada'): ?><p><strong>Reparación cancelada.</strong></p><?php endif; ?>
+                    <?php if ($reparacionCliente['tipo'] === 'orden'): ?><p><strong><?= escaparCuenta($reparacionCliente['marca'] . ' ' . $reparacionCliente['modelo']) ?></strong><br>Serie: <?= escaparCuenta($reparacionCliente['numero_serie']) ?></p><?php endif; ?>
+                    <div><strong>Problema de la placa</strong><p><?= nl2br(escaparCuenta($reparacionCliente['problema'])) ?></p></div>
+                    <div class="presupuesto-consulta-respuesta"><strong>Respuesta de GPUFIX</strong>
+                        <?php if (trim((string) $reparacionCliente['respuesta']) !== ''): ?><p><?= nl2br(escaparCuenta($reparacionCliente['respuesta'])) ?></p><small><?= escaparCuenta(formatoFechaCuenta($reparacionCliente['fecha_respuesta'])) ?></small>
+                        <?php else: ?><p>Todavía no hay una respuesta. Podés consultarla acá cuando esté disponible.</p><?php endif; ?>
+                    </div>
+                    <?php if ($reparacionCliente['fecha_egreso']): ?><small>Finalización: <?= escaparCuenta(formatoFechaCuenta($reparacionCliente['fecha_egreso'])) ?></small><?php endif; ?>
+                </article>
+            <?php endforeach; ?>
         </section>
 
         <section class="mi-cuenta-seccion mi-cuenta-seguridad" id="seguridad">

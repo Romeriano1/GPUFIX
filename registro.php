@@ -1,9 +1,11 @@
 <?php
 session_start();
 $requeridoCarrito = (($_GET["requerido"] ?? "") === "carrito") || (($_POST["requerido"] ?? "") === "carrito");
+$requeridoReparacion = (($_GET['requerido'] ?? '') === 'reparacion') || (($_POST['requerido'] ?? '') === 'reparacion');
+$contextoRegistro = $requeridoReparacion ? 'reparacion' : ($requeridoCarrito ? 'carrito' : '');
 
 if (!empty($_SESSION["usuario_id"])) {
-    header("Location: mi-cuenta.php");
+    header('Location: ' . ($requeridoReparacion ? 'reparar.php#consulta-reparacion' : 'mi-cuenta.php'));
     exit;
 }
 
@@ -86,7 +88,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $conexion->close();
 
                 $_SESSION["registro_creado"] = true;
-                header("Location: login.php?registrado=1" . ($requeridoCarrito ? "&requerido=carrito" : ""));
+                header('Location: login.php?registrado=1' . ($contextoRegistro !== '' ? '&requerido=' . $contextoRegistro : ''));
                 exit;
             }
         } catch (Throwable $error) {
@@ -190,8 +192,8 @@ function escaparRegistro($valor)
             <?php endif; ?>
 
             <form class="login-form" action="registro.php" method="POST">
-                <?php if ($requeridoCarrito): ?>
-                    <input type="hidden" name="requerido" value="carrito">
+                <?php if ($contextoRegistro !== ''): ?>
+                    <input type="hidden" name="requerido" value="<?= htmlspecialchars($contextoRegistro, ENT_QUOTES, 'UTF-8') ?>">
                 <?php endif; ?>
                 <div class="registro-grid">
                     <div class="login-campo">
@@ -237,7 +239,7 @@ function escaparRegistro($valor)
 
             <div class="login-enlaces">
                 <p>¿Ya tenés una cuenta?</p>
-                <a href="login.php">Iniciar sesión</a>
+                <a href="login.php<?= $contextoRegistro !== '' ? '?requerido=' . $contextoRegistro : '' ?>">Iniciar sesión</a>
             </div>
         </div>
     </section>

@@ -90,6 +90,29 @@ function admin_layout_inicio(string $titulo): void {
             color: #667085;
             font-size: .9rem;
         }
+        .presupuesto-admin > summary {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 18px;
+            list-style: none;
+            cursor: pointer;
+        }
+        .presupuesto-admin > summary::-webkit-details-marker { display: none; }
+        .presupuesto-admin > summary::after {
+            content: "";
+            flex-shrink: 0;
+            width: 9px;
+            height: 9px;
+            border-right: 2px solid #253b80;
+            border-bottom: 2px solid #253b80;
+            transform: rotate(45deg);
+        }
+        .presupuesto-admin[open] > summary::after { transform: rotate(225deg); }
+        .presupuesto-admin > summary:focus-visible { outline: 2px solid #253b80; outline-offset: 3px; }
+        .presupuesto-admin-resumen { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+        .presupuesto-admin > summary > .badge { max-width: 12rem; white-space: normal; }
+        .presupuesto-admin-contenido { padding: 18px; border-top: 1px solid #dee2e6; }
     </style>
 </head>
 <body>
