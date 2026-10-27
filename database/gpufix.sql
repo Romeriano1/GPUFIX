@@ -30,7 +30,7 @@ CREATE TABLE `carrito` (
   PRIMARY KEY (`id_carrito`),
   UNIQUE KEY `uq_carrito_cliente` (`id_cliente`),
   CONSTRAINT `fk_carrito_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -39,7 +39,6 @@ CREATE TABLE `carrito` (
 
 LOCK TABLES `carrito` WRITE;
 /*!40000 ALTER TABLE `carrito` DISABLE KEYS */;
-INSERT INTO `carrito` VALUES (6,18,'2026-10-26 08:40:41','2026-10-26 08:40:41');
 /*!40000 ALTER TABLE `carrito` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -57,7 +56,7 @@ CREATE TABLE `cliente` (
   PRIMARY KEY (`id_cliente`),
   UNIQUE KEY `uq_cliente_correo` (`id_correo`),
   CONSTRAINT `fk_cliente_usuarios` FOREIGN KEY (`id_correo`) REFERENCES `usuarios` (`id_correo`)
-) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -66,7 +65,7 @@ CREATE TABLE `cliente` (
 
 LOCK TABLES `cliente` WRITE;
 /*!40000 ALTER TABLE `cliente` DISABLE KEYS */;
-INSERT INTO `cliente` VALUES (18,18,NULL),(24,24,NULL);
+INSERT INTO `cliente` VALUES (24,24,NULL);
 /*!40000 ALTER TABLE `cliente` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -111,7 +110,7 @@ CREATE TABLE `detalle_carrito` (
   KEY `ix_detalle_carrito_gpu` (`id_gpu`),
   CONSTRAINT `fk_detalle_carrito_carrito` FOREIGN KEY (`id_carrito`) REFERENCES `carrito` (`id_carrito`) ON DELETE CASCADE,
   CONSTRAINT `fk_detalle_carrito_gpu` FOREIGN KEY (`id_gpu`) REFERENCES `gpu` (`id_gpu`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -120,7 +119,6 @@ CREATE TABLE `detalle_carrito` (
 
 LOCK TABLES `detalle_carrito` WRITE;
 /*!40000 ALTER TABLE `detalle_carrito` DISABLE KEYS */;
-INSERT INTO `detalle_carrito` VALUES (6,6,1,1),(9,6,9,1);
 /*!40000 ALTER TABLE `detalle_carrito` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -176,7 +174,7 @@ CREATE TABLE `detalle_factura` (
   PRIMARY KEY (`id_detalle_factura`),
   KEY `fk_detalle_factura_factura` (`id_factura`),
   CONSTRAINT `fk_detalle_factura_factura` FOREIGN KEY (`id_factura`) REFERENCES `factura` (`id_factura`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -267,7 +265,7 @@ CREATE TABLE `detalle_venta` (
   KEY `fk_detalle_venta_gpu` (`id_gpu`),
   CONSTRAINT `fk_detalle_venta_gpu` FOREIGN KEY (`id_gpu`) REFERENCES `gpu` (`id_gpu`),
   CONSTRAINT `fk_detalle_venta_venta` FOREIGN KEY (`id_gpu_ventas`) REFERENCES `gpu_ventas` (`id_gpu_ventas`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -331,7 +329,7 @@ CREATE TABLE `empleado` (
   KEY `fk_empleado_puesto` (`id_puesto`),
   CONSTRAINT `fk_empleado_puesto` FOREIGN KEY (`id_puesto`) REFERENCES `puesto` (`id_puesto`),
   CONSTRAINT `fk_empleado_usuario` FOREIGN KEY (`id_correo`) REFERENCES `usuarios` (`id_correo`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -340,6 +338,7 @@ CREATE TABLE `empleado` (
 
 LOCK TABLES `empleado` WRITE;
 /*!40000 ALTER TABLE `empleado` DISABLE KEYS */;
+INSERT INTO `empleado` VALUES (1,'Admin','GpuFix','12341234','1158390537','gpufixstore@gmail.com',1,24);
 /*!40000 ALTER TABLE `empleado` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -398,7 +397,7 @@ CREATE TABLE `factura` (
   CONSTRAINT `fk_factura_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`),
   CONSTRAINT `fk_factura_reparacion` FOREIGN KEY (`id_reparacion`) REFERENCES `reparacion` (`id_reparacion`),
   CONSTRAINT `fk_factura_venta` FOREIGN KEY (`id_gpu_ventas`) REFERENCES `gpu_ventas` (`id_gpu_ventas`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -485,10 +484,15 @@ CREATE TABLE `gpu_ventas` (
   `precio_total` decimal(12,2) NOT NULL DEFAULT 0.00,
   `metodo_pago` varchar(50) DEFAULT NULL,
   `estado` varchar(50) DEFAULT NULL,
+  `tarjeta_titular` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `tarjeta_ultimos4` char(4) DEFAULT NULL,
+  `tarjeta_longitud` tinyint(3) unsigned DEFAULT NULL,
+  `tarjeta_vencimiento` char(5) DEFAULT NULL,
+  `tarjeta_dni` varchar(8) DEFAULT NULL,
   PRIMARY KEY (`id_gpu_ventas`),
   KEY `fk_gpu_ventas_cliente` (`id_cliente`),
   CONSTRAINT `fk_gpu_ventas_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -631,7 +635,7 @@ CREATE TABLE `puesto` (
   `id_puesto` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(100) NOT NULL,
   PRIMARY KEY (`id_puesto`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -640,6 +644,7 @@ CREATE TABLE `puesto` (
 
 LOCK TABLES `puesto` WRITE;
 /*!40000 ALTER TABLE `puesto` DISABLE KEYS */;
+INSERT INTO `puesto` VALUES (1,'Administrador');
 /*!40000 ALTER TABLE `puesto` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -728,7 +733,7 @@ CREATE TABLE `stock_gpu` (
 
 LOCK TABLES `stock_gpu` WRITE;
 /*!40000 ALTER TABLE `stock_gpu` DISABLE KEYS */;
-INSERT INTO `stock_gpu` VALUES (1,1,'Disponible',NULL,4),(2,2,'Disponible',NULL,2),(3,3,'Disponible',NULL,3),(4,4,'Disponible',NULL,5),(5,5,'Disponible',NULL,4),(6,6,'Disponible',NULL,2),(7,7,'Disponible',NULL,3),(8,8,'Disponible',NULL,4),(9,9,'Disponible',NULL,2),(10,10,'Disponible',NULL,5),(11,11,'Disponible',NULL,3),(12,12,'Disponible',NULL,4),(13,13,'Disponible',NULL,2),(14,14,'Disponible',NULL,5),(15,15,'Disponible',NULL,3),(16,16,'Disponible',NULL,2),(17,17,'Disponible',NULL,5),(18,18,'Disponible',NULL,3),(19,19,'Disponible',NULL,4),(20,20,'Disponible',NULL,2),(21,21,'Disponible',NULL,5),(22,22,'Disponible',NULL,3),(23,23,'Disponible',NULL,4),(24,24,'Disponible',NULL,2);
+INSERT INTO `stock_gpu` VALUES (1,1,'Disponible',NULL,3),(2,2,'Disponible',NULL,2),(3,3,'Disponible',NULL,3),(4,4,'Disponible',NULL,5),(5,5,'Disponible',NULL,4),(6,6,'Disponible',NULL,2),(7,7,'Disponible',NULL,3),(8,8,'Disponible',NULL,4),(9,9,'Sin stock',NULL,0),(10,10,'Disponible',NULL,4),(11,11,'Disponible',NULL,3),(12,12,'Disponible',NULL,4),(13,13,'Disponible',NULL,2),(14,14,'Disponible',NULL,5),(15,15,'Disponible',NULL,3),(16,16,'Disponible',NULL,2),(17,17,'Disponible',NULL,5),(18,18,'Disponible',NULL,3),(19,19,'Disponible',NULL,4),(20,20,'Disponible',NULL,2),(21,21,'Disponible',NULL,5),(22,22,'Disponible',NULL,3),(23,23,'Disponible',NULL,4),(24,24,'Disponible',NULL,2);
 /*!40000 ALTER TABLE `stock_gpu` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -749,7 +754,7 @@ CREATE TABLE `usuarios` (
   `telefono` varchar(30) DEFAULT NULL,
   PRIMARY KEY (`id_correo`),
   UNIQUE KEY `uq_usuarios_correo` (`correo`)
-) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -758,7 +763,7 @@ CREATE TABLE `usuarios` (
 
 LOCK TABLES `usuarios` WRITE;
 /*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
-INSERT INTO `usuarios` VALUES (18,'lucasnicolas2002@gmail.com','$2y$10$HOq0s0YWfR8oULW4R4/g0.38tCPrUM.yqmBsT26/gFYojJvMvYUcK','lucas','calvano','34343434','+541160209263'),(24,'gpufixstore@gmail.com','$2y$10$ow9ZPHNC2IyfyDxj1cDNn.rcha4pkvVpUt.z0HLsqCxdH29vCLtqu','Admin','GpuFix','12341234','1158390537');
+INSERT INTO `usuarios` VALUES (24,'gpufixstore@gmail.com','$2y$10$ow9ZPHNC2IyfyDxj1cDNn.rcha4pkvVpUt.z0HLsqCxdH29vCLtqu','Admin','GpuFix','12341234','1158390537');
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -771,4 +776,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-10-26 19:29:53
+-- Dump completed on 2026-10-26 22:02:12

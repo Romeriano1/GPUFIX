@@ -19,12 +19,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             require_once __DIR__ . '/conexion.php';
 
             $consulta = $conexion->prepare(
-                'SELECT id_correo, `contraseña`, nombre, apellido
-                 FROM usuarios WHERE correo = ? LIMIT 1'
+                "SELECT u.id_correo, u.`contraseña`, u.nombre, u.apellido, e.id_empleado
+                 FROM usuarios u
+                 INNER JOIN empleado e ON e.id_correo = u.id_correo
+                 INNER JOIN puesto p ON p.id_puesto = e.id_puesto
+                 WHERE u.correo = ? AND p.nombre = 'Administrador' LIMIT 1"
             );
             $consulta->bind_param('s', $correo);
             $consulta->execute();
-            $consulta->bind_result($id, $hash, $nombre, $apellido);
+            $consulta->bind_result($id, $hash, $nombre, $apellido, $empleadoId);
 
             if ($consulta->fetch() && password_verify($clave, $hash)) {
                 $consulta->close();
@@ -33,6 +36,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['gpufix_admin'] = true;
                 $_SESSION['admin_correo'] = $correo;
                 $_SESSION['admin_csrf'] = bin2hex(random_bytes(32));
+                $_SESSION['empleado_id'] = (int) $empleadoId;
+                $_SESSION['empleado_nombre'] = $nombre;
+                $_SESSION['empleado_apellido'] = $apellido;
 
                 header('Location: admin.php');
                 exit;

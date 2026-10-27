@@ -67,6 +67,8 @@ if (formularioPago) {
     const numeroTarjeta = document.getElementById("numeroTarjeta");
     const marcaTarjeta = document.getElementById("marcaTarjeta");
     const marcaEnviada = document.getElementById("marcaTarjetaEnviada");
+    const ultimosEnviados = document.getElementById("ultimosTarjetaEnviados");
+    const longitudEnviada = document.getElementById("longitudTarjetaEnviada");
     const comprobante = document.getElementById("comprobanteTransferencia");
     const titularTarjeta = document.getElementById("titularTarjeta");
     const vencimientoTarjeta = document.getElementById("vencimientoTarjeta");
@@ -86,6 +88,8 @@ if (formularioPago) {
 
     function validarTarjeta() {
         marcaEnviada.value = "";
+        if (ultimosEnviados) ultimosEnviados.value = "";
+        if (longitudEnviada) longitudEnviada.value = "";
         numeroTarjeta.setCustomValidity("");
         if (numeroTarjeta.disabled) return true;
         const numero = numeroTarjeta.value.replace(/\D/g, "");
@@ -98,6 +102,8 @@ if (formularioPago) {
             numeroTarjeta.setCustomValidity("Completá el número de la tarjeta.");
         } else {
             marcaEnviada.value = marca;
+            if (ultimosEnviados) ultimosEnviados.value = numero.slice(-4);
+            if (longitudEnviada) longitudEnviada.value = String(numero.length);
             marcaTarjeta.textContent = marca + " detectada · formato válido";
         }
         return numeroTarjeta.validity.valid;
@@ -129,6 +135,9 @@ if (formularioPago) {
         document.getElementById("pagoTransferencia").hidden = esTarjeta;
         numeroTarjeta.disabled = !esTarjeta;
         numeroTarjeta.required = esTarjeta;
+        [ultimosEnviados, longitudEnviada].forEach(function(campo) {
+            if (campo) campo.disabled = !esTarjeta;
+        });
         datosTarjeta.forEach(function(campo) {
             campo.disabled = !esTarjeta;
             campo.required = esTarjeta;

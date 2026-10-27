@@ -57,7 +57,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $error = "Correo o contraseña incorrectos, o cuenta no habilitada como empleado.";
         } catch (Throwable $e) {
             error_log("Error en login de empleado: " . $e->getMessage());
-            $error = "No se pudo conectar con la base de datos.";
+            $error = "No se pudo verificar el acceso de empleado. Intentá nuevamente más tarde.";
         }
     }
 }

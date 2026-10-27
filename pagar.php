@@ -132,12 +132,38 @@ try {
             }
             $metodoSeleccionado = $_POST["metodo_pago"] ?? "";
             $archivoComprobante = null;
+            $titularTarjeta = $ultimosTarjeta = $vencimientoTarjeta = $dniTarjeta = null;
+            $longitudTarjeta = null;
             if ($metodoSeleccionado === "tarjeta") {
                 $marcaTarjeta = $_POST["marca_tarjeta"] ?? "";
                 if (!in_array($marcaTarjeta, ["Visa", "Mastercard"], true)) {
                     throw new RuntimeException("Ingresá una tarjeta Visa o Mastercard válida.");
                 }
-                $metodoPago = "Tarjeta " . $marcaTarjeta . " (simulada)";
+                foreach (["tarjeta_titular", "tarjeta_ultimos4", "tarjeta_longitud", "tarjeta_vencimiento", "tarjeta_dni"] as $campoTarjeta) {
+                    if (!is_string($_POST[$campoTarjeta] ?? null)) {
+                        throw new RuntimeException("Completá los datos de la tarjeta. Si la página estaba abierta, recargala e intentá de nuevo.");
+                    }
+                }
+                $titularTarjeta = trim($_POST["tarjeta_titular"]);
+                $ultimosTarjeta = $_POST["tarjeta_ultimos4"];
+                $longitudTarjeta = (int) $_POST["tarjeta_longitud"];
+                $vencimientoTarjeta = $_POST["tarjeta_vencimiento"];
+                $dniTarjeta = $_POST["tarjeta_dni"];
+                $longitudesPermitidas = $marcaTarjeta === "Visa" ? [13, 16, 19] : [16];
+                if (mb_strlen($titularTarjeta, "UTF-8") < 3 || mb_strlen($titularTarjeta, "UTF-8") > 100
+                    || !preg_match('/^[0-9]{4}$/', $ultimosTarjeta)
+                    || !ctype_digit($_POST["tarjeta_longitud"]) || !in_array($longitudTarjeta, $longitudesPermitidas, true)
+                    || !preg_match('/^[0-9]{7,8}$/', $dniTarjeta)) {
+                    throw new RuntimeException("Revisá el titular, el número y el DNI de la tarjeta.");
+                }
+                if (!preg_match('/^(0[1-9]|1[0-2])\/([0-9]{2})$/', $vencimientoTarjeta, $fechaTarjeta)) {
+                    throw new RuntimeException("Ingresá un vencimiento válido en formato MM/AA.");
+                }
+                $mesActual = (new DateTimeImmutable("now", new DateTimeZone("America/Argentina/Buenos_Aires")))->format("Ym");
+                if (("20" . $fechaTarjeta[2] . $fechaTarjeta[1]) < $mesActual) {
+                    throw new RuntimeException("La tarjeta está vencida.");
+                }
+                $metodoPago = "Tarjeta " . $marcaTarjeta;
             } elseif ($metodoSeleccionado === "transferencia") {
                 $archivoComprobante = $_FILES["comprobante"] ?? null;
                 if (!$archivoComprobante || !is_int($archivoComprobante["error"] ?? null)
@@ -155,7 +181,7 @@ try {
                     throw new RuntimeException("El comprobante debe ser un archivo PDF, JPG o PNG válido.");
                 }
                 $archivoComprobante["extension"] = $extensiones[$tipoArchivo];
-                $metodoPago = "Transferencia (simulada)";
+                $metodoPago = "Transferencia";
             } else {
                 throw new RuntimeException("Seleccioná tarjeta o transferencia para continuar.");
             }
@@ -191,8 +217,9 @@ try {
             }
 
             $totalVenta = decimalPago($totalCentavos);
-            $crearVenta = $conexion->prepare("INSERT INTO gpu_ventas (id_cliente, precio_total, metodo_pago, estado) VALUES (?, ?, ?, 'Simulada')");
-            $crearVenta->bind_param("iss", $idCliente, $totalVenta, $metodoPago);
+            $estadoVenta = $metodoSeleccionado === "transferencia" ? "Pendiente de verificación" : "Registrada";
+            $crearVenta = $conexion->prepare("INSERT INTO gpu_ventas (id_cliente, precio_total, metodo_pago, estado, tarjeta_titular, tarjeta_ultimos4, tarjeta_longitud, tarjeta_vencimiento, tarjeta_dni) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $crearVenta->bind_param("isssssiss", $idCliente, $totalVenta, $metodoPago, $estadoVenta, $titularTarjeta, $ultimosTarjeta, $longitudTarjeta, $vencimientoTarjeta, $dniTarjeta);
             $crearVenta->execute();
             $idVenta = (int) $conexion->insert_id;
             $crearVenta->close();
@@ -362,7 +389,7 @@ try {
                     <div><dt>Fecha</dt><dd><?= escaparPago(date("d/m/Y H:i", strtotime($compraConfirmada["fecha_emision"]))) ?></dd></div>
                     <div><dt>Método de pago</dt><dd><?= escaparPago(str_replace(" (simulada)", "", $compraConfirmada["metodo_pago"])) ?></dd></div>
                 </dl>
-                <?php if ($compraConfirmada["metodo_pago"] === "Transferencia (simulada)"): ?><p><a class="pago-volver" href="comprobante.php?compra=<?= (int) $idCompra ?>">Descargar comprobante enviado</a></p><?php endif; ?>
+                <?php if (in_array($compraConfirmada["metodo_pago"], ["Transferencia", "Transferencia (simulada)"], true)): ?><p><a class="pago-volver" href="comprobante.php?compra=<?= (int) $idCompra ?>">Descargar comprobante enviado</a></p><?php endif; ?>
                 <ul class="pago-items">
                     <?php foreach ($compraConfirmada["items"] as $detalle): ?>
                         <li><div><strong><?= escaparPago($detalle["descripcion"]) ?></strong><span>Cantidad: <?= (int) $detalle["cantidad"] ?></span></div><strong><?= formatoPago(centavosPago($detalle["subtotal"])) ?></strong></li>
@@ -396,14 +423,16 @@ try {
                                 <label for="numeroTarjeta">Número de tarjeta</label>
                                 <input type="text" id="numeroTarjeta" inputmode="numeric" autocomplete="off" maxlength="23" placeholder="0000 0000 0000 0000" aria-describedby="marcaTarjeta ayudaTarjeta" <?= $metodoSeleccionado === "tarjeta" ? "required" : "disabled" ?>>
                                 <input type="hidden" name="marca_tarjeta" id="marcaTarjetaEnviada" value="">
+                                <input type="hidden" name="tarjeta_ultimos4" id="ultimosTarjetaEnviados" value="">
+                                <input type="hidden" name="tarjeta_longitud" id="longitudTarjetaEnviada" value="">
                                 <p id="marcaTarjeta" class="pago-marca" aria-live="polite">Ingresá el número para detectar Visa o Mastercard.</p>
                                 <div class="pago-datos-tarjeta">
-                                    <div class="pago-titular"><label for="titularTarjeta">Nombre del titular de la tarjeta</label><input type="text" id="titularTarjeta" autocomplete="off" minlength="3" maxlength="100" placeholder="Como figura en la tarjeta" <?= $metodoSeleccionado === "tarjeta" ? "required" : "disabled" ?>></div>
-                                    <div><label for="vencimientoTarjeta">Vencimiento</label><input type="text" id="vencimientoTarjeta" inputmode="numeric" autocomplete="off" maxlength="5" pattern="[0-9]{2}/[0-9]{2}" placeholder="MM/AA" <?= $metodoSeleccionado === "tarjeta" ? "required" : "disabled" ?>></div>
+                                    <div class="pago-titular"><label for="titularTarjeta">Nombre del titular de la tarjeta</label><input type="text" id="titularTarjeta" name="tarjeta_titular" autocomplete="off" minlength="3" maxlength="100" placeholder="Como figura en la tarjeta" <?= $metodoSeleccionado === "tarjeta" ? "required" : "disabled" ?>></div>
+                                    <div><label for="vencimientoTarjeta">Vencimiento</label><input type="text" id="vencimientoTarjeta" name="tarjeta_vencimiento" inputmode="numeric" autocomplete="off" maxlength="5" pattern="[0-9]{2}/[0-9]{2}" placeholder="MM/AA" <?= $metodoSeleccionado === "tarjeta" ? "required" : "disabled" ?>></div>
                                     <div><label for="ccvTarjeta">CCV</label><input type="password" id="ccvTarjeta" inputmode="numeric" autocomplete="off" maxlength="3" pattern="[0-9]{3}" placeholder="3 dígitos" <?= $metodoSeleccionado === "tarjeta" ? "required" : "disabled" ?>></div>
-                                    <div><label for="dniTarjeta">DNI</label><input type="text" id="dniTarjeta" inputmode="numeric" autocomplete="off" minlength="7" maxlength="8" pattern="[0-9]{7,8}" placeholder="Sin puntos ni espacios" <?= $metodoSeleccionado === "tarjeta" ? "required" : "disabled" ?>></div>
+                                    <div><label for="dniTarjeta">DNI</label><input type="text" id="dniTarjeta" name="tarjeta_dni" inputmode="numeric" autocomplete="off" minlength="7" maxlength="8" pattern="[0-9]{7,8}" placeholder="Sin puntos ni espacios" <?= $metodoSeleccionado === "tarjeta" ? "required" : "disabled" ?>></div>
                                 </div>
-                                <small id="ayudaTarjeta">Los datos de la tarjeta no se guardan.</small>
+                                <small id="ayudaTarjeta">Guardamos el titular, vencimiento, DNI y los últimos 4 dígitos para el resumen. El número completo y el CCV no se guardan.</small>
                             </div>
                             <div id="pagoTransferencia" <?= $metodoSeleccionado !== "transferencia" ? "hidden" : "" ?>>
                                 <p>Alias para la transferencia: <strong class="pago-alias">gpufix.store.mp</strong></p>
@@ -434,7 +463,7 @@ try {
         <?php endif; ?>
     </main>
     <footer><p>GPU FIX &amp; STORE - Reparación y venta de GPUs</p></footer>
-    <script src="script.js?v=20261026-tarjeta-sin-luhn"></script>
+    <script src="script.js?v=20261026-resumen-pago"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

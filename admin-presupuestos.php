@@ -1,10 +1,17 @@
-
-
 <?php
 require_once __DIR__ . '/admin-comun.php';
 admin_requerir_acceso();
 require_once __DIR__ . '/conexion.php';
-require_once __DIR__ . '/correo-config.php';
+$correoDisponible = false;
+$archivoCorreo = __DIR__ . '/correo-config.php';
+if (is_file($archivoCorreo)) {
+    try {
+        require_once $archivoCorreo;
+        $correoDisponible = is_callable('gpufix_enviar_correo');
+    } catch (Throwable $errorCorreo) {
+        error_log('No se pudo cargar el envío de presupuestos: ' . $errorCorreo->getMessage());
+    }
+}
 
 admin_validar_csrf();
 
@@ -178,7 +185,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             FILTER_VALIDATE_INT
         );
 
-        if (!$idPresupuesto) {
+        if (!$correoDisponible) {
+            $error = 'El envío de correo no está configurado. El cliente puede consultar el presupuesto desde Mi cuenta.';
+        } elseif (!$idPresupuesto) {
             $error = 'El presupuesto seleccionado no es válido.';
         } else {
             $stmt = $conexion->prepare(
@@ -361,9 +370,15 @@ admin_layout_inicio('Presupuestos');
 <h1 class="h3 mt-3">Presupuestos</h1>
 
 <p class="text-secondary">
-    Registrá presupuestos, administrá sus estados y envialos por correo electrónico.
+    Registrá presupuestos y administrá sus estados.
     El importe corresponde únicamente a la mano de obra.
 </p>
+
+<?php if (!$correoDisponible): ?>
+    <div class="alert alert-info" role="status">
+        El envío por correo no está configurado. Podés gestionar los presupuestos desde este panel y el cliente puede consultarlos en Mi cuenta.
+    </div>
+<?php endif; ?>
 
 <?php if ($mensaje !== ''): ?>
     <div class="alert alert-success">
@@ -612,6 +627,7 @@ admin_layout_inicio('Presupuestos');
                                     <button
                                         type="submit"
                                         class="btn btn-success btn-sm"
+                                        <?= $correoDisponible ? '' : 'disabled' ?>
                                     >
                                         Enviar presupuesto
                                     </button>
