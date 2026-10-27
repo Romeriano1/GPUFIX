@@ -50,6 +50,33 @@ function formatoPago(int $centavos): string
     return "$ " . number_format($centavos / 100, 2, ",", ".");
 }
 
+function prepararCarpetaComprobantes(): string
+{
+    $directorio = __DIR__ . '/comprobantes';
+    if (!is_dir($directorio) && !@mkdir($directorio, 0755) && !is_dir($directorio)) {
+        throw new RuntimeException('El hosting no pudo crear la carpeta de comprobantes. Creá la carpeta comprobantes junto a pagar.php y verificá sus permisos de escritura.');
+    }
+    if (!is_writable($directorio)) {
+        throw new RuntimeException('La carpeta de comprobantes no permite guardar archivos. Revisá sus permisos de escritura en el hosting.');
+    }
+    $proteccion = $directorio . '/.htaccess';
+    if (!is_file($proteccion)) {
+        $archivoProteccion = @fopen($proteccion, 'x');
+        if ($archivoProteccion === false) {
+            if (!is_file($proteccion)) throw new RuntimeException('No pudimos proteger la carpeta de comprobantes. Subí comprobantes/.htaccess al hosting e intentá nuevamente.');
+        } else {
+            $regla = "Require all denied\n";
+            $escrito = fwrite($archivoProteccion, $regla);
+            fclose($archivoProteccion);
+            if ($escrito !== strlen($regla)) {
+                @unlink($proteccion);
+                throw new RuntimeException('No pudimos proteger la carpeta de comprobantes. Subí comprobantes/.htaccess al hosting e intentá nuevamente.');
+            }
+        }
+    }
+    return $directorio;
+}
+
 function enviarCorreoCompra(array $cliente, array $articulos, int $idVenta, string $numeroComprobante, int $totalCentavos, string $metodoPago, string $estadoVenta, string $direccion): bool
 {
     try {
@@ -229,6 +256,7 @@ try {
                     throw new RuntimeException("El comprobante debe ser un archivo PDF, JPG o PNG válido.");
                 }
                 $archivoComprobante["extension"] = $extensiones[$tipoArchivo];
+                $directorioComprobantes = prepararCarpetaComprobantes();
                 $metodoPago = "Transferencia";
             } else {
                 throw new RuntimeException("Seleccioná tarjeta o transferencia para continuar.");
@@ -321,9 +349,13 @@ try {
             $actualizarCarrito->execute();
             $actualizarCarrito->close();
             if ($archivoComprobante !== null) {
-                $rutaComprobante = __DIR__ . "/comprobantes/" . $idVenta . "." . $archivoComprobante["extension"];
-                if (is_file($rutaComprobante) || !@move_uploaded_file($archivoComprobante["tmp_name"], $rutaComprobante)) {
-                    throw new RuntimeException("No pudimos guardar el comprobante. Seleccioná el archivo e intentá nuevamente.");
+                $rutaComprobante = $directorioComprobantes . '/' . $idVenta . '.' . $archivoComprobante['extension'];
+                if (file_exists($rutaComprobante)) {
+                    throw new RuntimeException('Ya existe un archivo para este comprobante. No se guardó la compra. Revisá los comprobantes del hosting antes de intentar nuevamente.');
+                }
+                if (!@move_uploaded_file($archivoComprobante['tmp_name'], $rutaComprobante)) {
+                    error_log('No se pudo guardar comprobante de compra #' . $idVenta . ': ' . (error_get_last()['message'] ?? 'Fallo al mover el archivo subido.'));
+                    throw new RuntimeException('El hosting no pudo guardar el comprobante. Revisá el espacio disponible y los permisos de la carpeta comprobantes, y volvé a seleccionar el archivo.');
                 }
                 $rutaComprobanteGuardado = $rutaComprobante;
             }
