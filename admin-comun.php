@@ -113,6 +113,25 @@ function admin_layout_inicio(string $titulo): void {
         .presupuesto-admin-resumen { flex: 1; min-width: 0; overflow-wrap: anywhere; }
         .presupuesto-admin > summary > .badge { max-width: 12rem; white-space: normal; }
         .presupuesto-admin-contenido { padding: 18px; border-top: 1px solid #dee2e6; }
+        .panel, .row > * { min-width: 0; }
+        .panel { overflow-wrap: anywhere; }
+        .table-responsive { max-width: 100%; }
+        @media (max-width: 1199px) {
+            .navbar > .container { flex-wrap: wrap; }
+            .navbar-collapse .navbar-nav { flex-wrap: wrap; }
+        }
+        @media (max-width: 575px) {
+            .navbar-brand { font-size: 1rem; white-space: normal; max-width: calc(100% - 64px); }
+            .panel { padding: 16px 12px; margin: 14px 0; }
+            .panel h1 { font-size: 1.5rem; }
+            .panel h2 { font-size: 1.25rem; }
+            .panel .d-flex { flex-wrap: wrap; }
+            .panel input, .panel select, .panel textarea { font-size: 16px; }
+            .presupuesto-admin > summary { padding: 14px 12px; gap: 10px; flex-wrap: wrap; }
+            .presupuesto-admin-resumen { flex-basis: calc(100% - 24px); }
+            .presupuesto-admin > summary::after { margin-left: auto; }
+            .presupuesto-admin-contenido { padding: 14px 12px; }
+        }
     </style>
 </head>
 <body>

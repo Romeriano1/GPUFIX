@@ -281,10 +281,8 @@ body.light-theme .cuenta-menu a:hover {
 }
 
 .navbar-centro {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
+    position: static;
+    margin: 0 16px;
 }
 
 .search-form {
@@ -2324,4 +2322,53 @@ body.light-theme .login-enlaces a.login-registro-boton:hover {
     border-color: #007aa8;
     background-color: #007aa8;
     color: #ffffff;
+}
+
+/* Adaptación compartida para celulares y tablets. */
+@media (max-width: 1100px) {
+    .navbar-centro {
+        order: 3;
+        flex: 0 0 100%;
+        margin: 12px 0 0;
+    }
+    .navbar-centro .search-form { justify-content: center; }
+}
+
+@media (max-width: 700px) {
+    .navbar, body.light-theme .navbar { padding: 12px; gap: 12px; }
+    .navbar-izquierda { margin: 0; flex: 1 1 100%; min-width: 0; flex-wrap: wrap; gap: 8px; }
+    .navbar-izquierda .navbar-nav { width: 100%; flex-wrap: wrap; gap: 4px 18px; }
+    .navbar-brand { margin: 0; white-space: normal; }
+    .navbar-derecha { margin-left: auto; }
+    .navbar-centro { margin: 0; }
+    .search-form { width: 100%; }
+    .search-form .form-control { width: auto; flex: 1; min-width: 0; }
+    .search-form .btn { flex-shrink: 0; }
+    main { margin: 28px auto; }
+    .sucursal { width: 100%; min-width: 0; padding: 20px; }
+    .formulario-seguimiento { flex-wrap: wrap; }
+    .formulario-seguimiento input { width: 100%; min-width: 0; }
+    .producto-informacion, .pago-panel { min-width: 0; }
+    .producto-informacion h1, .carrito-item-detalle, .carrito-item-precio,
+    .mi-cuenta-seccion, .pago-panel { overflow-wrap: anywhere; }
+    .pago-resumen { position: static; }
+    .pago-items li { flex-wrap: wrap; }
+    .carrito-resumen, .carrito-acciones, .pago-acciones { flex-wrap: wrap; gap: 12px; }
+    .carrito-vacio { margin: 32px auto; padding: 28px 18px; }
+    .login-formulario { padding: 28px 22px; }
+    footer { margin-top: 40px; padding: 20px 16px; }
+}
+
+@media (max-width: 480px) {
+    #carruselProductos { padding: 16px; }
+    .carrusel-imagen { height: 230px; }
+    .carousel-item h3 { font-size: 20px; }
+    .pago-panel { padding: 20px 16px; }
+    .pago-datos-tarjeta { grid-template-columns: 1fr; }
+    .pago-titular { grid-column: auto; }
+    .pago-selector label { flex: 1 1 100%; }
+    .pago-total { flex-wrap: wrap; gap: 8px; }
+    .carrito-item-precio { grid-column: 1 / -1; text-align: left; }
+    .carrito-acciones > a { max-width: 100%; }
+    input, select, textarea { font-size: 16px; }
 }
