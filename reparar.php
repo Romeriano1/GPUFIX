@@ -64,7 +64,7 @@ $escaparReparacion = static fn($valor): string => htmlspecialchars((string) $val
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reparar GPU - GPU FIX & STORE</title>
 
-    <link rel="stylesheet" href="style.css?v=20261027-responsive">
+    <link rel="stylesheet" href="style.css?v=20261029-buscador">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
