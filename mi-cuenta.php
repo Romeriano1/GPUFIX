@@ -384,7 +384,6 @@ function formatoImporteCuenta($importe)
                 <div><p class="mi-cuenta-etiqueta">SERVICIO TÉCNICO</p><h2>Consultas y reparaciones</h2></div>
                 <span class="mi-cuenta-contador"><?= count($reparacionesCliente) ?></span>
             </div>
-            <div class="mi-cuenta-opciones"><a href="reparar.php#consulta-reparacion">Consultar por una reparación</a></div>
             <?php if (!$reparacionesCliente): ?><p class="mi-cuenta-vacio">Todavía no tenés consultas ni reparaciones registradas.</p><?php endif; ?>
             <?php foreach ($reparacionesCliente as $reparacionCliente):
                 $finalizadaCliente = in_array($reparacionCliente['estado'], ['Finalizada', 'Entregada', 'Cancelada'], true);

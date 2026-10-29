@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/admin-comun.php';
 admin_requerir_acceso();
+require_once __DIR__ . '/admin-edicion-datos.php';
+admin_edicion_seccion('Presupuestos', ['presupuesto', 'detalle_presupuesto'], 'admin-presupuestos.php');
 require_once __DIR__ . '/conexion.php';
 
 $correoDisponible = false;

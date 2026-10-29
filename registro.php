@@ -5,7 +5,7 @@ $requeridoReparacion = (($_GET['requerido'] ?? '') === 'reparacion') || (($_POST
 $contextoRegistro = $requeridoReparacion ? 'reparacion' : ($requeridoCarrito ? 'carrito' : '');
 
 if (!empty($_SESSION["usuario_id"])) {
-    header('Location: ' . ($requeridoReparacion ? 'reparar.php#consulta-reparacion' : 'mi-cuenta.php'));
+    header('Location: ' . ($requeridoReparacion ? 'mi-cuenta.php#reparaciones' : 'mi-cuenta.php'));
     exit;
 }
 

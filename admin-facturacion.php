@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/admin-comun.php';
 admin_requerir_acceso();
+require_once __DIR__ . '/admin-edicion-datos.php';
+admin_edicion_seccion('Facturación y envíos', ['gpu_ventas', 'detalle_venta', 'factura', 'detalle_factura', 'envios'], 'admin-facturacion.php');
 require_once __DIR__ . '/conexion.php';
 header('Cache-Control: private, no-store');
 

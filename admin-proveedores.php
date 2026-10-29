@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/admin-comun.php';
 admin_requerir_acceso();
+require_once __DIR__ . '/admin-edicion-datos.php';
+admin_edicion_seccion('Proveedores', ['proveedor'], 'admin-proveedores.php');
 require_once __DIR__ . '/conexion.php';
 
 $mensaje = (string) ($_SESSION['mensaje_proveedor_admin'] ?? '');

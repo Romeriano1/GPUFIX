@@ -48,6 +48,7 @@ function admin_e($v): string {
 }
 
 function admin_layout_inicio(string $titulo): void {
+    global $conexion;
     $csrf = admin_csrf();
     $enlaceCuentas = '<a class="nav-link" href="admin-cuentas.php">Cuentas</a>';
 
@@ -156,6 +157,8 @@ function admin_layout_inicio(string $titulo): void {
                     <a class="nav-link" href="admin-productos.php">Productos y stock</a>
                     <a class="nav-link" href="admin-proveedores.php">Proveedores</a>
                     '.$enlaceCuentas.'
+                    <a class="nav-link" href="admin-compras.php">Compras</a>
+                    <a class="nav-link" href="admin-componentes.php">Componentes</a>
                     <a class="nav-link" href="admin-reparaciones.php">Reparaciones</a>
                     <a class="nav-link" href="admin-presupuestos.php">Presupuestos</a>
                     <a class="nav-link" href="admin-facturacion.php">Facturación</a>
@@ -167,8 +170,28 @@ function admin_layout_inicio(string $titulo): void {
     </nav>
 
     <main class="container py-3">';
+    $seccionesEditables = [
+        'admin-cuentas.php' => 'Cuentas',
+        'admin-productos.php' => 'Productos y stock',
+        'admin-proveedores.php' => 'Proveedores',
+        'admin-presupuestos.php' => 'Presupuestos',
+        'admin-reparaciones.php' => 'Reparaciones',
+        'admin-facturacion.php' => 'Facturación y envíos',
+        'admin-compras.php' => 'Compras a proveedores',
+        'admin-componentes.php' => 'Componentes y repuestos'
+    ];
+    $paginaActual = basename($_SERVER['SCRIPT_NAME'] ?? '');
+    if (isset($seccionesEditables[$paginaActual]) && $conexion instanceof mysqli && admin_es_cuenta_principal($conexion) && ($_GET['modo'] ?? '') !== 'datos') {
+        echo '<div class="d-flex justify-content-end mt-3"><a class="btn btn-outline-primary" href="'.admin_e($paginaActual).'?modo=datos">Editar todos los datos de '.admin_e($seccionesEditables[$paginaActual]).'</a></div>';
+    }
+
 }
 
 function admin_layout_fin(): void {
     echo '</main><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script></body></html>';
+}
+
+function admin_enlace_datos(string $tabla): string {
+    $secciones = ['usuarios' => 'admin-cuentas.php', 'cliente' => 'admin-cuentas.php', 'empleado' => 'admin-cuentas.php', 'puesto' => 'admin-cuentas.php', 'carrito' => 'admin-cuentas.php', 'detalle_carrito' => 'admin-cuentas.php', 'gpu' => 'admin-productos.php', 'stock_gpu' => 'admin-productos.php', 'proveedor' => 'admin-proveedores.php', 'presupuesto' => 'admin-presupuestos.php', 'detalle_presupuesto' => 'admin-presupuestos.php', 'gpu_cliente' => 'admin-reparaciones.php', 'orden_reparacion' => 'admin-reparaciones.php', 'diagnostico' => 'admin-reparaciones.php', 'reparacion' => 'admin-reparaciones.php', 'detalle_reparacion' => 'admin-reparaciones.php', 'gpu_ventas' => 'admin-facturacion.php', 'detalle_venta' => 'admin-facturacion.php', 'factura' => 'admin-facturacion.php', 'detalle_factura' => 'admin-facturacion.php', 'envios' => 'admin-facturacion.php', 'orden_compra' => 'admin-compras.php', 'detalle_compra' => 'admin-compras.php', 'componente' => 'admin-componentes.php', 'stock' => 'admin-componentes.php'];
+    return ($secciones[$tabla] ?? 'admin.php') . '?modo=datos&tabla=' . rawurlencode($tabla);
 }

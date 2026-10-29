@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/admin-comun.php';
 admin_requerir_acceso();
+require_once __DIR__ . '/admin-edicion-datos.php';
+admin_edicion_seccion('Reparaciones', ['gpu_cliente', 'orden_reparacion', 'diagnostico', 'reparacion', 'detalle_reparacion'], 'admin-reparaciones.php');
 admin_validar_csrf();
 
 $estadosReparacion = ['Pendiente de presupuesto', 'Pendiente', 'En diagnóstico', 'Presupuestada', 'En reparación', 'Finalizada', 'Entregada', 'Cancelada'];

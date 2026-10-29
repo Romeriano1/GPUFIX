@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/admin-comun.php';
 admin_requerir_acceso();
+require_once __DIR__ . '/admin-edicion-datos.php';
+admin_edicion_seccion('Productos y stock', ['gpu', 'stock_gpu'], 'admin-productos.php');
 require_once __DIR__ . '/conexion.php';
 
 function opcionesMarcaProducto(mysqli $conexion): array

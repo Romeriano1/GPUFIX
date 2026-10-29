@@ -11,7 +11,7 @@ $contextoLogin = $requeridoReparacion ? 'reparacion' : ($requeridoCarrito ? 'car
 $destinoCarrito = !empty($_SESSION["carrito_pendiente"])
     ? "carrito.php?continuar_pendiente=1"
     : "carrito.php";
-$destinoLogin = $requeridoReparacion ? 'reparar.php#consulta-reparacion' : (($requeridoCarrito || !empty($_SESSION['carrito_pendiente'])) ? $destinoCarrito : 'mi-cuenta.php');
+$destinoLogin = $requeridoReparacion ? 'mi-cuenta.php#reparaciones' : (($requeridoCarrito || !empty($_SESSION['carrito_pendiente'])) ? $destinoCarrito : 'mi-cuenta.php');
 
 if (!empty($_SESSION["usuario_id"])) {
     header('Location: ' . $destinoLogin);

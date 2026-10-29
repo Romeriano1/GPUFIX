@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/admin-comun.php';
 admin_requerir_acceso();
+require_once __DIR__ . '/admin-edicion-datos.php';
+admin_edicion_seccion('Cuentas', ['usuarios', 'cliente', 'empleado', 'puesto', 'carrito', 'detalle_carrito'], 'admin-cuentas.php');
 $esAdministradorPrincipal = admin_es_cuenta_principal($conexion);
 
 function buscarCuentaAdmin(mysqli $conexion, int $id, bool $bloquear = false): ?array
