@@ -5,10 +5,43 @@ admin_validar_csrf();
 
 $estadosReparacion = ['Pendiente de presupuesto', 'Pendiente', 'En diagnóstico', 'Presupuestada', 'En reparación', 'Finalizada', 'Entregada', 'Cancelada'];
 $estadosIniciales = ['Pendiente', 'En diagnóstico', 'En reparación'];
+$puedeAgregarEstado = admin_es_cuenta_principal($conexion);
+function leerEstadosPersonalizados($archivo): array {
+    rewind($archivo);
+    $contenido = stream_get_contents($archivo);
+    $estados = $contenido === '' ? [] : json_decode($contenido, true, 512, JSON_THROW_ON_ERROR);
+    if (!is_array($estados) || !array_is_list($estados)) throw new RuntimeException('La configuración de estados no es válida.');
+    foreach ($estados as $estado) if (!is_string($estado) || mb_strlen($estado, 'UTF-8') > 50) throw new RuntimeException('La configuración de estados no es válida.');
+    return $estados;
+}
+function guardarEstadoPersonalizado(string $estado, array $existentes): void {
+    if ($estado === '' || mb_strlen($estado, 'UTF-8') > 50 || !preg_match('/^[A-Za-zÀ-ÖØ-öø-ÿ0-9][A-Za-zÀ-ÖØ-öø-ÿ0-9 .()\/_-]*$/uD', $estado)) throw new RuntimeException('Ingresá un estado de 1 a 50 caracteres, con letras, números, espacios o signos . / ( ) _ -.');
+    $archivo = @fopen(__DIR__ . '/estados-reparacion.json', 'c+');
+    if (!$archivo) throw new RuntimeException('No pudimos guardar el estado. Revisá el permiso de escritura de estados-reparacion.json.');
+    try {
+        if (!flock($archivo, LOCK_EX)) throw new RuntimeException('No se pudo bloquear la configuración de estados.');
+        $personalizados = leerEstadosPersonalizados($archivo);
+        foreach (array_merge($existentes, $personalizados) as $opcion) if (mb_strtolower($opcion, 'UTF-8') === mb_strtolower($estado, 'UTF-8')) throw new RuntimeException('Ese estado ya existe.');
+        $personalizados[] = $estado;
+        $contenido = json_encode($personalizados, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR) . "\n";
+        rewind($archivo);
+        if (fwrite($archivo, $contenido) !== strlen($contenido) || !ftruncate($archivo, strlen($contenido)) || !fflush($archivo)) throw new RuntimeException('No se pudo completar el guardado del estado.');
+    } finally { flock($archivo, LOCK_UN); fclose($archivo); }
+}
+$errorConfiguracionEstados = '';
+try {
+    $archivoEstados = fopen(__DIR__ . '/estados-reparacion.json', 'r');
+    if (!$archivoEstados || !flock($archivoEstados, LOCK_SH)) throw new RuntimeException('No pudimos leer la configuración de estados.');
+    try { $estadosPersonalizados = leerEstadosPersonalizados($archivoEstados); }
+    finally { flock($archivoEstados, LOCK_UN); fclose($archivoEstados); }
+    $estadosReparacion = array_values(array_unique(array_merge($estadosReparacion, $estadosPersonalizados)));
+    $estadosIniciales = array_values(array_unique(array_merge($estadosIniciales, $estadosPersonalizados)));
+} catch (Throwable $falloEstados) { $errorConfiguracionEstados = 'No pudimos cargar los estados personalizados. Revisá estados-reparacion.json.'; }
+
 $estadosCerrados = ['Finalizada', 'Entregada', 'Cancelada'];
 $mensaje = (string) ($_SESSION['mensaje_reparaciones_admin'] ?? '');
 unset($_SESSION['mensaje_reparaciones_admin']);
-$error = '';
+$error = $errorConfiguracionEstados;
 $transaccionActiva = false;
 $idConsultaOrigen = filter_input(INPUT_GET, 'consulta', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
 $datosNueva = ['id_cliente' => '', 'id_gpu_cliente' => '0', 'marca' => '', 'modelo' => '', 'numero_serie' => '', 'problema' => '', 'estado' => 'En reparación'];
@@ -58,6 +91,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $idConsultaOrigen = filter_input(INPUT_POST, 'id_consulta', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
     }
     try {
+        if ($accion === 'agregar_estado') {
+            if (!$puedeAgregarEstado) { http_response_code(403); throw new RuntimeException('Solo la cuenta principal de GPUFIX puede agregar estados.'); }
+            $estadoNuevo = is_string($_POST['estado_nuevo'] ?? null) ? trim(preg_replace('/ +/', ' ', $_POST['estado_nuevo'])) : '';
+            guardarEstadoPersonalizado($estadoNuevo, $estadosReparacion);
+            $_SESSION['mensaje_reparaciones_admin'] = 'Estado agregado. Ya está disponible para todos los empleados.';
+            header('Location: admin-reparaciones.php#nueva-reparacion', true, 303);
+            exit;
+        }
         if (!in_array($accion, ['crear', 'responder', 'guardar_orden', 'cancelar'], true)) throw new RuntimeException('No se reconoció la acción.');
         $conexion->begin_transaction();
         $transaccionActiva = true;
@@ -246,7 +287,7 @@ admin_layout_inicio('Reparaciones');
             <div class="col-md-4"><label class="form-label" for="serieReparacion">Número de serie</label><input class="form-control" id="serieReparacion" name="numero_serie" maxlength="100" value="<?= admin_e($datosNueva['numero_serie']) ?>" required></div>
         </div></div>
         <div class="col-12"><label class="form-label" for="motivoNuevaReparacion">Problema de la placa</label><textarea class="form-control" id="motivoNuevaReparacion" name="problema" rows="3" minlength="10" maxlength="3000" required><?= admin_e($datosNueva['problema']) ?></textarea></div>
-        <div class="col-md-6"><label class="form-label" for="estadoNuevaReparacion">Estado inicial</label><select class="form-select" id="estadoNuevaReparacion" name="estado" required><?php foreach ($estadosIniciales as $estado): ?><option value="<?= admin_e($estado) ?>" <?= $datosNueva['estado'] === $estado ? 'selected' : '' ?>><?= admin_e($estado) ?></option><?php endforeach; ?></select></div>
+        <div class="col-md-6"><label class="form-label" for="estadoNuevaReparacion">Estado inicial</label><div class="d-flex gap-2 align-items-center"><select class="form-select" id="estadoNuevaReparacion" name="estado" required><?php foreach ($estadosIniciales as $estado): ?><option value="<?= admin_e($estado) ?>" <?= $datosNueva['estado'] === $estado ? 'selected' : '' ?>><?= admin_e($estado) ?></option><?php endforeach; ?></select><?php if ($puedeAgregarEstado): ?><button class="btn btn-outline-primary flex-shrink-0" style="width:40px;height:40px" type="button" data-bs-toggle="modal" data-bs-target="#agregarEstadoModal" aria-label="Agregar nuevo estado" title="Agregar nuevo estado">+</button><?php endif; ?></div></div>
         <div class="col-12"><button class="btn btn-primary" type="submit">Crear reparación</button></div>
     </form>
 </section>
@@ -263,13 +304,31 @@ admin_layout_inicio('Reparaciones');
         <form method="post" action="admin-reparaciones.php#orden-<?= (int) $orden['id_orden_reparacion'] ?>" class="row g-3">
             <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">
             <input type="hidden" name="id_orden_reparacion" value="<?= (int) $orden['id_orden_reparacion'] ?>">
-            <div class="col-md-5"><label class="form-label" for="estadoOrden-<?= (int) $orden['id_orden_reparacion'] ?>">Estado</label><select class="form-select" id="estadoOrden-<?= (int) $orden['id_orden_reparacion'] ?>" name="estado" required><?php foreach ($estadosReparacion as $estado): ?><option value="<?= admin_e($estado) ?>" <?= $orden['estado'] === $estado ? 'selected' : '' ?>><?= admin_e($estado) ?></option><?php endforeach; ?></select></div>
+            <div class="col-md-5"><label class="form-label" for="estadoOrden-<?= (int) $orden['id_orden_reparacion'] ?>">Estado</label><div class="d-flex gap-2 align-items-center"><select class="form-select" id="estadoOrden-<?= (int) $orden['id_orden_reparacion'] ?>" name="estado" required><?php foreach ($estadosReparacion as $estado): ?><option value="<?= admin_e($estado) ?>" <?= $orden['estado'] === $estado ? 'selected' : '' ?>><?= admin_e($estado) ?></option><?php endforeach; ?></select><?php if ($puedeAgregarEstado): ?><button class="btn btn-outline-primary flex-shrink-0" style="width:40px;height:40px" type="button" data-bs-toggle="modal" data-bs-target="#agregarEstadoModal" aria-label="Agregar nuevo estado" title="Agregar nuevo estado">+</button><?php endif; ?></div></div>
             <div class="col-12"><label class="form-label" for="respuestaOrden-<?= (int) $orden['id_orden_reparacion'] ?>">Respuesta al cliente</label><textarea class="form-control" id="respuestaOrden-<?= (int) $orden['id_orden_reparacion'] ?>" name="respuesta" rows="3" maxlength="5000"><?= admin_e($orden['respuesta']) ?></textarea></div>
             <div class="col-12 d-flex flex-wrap gap-2"><button class="btn btn-primary" type="submit" name="accion" value="guardar_orden">Guardar estado y respuesta</button><?php if (!$cerrada): ?><button class="btn btn-outline-danger" type="submit" name="accion" value="cancelar">Cancelar reparación</button><?php endif; ?></div>
         </form>
     </article>
     <?php endwhile; ?>
 </section>
+
+<?php if ($puedeAgregarEstado): ?>
+<div class="modal fade" id="agregarEstadoModal" tabindex="-1" aria-labelledby="tituloAgregarEstado" aria-hidden="true">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="post" action="admin-reparaciones.php">
+            <div class="modal-header"><h2 class="modal-title fs-5" id="tituloAgregarEstado">Agregar nuevo estado</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+            <div class="modal-body">
+                <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>"><input type="hidden" name="accion" value="agregar_estado">
+                <label class="form-label" for="estadoNuevo">Nombre del estado</label><input class="form-control" id="estadoNuevo" name="estado_nuevo" maxlength="50" required>
+                <p class="form-text">Hasta 50 caracteres. Estará disponible para todos los empleados y se mostrará al cliente cuando lo asignes a su reparación.</p>
+            </div>
+            <div class="modal-footer"><button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancelar</button><button class="btn btn-primary" type="submit">Agregar estado</button></div>
+        </form>
+    </div></div>
+</div>
+<script>document.getElementById('agregarEstadoModal').addEventListener('shown.bs.modal', function () { document.getElementById('estadoNuevo').focus(); });</script>
+<?php endif; ?>
+
 <script>
 (function () {
     const cliente = document.getElementById('clienteReparacion');
