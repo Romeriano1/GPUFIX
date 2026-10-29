@@ -22,7 +22,7 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
         crossorigin="anonymous">
-    <link rel="stylesheet" href="style.css?v=20261029-buscador">
+    <link rel="stylesheet" href="style.css?v=20261029-consultas">
 
 
 </head>
@@ -139,6 +139,27 @@ try {
                     <span>ZOTAC</span>
                     <span class="marca-flecha" aria-hidden="true">↗</span>
                 </a>
+            </div>
+        </section>
+        <section class="reviews-clientes" aria-labelledby="titulo-reviews">
+            <h2 id="titulo-reviews">Reviews de clientes</h2>
+            <div class="reviews-grid">
+                <article class="review-cliente">
+                    <h3>Lucia Perez</h3>
+                    <p>Buenos precios!</p>
+                </article>
+                <article class="review-cliente">
+                    <h3>Leonel Sanchez</h3>
+                    <p>La repararon y va mejor que cuando la compré</p>
+                </article>
+                <article class="review-cliente">
+                    <h3>Esteban Quito</h3>
+                    <p>Encontrar esta página me cambió la vida</p>
+                </article>
+                <article class="review-cliente">
+                    <h3>Rosa Saracho</h3>
+                    <p>el profe de estos chicos debería aprobarlos!</p>
+                </article>
             </div>
         </section>
     </main>

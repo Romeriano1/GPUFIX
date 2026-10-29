@@ -1,60 +1,45 @@
 <?php
 session_start();
 $sesionReparacion = !empty($_SESSION['usuario_id']);
-$errorReparacion = '';
-$mensajeReparacion = (string) ($_SESSION['mensaje_reparacion'] ?? '');
-unset($_SESSION['mensaje_reparacion']);
-$garantiaReparacion = '';
-$placaConsultaReparacion = '';
-$problemaReparacion = '';
-if (empty($_SESSION['csrf_reparacion'])) $_SESSION['csrf_reparacion'] = bin2hex(random_bytes(32));
+if (empty($_SESSION['csrf_consulta_gpu'])) {
+    $_SESSION['csrf_consulta_gpu'] = bin2hex(random_bytes(32));
+}
+$consultaCorreo = '';
+$consultaProblema = '';
+$consultaError = '';
+$consultaMensaje = (string) ($_SESSION['consulta_gpu_mensaje'] ?? '');
+unset($_SESSION['consulta_gpu_mensaje']);
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!$sesionReparacion) {
-        header('Location: login.php?requerido=reparacion', true, 303);
-        exit;
-    }
-    $garantiaReparacion = is_string($_POST['garantia'] ?? null) ? $_POST['garantia'] : '';
-    $placaConsultaReparacion = is_string($_POST['placa'] ?? null) ? trim($_POST['placa']) : '';
-    $problemaReparacion = is_string($_POST['problema'] ?? null) ? trim($_POST['problema']) : '';
-    $tokenReparacion = $_POST['csrf_reparacion'] ?? null;
-    if (!is_string($tokenReparacion) || !hash_equals($_SESSION['csrf_reparacion'], $tokenReparacion)) {
-        $errorReparacion = 'La solicitud venció o ya fue enviada. Revisá tus reparaciones en Mi cuenta antes de intentarlo otra vez.';
-    } elseif ($placaConsultaReparacion === '' || mb_strlen($placaConsultaReparacion, 'UTF-8') > 250 || preg_match('/[\r\n]/', $placaConsultaReparacion)) {
-        $errorReparacion = 'Indicá qué placa tenés, con hasta 250 caracteres.';
-    } elseif ($garantiaReparacion === 'no') {
-        $errorReparacion = 'GPUFIX & STORE se encarga de reparar placas en garantía. Podés pedir un presupuesto para tu nueva placa en Mi cuenta.';
-    } elseif ($garantiaReparacion !== 'si') {
-        $errorReparacion = 'Indicá si tu placa tiene garantía.';
-    } elseif (mb_strlen($problemaReparacion, 'UTF-8') < 10 || mb_strlen($problemaReparacion, 'UTF-8') > 3000) {
-        $errorReparacion = 'Contanos qué le sucede a tu placa usando entre 10 y 3000 caracteres.';
+    $consultaCorreo = is_string($_POST['correo'] ?? null) ? trim($_POST['correo']) : '';
+    $consultaProblema = is_string($_POST['problema'] ?? null) ? trim($_POST['problema']) : '';
+    $tokenConsulta = is_string($_POST['csrf_consulta_gpu'] ?? null) ? $_POST['csrf_consulta_gpu'] : '';
+    if (!hash_equals($_SESSION['csrf_consulta_gpu'], $tokenConsulta)) {
+        $consultaError = 'La solicitud venció. Volvé a enviar la consulta.';
+    } elseif (strlen($consultaCorreo) > 150 || !filter_var($consultaCorreo, FILTER_VALIDATE_EMAIL)) {
+        $consultaError = 'El correo no es válido. Revisalo e intentá nuevamente.';
+    } elseif (mb_strlen($consultaProblema, 'UTF-8') < 10 || mb_strlen($consultaProblema, 'UTF-8') > 3000) {
+        $consultaError = 'Contanos qué le sucede a tu GPU usando entre 10 y 3000 caracteres.';
+    } elseif (time() - (int) ($_SESSION['consulta_gpu_ultimo_envio'] ?? 0) < 60) {
+        $consultaError = 'Esperá un minuto antes de enviar otra consulta.';
     } else {
         try {
-            require_once __DIR__ . '/conexion.php';
-            $idUsuarioReparacion = (int) $_SESSION['usuario_id'];
-            $buscarCliente = $conexion->prepare('SELECT id_cliente FROM cliente WHERE id_correo = ? LIMIT 1');
-            $buscarCliente->bind_param('i', $idUsuarioReparacion);
-            $buscarCliente->execute();
-            $clienteReparacion = $buscarCliente->get_result()->fetch_assoc();
-            $buscarCliente->close();
-            if (!$clienteReparacion) throw new RuntimeException('No encontramos el perfil de cliente asociado a tu cuenta.');
-            $detalleConsultaReparacion = 'Placa: ' . $placaConsultaReparacion . "\n\nProblema: " . $problemaReparacion;
-            $crearConsulta = $conexion->prepare("INSERT INTO presupuesto (id_cliente, consulta, total, estado) VALUES (?, ?, NULL, 'Consulta de garantía')");
-            $crearConsulta->bind_param('is', $clienteReparacion['id_cliente'], $detalleConsultaReparacion);
-            $crearConsulta->execute();
-            $idConsultaReparacion = (int) $conexion->insert_id;
-            $crearConsulta->close();
-            $conexion->close();
-            unset($_SESSION['csrf_reparacion']);
-            $_SESSION['mensaje_reparacion'] = 'Consulta #' . $idConsultaReparacion . ' enviada. Podés ver la respuesta y el seguimiento desde Mi cuenta.';
-            header('Location: reparar.php#consulta-reparacion', true, 303);
+            require_once __DIR__ . '/correo-config.php';
+            $cuerpoConsulta = "Consulta de reparación de GPU\n\nCorreo de contacto: " . $consultaCorreo
+                . "\n\n¿Qué le sucede a la GPU?\n" . $consultaProblema;
+            if (!is_callable('gpufix_enviar_correo') || !gpufix_enviar_correo('gpufixstore@gmail.com', 'Nueva consulta de reparación GPUFIX', $cuerpoConsulta)) {
+                throw new RuntimeException('No se pudo enviar la consulta.');
+            }
+            $_SESSION['consulta_gpu_ultimo_envio'] = time();
+            $_SESSION['csrf_consulta_gpu'] = bin2hex(random_bytes(32));
+            $_SESSION['consulta_gpu_mensaje'] = 'Recibimos tu consulta. Te responderemos al correo que ingresaste.';
+            header('Location: reparar.php#hace-tu-consulta', true, 303);
             exit;
-        } catch (Throwable $falloReparacion) {
-            error_log('Error al solicitar reparación: ' . $falloReparacion->getMessage());
-            $errorReparacion = 'No pudimos registrar tu consulta. Intentá nuevamente.';
+        } catch (Throwable $errorConsulta) {
+            error_log('Error al enviar consulta de GPU: ' . $errorConsulta->getMessage());
+            $consultaError = 'No pudimos enviar tu consulta. Intentá nuevamente más tarde.';
         }
     }
 }
-$escaparReparacion = static fn($valor): string => htmlspecialchars((string) $valor, ENT_QUOTES, 'UTF-8');
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -64,7 +49,7 @@ $escaparReparacion = static fn($valor): string => htmlspecialchars((string) $val
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reparar GPU - GPU FIX & STORE</title>
 
-    <link rel="stylesheet" href="style.css?v=20261029-buscador">
+    <link rel="stylesheet" href="style.css?v=20261029-consultas">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
@@ -131,60 +116,44 @@ $escaparReparacion = static fn($valor): string => htmlspecialchars((string) $val
             </p>
 
             <p class="reparaciones-intro">
-                Podés iniciar una consulta por la reparación de tu placa. Para realizar la reparación,
-                tenés que llevarla a una sucursal. Las reparaciones tardan <strong>48 horas o más</strong>;
+                La reparación se registra en administración cuando llevás tu placa a una sucursal. Las reparaciones tardan <strong>48 horas o más</strong>;
                 no se cuentan sábados, domingos ni feriados.
             </p>
 
         </section>
 
-        <section class="seguimiento" id="consulta-reparacion">
-            <?php if (!$sesionReparacion): ?>
-            <div class="acceso-reparaciones">
-                <h3>Iniciá sesión para consultar por una reparación</h3>
-
-                <p>
-                    Accedé a tu cuenta para consultar el estado de tus GPUs,
-                    los diagnósticos y el seguimiento de cada reparación.
-                </p>
-
-                <a href="login.php?requerido=reparacion" class="boton-iniciar-sesion">
-                    Iniciar sesión
-                </a>
-
-            </div>
-            <?php else: ?>
+        <section class="seguimiento" id="hace-tu-consulta" aria-labelledby="titulo-consulta-gpu">
             <div class="acceso-reparaciones consulta-reparacion">
-                <h3>Consulta por reparación</h3>
-                <?php if ($mensajeReparacion !== ''): ?><div class="mi-cuenta-mensaje exito" role="status"><?= $escaparReparacion($mensajeReparacion) ?></div><?php endif; ?>
-                <?php if ($errorReparacion !== ''): ?><div class="mi-cuenta-mensaje error" role="alert"><?= $escaparReparacion($errorReparacion) ?></div><?php endif; ?>
-                <form method="post" action="reparar.php#consulta-reparacion" class="presupuesto-formulario" id="formularioConsultaReparacion">
-                    <input type="hidden" name="csrf_reparacion" value="<?= $escaparReparacion($_SESSION['csrf_reparacion']) ?>">
-                    <div>
-                        <label for="placaConsultaReparacion">¿Qué placa es?</label>
-                        <input type="text" id="placaConsultaReparacion" name="placa" maxlength="250" value="<?= $escaparReparacion($placaConsultaReparacion) ?>" required>
-                    </div>
-                    <div>
-                        <label for="garantiaReparacion">¿Tiene garantía?</label>
-                        <select id="garantiaReparacion" name="garantia" required>
-                            <option value="" <?= $garantiaReparacion === '' ? 'selected' : '' ?> disabled>Seleccionar</option>
-                            <option value="si" <?= $garantiaReparacion === 'si' ? 'selected' : '' ?>>Sí</option>
-                            <option value="no" <?= $garantiaReparacion === 'no' ? 'selected' : '' ?>>No</option>
-                        </select>
-                    </div>
-                    <div id="avisoSinGarantia" <?= $garantiaReparacion !== 'no' ? 'hidden' : '' ?>>
-                        <p>GPUFIX &amp; STORE se encarga de reparar placas en garantía. Podés pedir un presupuesto para tu nueva placa en <a href="mi-cuenta.php?solicitar=presupuesto#presupuestos">Mi cuenta</a>.</p>
-                    </div>
-                    <div id="datosConsultaReparacion" <?= $garantiaReparacion !== 'si' ? 'hidden' : '' ?>>
-                        <label for="problemaReparacion">¿Qué le sucede a tu placa?</label>
-                        <textarea id="problemaReparacion" name="problema" rows="4" minlength="10" maxlength="3000" <?= $garantiaReparacion === 'si' ? 'required' : 'disabled' ?>><?= $escaparReparacion($problemaReparacion) ?></textarea>
-                        <button class="pago-boton" type="submit">Enviar consulta</button>
-                    </div>
+                <h3 id="titulo-consulta-gpu">Hacé tu consulta</h3>
+                <p>No necesitás iniciar sesión. Dejanos tu correo y contanos qué le pasa a tu GPU.</p>
+                <?php if ($consultaMensaje !== ''): ?>
+                    <div class="alert alert-success" role="status"><?= htmlspecialchars($consultaMensaje, ENT_QUOTES, 'UTF-8') ?></div>
+                <?php endif; ?>
+                <?php if ($consultaError !== ''): ?>
+                    <div class="alert alert-danger" role="alert"><?= htmlspecialchars($consultaError, ENT_QUOTES, 'UTF-8') ?></div>
+                <?php endif; ?>
+                <form method="post" action="reparar.php#hace-tu-consulta" class="consulta-gpu-formulario">
+                    <input type="hidden" name="csrf_consulta_gpu" value="<?= htmlspecialchars($_SESSION['csrf_consulta_gpu'], ENT_QUOTES, 'UTF-8') ?>">
+                    <label for="consulta-correo">Correo (obligatorio)</label>
+                    <input type="email" id="consulta-correo" name="correo" autocomplete="email" maxlength="150" required value="<?= htmlspecialchars($consultaCorreo, ENT_QUOTES, 'UTF-8') ?>">
+                    <label for="consulta-problema">¿Qué le pasa a tu GPU?</label>
+                    <textarea id="consulta-problema" name="problema" rows="5" minlength="10" maxlength="3000" required aria-describedby="consulta-ayuda"><?= htmlspecialchars($consultaProblema, ENT_QUOTES, 'UTF-8') ?></textarea>
+                    <small id="consulta-ayuda">Escribí entre 10 y 3000 caracteres. Te responderemos por correo.</small>
+                    <button type="submit" class="boton-iniciar-sesion">Enviar consulta</button>
                 </form>
-                <a class="pago-volver" href="mi-cuenta.php#reparaciones">Ver consultas y reparaciones en Mi cuenta</a>
             </div>
-            <?php endif; ?>
+        </section>
 
+        <section class="seguimiento" id="seguimiento-reparacion">
+            <div class="acceso-reparaciones">
+                <h3>Seguimiento de tu reparación</h3>
+                <p>Una vez registrada por nuestro equipo, podés ver el estado y las respuestas desde Mi cuenta.</p>
+                <?php if ($sesionReparacion): ?>
+                    <a href="mi-cuenta.php#reparaciones" class="boton-iniciar-sesion">Ver mis reparaciones</a>
+                <?php else: ?>
+                    <a href="login.php?requerido=reparacion" class="boton-iniciar-sesion">Iniciar sesión</a>
+                <?php endif; ?>
+            </div>
         </section>
 
         <section class="reparaciones">
@@ -263,22 +232,6 @@ $escaparReparacion = static fn($valor): string => htmlspecialchars((string) $val
 
     </footer>
 
-    <script>
-    (function () {
-        const garantia = document.getElementById('garantiaReparacion');
-        if (!garantia) return;
-        const problema = document.getElementById('problemaReparacion');
-        function cambiarGarantia() {
-            const tieneGarantia = garantia.value === 'si';
-            document.getElementById('avisoSinGarantia').hidden = garantia.value !== 'no';
-            document.getElementById('datosConsultaReparacion').hidden = !tieneGarantia;
-            problema.required = tieneGarantia;
-            problema.disabled = !tieneGarantia;
-        }
-        garantia.addEventListener('change', cambiarGarantia);
-        cambiarGarantia();
-    })();
-    </script>
     <script src="script.js?v=20261021-9"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>

@@ -1967,6 +1967,121 @@ body.light-theme .login-aviso {
     background-color: #f5fbfd;
     color: #0077a5;
 }
+.consulta-gpu-formulario {
+    display: grid;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.consulta-gpu-formulario label {
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.consulta-gpu-formulario input,
+.consulta-gpu-formulario textarea {
+    width: 100%;
+    min-width: 0;
+    padding: 12px 14px;
+    border: 1px solid #44515a;
+    border-radius: 9px;
+    background: #101820;
+    color: #ffffff;
+    font: inherit;
+}
+
+.consulta-gpu-formulario textarea {
+    resize: vertical;
+    margin-bottom: 0;
+}
+
+.consulta-gpu-formulario small {
+    color: #b5b5b5;
+}
+
+.consulta-gpu-formulario button {
+    justify-self: start;
+    margin-top: 8px;
+    font: inherit;
+    cursor: pointer;
+}
+
+.consulta-gpu-formulario input:focus-visible,
+.consulta-gpu-formulario textarea:focus-visible {
+    outline: 2px solid #00bfff;
+    outline-offset: 2px;
+}
+
+.reviews-clientes {
+    margin-top: 60px;
+    color: #ffffff;
+}
+
+.reviews-clientes > h2 {
+    margin-bottom: 28px;
+    text-align: center;
+    font-size: 30px;
+}
+
+.reviews-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.review-cliente {
+    padding: 24px;
+    border: 1px solid #333333;
+    border-radius: 12px;
+    background: #1c1c1c;
+    overflow-wrap: anywhere;
+}
+
+.review-cliente h3 {
+    margin: 0 0 14px;
+    color: #00bfff;
+    font-size: 18px;
+}
+
+.review-cliente p {
+    margin: 0;
+    color: #dddddd;
+    line-height: 1.6;
+}
+
+body.light-theme .consulta-gpu-formulario label,
+body.light-theme .reviews-clientes {
+    color: #111111;
+}
+
+body.light-theme .consulta-gpu-formulario input,
+body.light-theme .consulta-gpu-formulario textarea,
+body.light-theme .review-cliente {
+    background: #ffffff;
+    color: #111111;
+    border-color: #cccccc;
+}
+
+body.light-theme .consulta-gpu-formulario small,
+body.light-theme .review-cliente p {
+    color: #555555;
+}
+
+body.light-theme .review-cliente h3 {
+    color: #0077a5;
+}
+
+@media (max-width: 1000px) {
+    .reviews-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 600px) {
+    .reviews-grid { grid-template-columns: minmax(0, 1fr); }
+    .reviews-clientes { margin-top: 40px; }
+    .consulta-reparacion { padding: 22px 18px; }
+    .consulta-gpu-formulario button { width: 100%; }
+}
+
 .marcas-section {
     margin-top: 70px;
     color: #ffffff;

@@ -29,7 +29,7 @@ function gpufix_enviar_correo(
         $mail->CharSet = 'UTF-8';
 
         $mail->setFrom(
-            'TU_CORREO@gmail.com',
+            $mail->Username,
             'GPUFIX'
         );
 
