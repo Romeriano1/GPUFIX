@@ -2852,3 +2852,76 @@ body.dark-mode .footer-logo-pago {
 body.dark-mode .logo-claro {
     background-color: #263445;
 }
+
+body:not(.light-theme) .footer-logo-pago {
+    background-color: #222222;
+    border-color: #555555;
+}
+
+body:not(.light-theme) .footer-logo-pago span {
+    color: #1f2937;
+}
+
+
+/* Medios de pago del footer */
+.footer-pagos {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.footer-pagos img {
+    display: block;
+    width: 58px;
+    height: 34px;
+    object-fit: contain;
+}
+
+/* Medios de pago: presentación compacta y alineada */
+.footer-seccion .footer-pagos {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    margin: 14px auto 0;
+}
+
+.footer-seccion .footer-pagos img {
+    display: block;
+    flex: 0 0 auto;
+    width: 66px;
+    height: 40px;
+    padding: 5px;
+    object-fit: contain;
+    background: #1c1c1c;
+    border: 1px solid #444444;
+    border-radius: 7px;
+    box-shadow: 0 2px 7px rgba(0, 0, 0, .12);
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+body.light-theme .footer-seccion .footer-pagos img {
+    background: #f1f3f5;
+    border-color: #cccccc;
+}
+
+.footer-seccion .footer-pagos img:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 11px rgba(0, 0, 0, .18);
+}
+
+@media (max-width: 420px) {
+    .footer-seccion .footer-pagos {
+        gap: 10px;
+    }
+
+    .footer-seccion .footer-pagos img {
+        width: 60px;
+        height: 36px;
+    }
+}

@@ -22,7 +22,7 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
         crossorigin="anonymous">
-    <link rel="stylesheet" href="style.css?v=20261029-consultas">
+    <link rel="stylesheet" href="style.css?v=20261102-pagos-temas">
 
 
 </head>
@@ -253,108 +253,14 @@ try {
 
     </div>
 
-    <!-- Marcas -->
-    
-<!-- Marcas -->
-<div class="footer-seccion">
-    <h3>Trabajamos con las principales marcas</h3>
-
-    <div class="footer-marcas">
-
-        <div class="footer-logo-marca">
-            <img src="imagenes/marcas/amd.svg" alt="AMD">
-            <span>AMD</span>
-        </div>
-
-        <div class="footer-logo-marca">
-            <img src="imagenes/marcas/nvidia.svg" alt="NVIDIA">
-            <span>NVIDIA</span>
-        </div>
-
-        <div class="footer-logo-marca">
-            <img src="imagenes/marcas/asus.svg" alt="ASUS">
-            <span>ASUS</span>
-        </div>
-
-        <div class="footer-logo-marca">
-            <img src="imagenes/marcas/msi.svg" alt="MSI">
-            <span>MSI</span>
-        </div>
-
-        <div class="footer-logo-marca">
-            <img src="imagenes/marcas/gigabyte-logo.svg" alt="GIGABYTE">
-            <span>GIGABYTE</span>
-        </div>
-
-        <div class="footer-logo-marca">
-            <img src="imagenes/marcas/aorus-vertical-logo.svg" alt="AORUS">
-            <span>AORUS</span>
-        </div>
-
-        <div class="footer-logo-marca">
-    <img class="logo-claro"
-         src="imagenes/marcas/ZOTAC_LightGrey_Logo.png"
-         alt="ZOTAC">
-    <span>ZOTAC</span>
-</div>
-
-
-        <div class="footer-logo-marca">
-    <img class="logo-claro"
-         src="imagenes/marcas/sapphirewhite-web.png"
-         alt="SAPPHIRE">
-    <span>SAPPHIRE</span>
-</div>
-
-        <div class="footer-logo-marca">
-            <img src="imagenes/marcas/Powercolor_2024_logo.svg.webp" alt="PowerColor">
-            <span>POWERCOLOR</span>
-        </div>
-
-        <div class="footer-logo-marca">
-            <img src="imagenes/marcas/Inno3d_logo.svg.webp" alt="Inno3D">
-            <span>INNO3D</span>
-        </div>
-
-    </div>
-</div>
-    
 <!-- Medios de pago -->
 <div class="footer-seccion">
     <h3>Medios de pago</h3>
 
     <div class="footer-pagos">
-
-        <div class="footer-logo-pago">
-            <img src="imagenes/pagos/visa.svg" alt="Visa">
-            <span>VISA</span>
-        </div>
-
-        <div class="footer-logo-pago">
-            <img src="imagenes/pagos/mastercard.svg" alt="Mastercard">
-            <span>Mastercard</span>
-        </div>
-
-        <div class="footer-logo-pago">
-            <img src="imagenes/pagos/americanexpress.svg" alt="American Express">
-            <span>American Express</span>
-        </div>
-
-        <div class="footer-logo-pago">
-            <img src="imagenes/pagos/mercadopago.svg" alt="Mercado Pago">
-            <span>Mercado Pago</span>
-        </div>
-
-        <div class="footer-logo-pago">
-            <img src="imagenes/pagos/naranja-x.png" alt="Naranja X">
-            <span>Naranja X</span>
-        </div>
-
-        <div class="footer-logo-pago">
-            <img src="imagenes/pagos/paypal.svg" alt="PayPal">
-            <span>PayPal</span>
-        </div>
-
+        <img src="Imagenes/Footer/MP.png" alt="Mercado Pago">
+        <img src="Imagenes/Footer/VISA.png" alt="Visa">
+        <img src="Imagenes/Footer/MASTERCARD.png" alt="Mastercard">
     </div>
 </div>
 
