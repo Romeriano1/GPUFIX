@@ -300,7 +300,11 @@ admin_layout_inicio('Reparaciones');
     <?php while ($orden = $ordenesReparacion->fetch_assoc()): $cerrada = in_array($orden['estado'], $estadosCerrados, true); ?>
     <article class="border rounded p-3 mb-3" id="orden-<?= (int) $orden['id_orden_reparacion'] ?>">
         <div class="d-flex flex-wrap justify-content-between gap-2"><h3 class="h6">Reparación #<?= (int) $orden['id_orden_reparacion'] ?> · <?= admin_e($orden['nombre'] . ' ' . $orden['apellido']) ?></h3><span class="badge <?= $cerrada ? 'text-bg-secondary' : 'text-bg-primary' ?>"><?= admin_e($orden['estado'] ?: 'Pendiente') ?></span></div>
-        <p class="small text-secondary"><?= admin_e($orden['correo']) ?> · Ingreso: <?= admin_e($orden['fecha_ingreso']) ?></p>
+        <div class="border rounded p-3 my-3">
+            <p class="mb-1"><strong>Cliente:</strong> <?= admin_e(trim($orden['nombre'] . ' ' . $orden['apellido'])) ?></p>
+            <p class="mb-0"><strong>Correo:</strong> <?= admin_e($orden['correo']) ?></p>
+        </div>
+        <p class="small text-secondary">Ingreso: <?= admin_e($orden['fecha_ingreso']) ?></p>
         <p><strong><?= admin_e($orden['marca'] . ' ' . $orden['modelo']) ?></strong> · Serie: <?= admin_e($orden['numero_serie']) ?></p>
         <p><?= nl2br(admin_e($orden['motivo'])) ?></p>
         <form method="post" action="admin-reparaciones.php#orden-<?= (int) $orden['id_orden_reparacion'] ?>" class="row g-3">

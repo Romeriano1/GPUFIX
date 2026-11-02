@@ -127,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (strlen($cuentaEditada['correo']) > 150 || !filter_var($cuentaEditada['correo'], FILTER_VALIDATE_EMAIL)) throw new RuntimeException('El correo no es válido.');
         if ($esPrincipal && $cuentaEditada['correo'] !== 'gpufixstore@gmail.com') throw new RuntimeException('El correo de la cuenta principal debe seguir siendo gpufixstore@gmail.com.');
         if (!preg_match('/^[0-9]{7,8}$/D', $cuentaEditada['dni'])) throw new RuntimeException('El DNI debe tener 7 u 8 números.');
-        if (mb_strlen($cuentaEditada['telefono'], 'UTF-8') > 30) throw new RuntimeException('El teléfono admite hasta 30 caracteres.');
+        if ($cuentaEditada['telefono'] === '' || mb_strlen($cuentaEditada['telefono'], 'UTF-8') > 30) throw new RuntimeException('Completá el teléfono, con hasta 30 caracteres.');
         if (mb_strlen((string) ($cuentaEditada['direccion'] ?? ''), 'UTF-8') > 255) throw new RuntimeException('La dirección admite hasta 255 caracteres.');
         $clave = is_string($_POST['contrasena'] ?? null) ? $_POST['contrasena'] : '';
         $confirmacion = is_string($_POST['confirmar_contrasena'] ?? null) ? $_POST['confirmar_contrasena'] : '';
@@ -252,7 +252,7 @@ admin_layout_inicio('Cuentas');
         <div class="col-md-6"><label class="form-label" for="cuentaApellido">Apellido</label><input id="cuentaApellido" class="form-control" name="apellido" maxlength="100" value="<?= admin_e($cuentaEditada['apellido']) ?>" required></div>
         <div class="col-md-6"><label class="form-label" for="cuentaCorreo">Correo</label><input id="cuentaCorreo" class="form-control" name="correo" type="email" maxlength="150" value="<?= admin_e($cuentaEditada['correo']) ?>" required <?= $principalEditada ? 'readonly' : '' ?>></div>
         <div class="col-md-3"><label class="form-label" for="cuentaDni">DNI</label><input id="cuentaDni" class="form-control" name="dni" inputmode="numeric" pattern="[0-9]{7,8}" minlength="7" maxlength="8" value="<?= admin_e($cuentaEditada['dni']) ?>" required></div>
-        <div class="col-md-3"><label class="form-label" for="cuentaTelefono">Teléfono</label><input id="cuentaTelefono" class="form-control" name="telefono" type="tel" maxlength="30" value="<?= admin_e($cuentaEditada['telefono']) ?>"></div>
+        <div class="col-md-3"><label class="form-label" for="cuentaTelefono">Teléfono</label><input id="cuentaTelefono" class="form-control" name="telefono" type="tel" maxlength="30" value="<?= admin_e($cuentaEditada['telefono']) ?>" required></div>
         <div class="col-12" id="grupoCuentaDireccion" data-tiene-cliente="<?= $cuentaEditada['id_cliente'] ? '1' : '0' ?>" <?= !$cuentaEditada['id_cliente'] && $tipoEditado !== 'cliente' ? 'hidden' : '' ?>><label class="form-label" for="cuentaDireccion">Dirección de facturación del cliente</label><input id="cuentaDireccion" class="form-control" name="direccion" maxlength="255" value="<?= admin_e($cuentaEditada['direccion']) ?>"></div>
         <fieldset class="col-12">
             <legend class="h6">Cambiar contraseña</legend>

@@ -19,9 +19,9 @@ $telefono = "";
 $correo = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $nombre = trim($_POST["nombre"] ?? "");
-    $apellido = trim($_POST["apellido"] ?? "");
-    $dni = trim($_POST["dni"] ?? "");
+    $nombre = is_string($_POST['nombre'] ?? null) ? trim($_POST['nombre']) : '';
+    $apellido = is_string($_POST['apellido'] ?? null) ? trim($_POST['apellido']) : '';
+    $dni = is_string($_POST['dni'] ?? null) ? trim($_POST['dni']) : '';
     $telefono = trim($_POST["telefono"] ?? "");
     $correo = strtolower(trim($_POST["correo"] ?? ""));
     $contrasena = $_POST["contrasena"] ?? "";
@@ -29,6 +29,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     if ($nombre === "" || $apellido === "" || $dni === "" || $correo === "" || $contrasena === "" || $confirmarContrasena === "") {
         $registroError = "datos";
+    } elseif (mb_strlen($nombre, 'UTF-8') > 100 || mb_strlen($apellido, 'UTF-8') > 100
+        || !preg_match("/^[\p{L}\p{M}]+(?:[ '\x{2019}-][\p{L}\p{M}]+)*$/uD", $nombre)
+        || !preg_match("/^[\p{L}\p{M}]+(?:[ '\x{2019}-][\p{L}\p{M}]+)*$/uD", $apellido)) {
+        $registroError = 'nombre_invalido';
     } elseif (!preg_match('/^[0-9]{7,8}$/D', $dni)) {
         $registroError = "dni_invalido";
     } elseif (strlen($correo) > 150 || !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
@@ -178,6 +182,7 @@ function escaparRegistro($valor)
                     <?php
                     $mensajesError = [
                         "datos" => "Completá los campos obligatorios.",
+                        "nombre_invalido" => "Nombre y apellido deben tener solo letras, hasta 100 caracteres. Se permiten tildes, espacios, guiones y apóstrofes; no números.",
                         "dni_invalido" => "El DNI no es válido. Ingresá 7 u 8 números, sin puntos ni espacios.",
                         "correo_invalido" => "El correo electrónico no es válido. Ingresá una dirección con @ y un dominio válido.",
                         "contrasena_corta" => "La contraseña debe tener al menos 8 caracteres.",
@@ -250,6 +255,23 @@ function escaparRegistro($valor)
 </footer>
 
 <script src="script.js?v=20261023-cuenta"></script>
+<script>
+(() => {
+    const patronNombre = /^[\p{L}\p{M}]+(?:[ '\u2019-][\p{L}\p{M}]+)*$/u;
+    ['nombre', 'apellido'].forEach(id => {
+        const campo = document.getElementById(id);
+        const validar = () => campo.setCustomValidity(!campo.value.trim() || patronNombre.test(campo.value.trim())
+            ? '' : 'Ingresá letras, sin números. Se permiten tildes, espacios, guiones y apóstrofes.');
+        campo.addEventListener('input', validar);
+        validar();
+    });
+    const dni = document.getElementById('dni');
+    dni.addEventListener('input', () => {
+        dni.value = dni.value.replace(/[^0-9]/g, '').slice(0, 8);
+        dni.setCustomValidity(!dni.value || /^[0-9]{7,8}$/.test(dni.value) ? '' : 'Ingresá 7 u 8 números, sin letras ni puntos.');
+    });
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
