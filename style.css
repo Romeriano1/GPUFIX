@@ -2494,3 +2494,361 @@ body.light-theme .login-enlaces a.login-registro-boton:hover {
     .carrito-acciones > a { max-width: 100%; }
     input, select, textarea { font-size: 16px; }
 }
+/* FOOTER GPUFIX */
+
+.footer-gpufix {
+    margin-top: 90px;
+    padding: 45px 6% 20px;
+    background-color: #181818;
+    border-top: 2px solid #00bfff;
+    color: #ffffff;
+    text-align: left;
+}
+
+.footer-contenido {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr 1fr;
+    gap: 45px;
+    max-width: 1250px;
+    margin: 0 auto 40px;
+}
+
+.footer-columna {
+    min-width: 0;
+}
+
+.footer-columna h3,
+.footer-seccion h3 {
+    margin-bottom: 18px;
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.footer-presentacion h2 {
+    margin-bottom: 15px;
+    color: #00bfff;
+    font-size: 27px;
+    font-weight: bold;
+}
+
+.footer-presentacion h2 span {
+    color: #ffffff;
+}
+
+.footer-columna p {
+    margin-bottom: 18px;
+    color: #aaaaaa;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.footer-redes {
+    margin-top: 25px;
+}
+
+.footer-redes > span {
+    display: block;
+    margin-bottom: 12px;
+    color: #aaaaaa;
+    font-size: 13px;
+}
+
+.footer-redes-iconos {
+    display: flex;
+    gap: 12px;
+}
+
+.footer-redes-iconos a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid #444444;
+    border-radius: 8px;
+    background: #222222;
+    color: #00bfff;
+    font-weight: bold;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.footer-redes-iconos a:hover {
+    background: #00bfff;
+    border-color: #00bfff;
+    color: #111111;
+    transform: translateY(-3px);
+}
+
+.footer-estrellas {
+    margin: 12px 0;
+    color: #ffc107;
+    font-size: 27px;
+    letter-spacing: 4px;
+}
+
+.footer-enlace-destacado {
+    display: inline-block;
+    margin-top: 5px;
+    color: #00bfff;
+    font-size: 13px;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.footer-enlace-destacado:hover {
+    color: #45d3ff;
+    text-decoration: underline;
+}
+
+.footer-lista {
+    display: grid;
+    gap: 15px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.footer-lista li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #aaaaaa;
+    font-size: 14px;
+}
+
+.footer-icono {
+    color: #00bfff;
+    font-size: 19px;
+}
+
+.footer-seccion {
+    max-width: 1250px;
+    margin: 0 auto 32px;
+    padding-top: 25px;
+    border-top: 1px solid #333333;
+}
+
+.footer-seccion h3 {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.footer-marcas,
+.footer-pagos {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+}
+
+.footer-marcas span,
+.footer-pagos span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 45px;
+    padding: 10px 18px;
+    border: 1px solid #383838;
+    border-radius: 8px;
+    background: #222222;
+    color: #dddddd;
+    font-size: 13px;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.footer-marcas span:hover,
+.footer-pagos span:hover {
+    border-color: #00bfff;
+    color: #00bfff;
+}
+
+.footer-inferior {
+    max-width: 1250px;
+    margin: 30px auto 0;
+    padding-top: 20px;
+    border-top: 1px solid #333333;
+    text-align: center;
+}
+
+.footer-inferior p {
+    margin: 5px 0;
+    color: #888888;
+    font-size: 12px;
+}
+
+/* FOOTER - TEMA CLARO */
+
+body.light-theme .footer-gpufix {
+    background-color: #ffffff;
+    border-top-color: #008fc4;
+}
+
+body.light-theme .footer-columna h3,
+body.light-theme .footer-seccion h3,
+body.light-theme .footer-presentacion h2 span {
+    color: #111111;
+}
+
+body.light-theme .footer-columna p,
+body.light-theme .footer-redes > span,
+body.light-theme .footer-lista li {
+    color: #555555;
+}
+
+body.light-theme .footer-redes-iconos a {
+    background: #f2f2f2;
+    border-color: #cccccc;
+    color: #008fc4;
+}
+
+body.light-theme .footer-marcas span,
+body.light-theme .footer-pagos span {
+    background: #f5f5f5;
+    border-color: #cccccc;
+    color: #333333;
+}
+
+body.light-theme .footer-inferior p {
+    color: #666666;
+}
+
+body.light-theme .footer-seccion,
+body.light-theme .footer-inferior {
+    border-color: #dddddd;
+}
+
+/* FOOTER RESPONSIVE */
+
+@media (max-width: 800px) {
+    .footer-contenido {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 35px;
+    }
+
+    .footer-presentacion {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 500px) {
+    .footer-gpufix {
+        padding: 35px 20px 18px;
+        margin-top: 50px;
+    }
+
+    .footer-contenido {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+
+    .footer-presentacion {
+        grid-column: auto;
+    }
+
+    .footer-seccion h3 {
+        font-size: 16px;
+    }
+
+    .footer-marcas span,
+    .footer-pagos span {
+        flex: 1 1 calc(50% - 12px);
+        padding: 10px;
+        font-size: 12px;
+    }
+}
+
+/* LOGOS DE MARCAS Y MEDIOS DE PAGO */
+
+.footer-marcas,
+.footer-pagos {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 25px;
+    margin-top: 25px;
+}
+
+.footer-logo-marca,
+.footer-logo-pago {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-width: 105px;
+    padding: 12px;
+    transition: transform 0.3s ease;
+}
+
+.footer-logo-marca img {
+    width: 95px;
+    height: 42px;
+    object-fit: contain;
+}
+
+.footer-logo-pago img {
+    width: 105px;
+    height: 48px;
+    object-fit: contain;
+}
+
+.footer-logo-marca span,
+.footer-logo-pago span {
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.footer-logo-marca:hover,
+.footer-logo-pago:hover {
+    transform: translateY(-4px);
+}
+
+@media (max-width: 576px) {
+    .footer-marcas,
+    .footer-pagos {
+        gap: 12px;
+    }
+
+    .footer-logo-marca,
+    .footer-logo-pago {
+        min-width: 85px;
+        padding: 8px;
+    }
+
+    .footer-logo-marca img {
+        width: 75px;
+    }
+
+    .footer-logo-pago img {
+        width: 85px;
+    }
+}
+/* Fondo de los logos: igual en ambos temas */
+.footer-logo-marca,
+.footer-logo-pago {
+    background-color: #F1F3F5;
+    border: 1px solid #D1D5DB;
+    border-radius: 12px;
+}
+
+/* Logos blancos o muy claros */
+.logo-claro {
+    background-color: #263445;
+    padding: 8px;
+    border-radius: 8px;
+}
+body.dark-mode .footer-logo-marca,
+body.dark-mode .footer-logo-pago {
+    background-color: #D1D5DB;
+    border-color: #9CA3AF;
+}
+body.dark-mode .logo-claro {
+    background-color: #263445;
+}

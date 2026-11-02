@@ -164,10 +164,207 @@ try {
         </section>
     </main>
 
-    <footer>
-        <p>GPU FIX & STORE - Reparación y venta de GPUs</p>
-    </footer>
+    <footer class="footer-gpufix">
+    <div class="footer-contenido">
 
+        <!-- Información de GPUFIX -->
+        <div class="footer-columna footer-presentacion">
+            <h2>GPU FIX <span>& STORE</span></h2>
+            <p>
+                Especialistas en venta, reparación y mantenimiento
+                de placas de video.
+            </p>
+
+            <div class="footer-redes">
+                <span>Seguinos en nuestras redes</span>
+                <div class="footer-redes-iconos">
+
+    <!-- Instagram -->
+    <a href="https://www.instagram.com/" target="_blank"
+       rel="noopener noreferrer" aria-label="Instagram">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="5"
+                  fill="none" stroke="currentColor" stroke-width="2"/>
+            <circle cx="12" cy="12" r="4"
+                    fill="none" stroke="currentColor" stroke-width="2"/>
+            <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/>
+        </svg>
+    </a>
+
+    <!-- Facebook -->
+    <a href="https://www.facebook.com/" target="_blank"
+       rel="noopener noreferrer" aria-label="Facebook">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="currentColor"
+                  d="M13.5 21v-8h2.7l.4-3.1h-3.1V7.9c0-.9.3-1.5 1.6-1.5h1.6V3.6c-.8-.1-1.6-.2-2.5-.2-2.5 0-4.2 1.5-4.2 4.3v2.2H7.2V13H10v8z"/>
+        </svg>
+    </a>
+
+    <!-- TikTok -->
+    <a href="https://www.tiktok.com/" target="_blank"
+       rel="noopener noreferrer" aria-label="TikTok">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="currentColor"
+                  d="M19.6 8.1a7.1 7.1 0 0 1-4.3-1.4v8.1a6.2 6.2 0 1 1-5.4-6.1v3.2a3.1 3.1 0 1 0 2.2 3V2.5h3.2a4.4 4.4 0 0 0 4.3 3.5z"/>
+        </svg>
+    </a>
+
+</div>
+            </div>
+        </div>
+
+        <!-- Reseñas -->
+        <div class="footer-columna">
+            <h3>Experiencia GPUFIX</h3>
+            <p>Tu opinión nos ayuda a seguir mejorando.</p>
+
+            <div class="footer-estrellas" aria-label="Cinco estrellas">
+                ★★★★★
+            </div>
+
+            <a href="#titulo-reviews" class="footer-enlace-destacado">
+                Conocé las opiniones de nuestros clientes →
+            </a>
+        </div>
+
+        <!-- Contacto -->
+        <div class="footer-columna">
+            <h3>Contacto</h3>
+
+            <ul class="footer-lista">
+                <li>
+                    <span class="footer-icono">✉</span>
+                    <span>Correo electrónico</span>
+                </li>
+                <li>
+                    <span class="footer-icono">☏</span>
+                    <span>WhatsApp</span>
+                </li>
+                <li>
+                    <span class="footer-icono">◎</span>
+                    <span>Instagram</span>
+                </li>
+                <li>
+                    <span class="footer-icono">◷</span>
+                    <span>Atención al cliente</span>
+                </li>
+            </ul>
+        </div>
+
+    </div>
+
+    <!-- Marcas -->
+    
+<!-- Marcas -->
+<div class="footer-seccion">
+    <h3>Trabajamos con las principales marcas</h3>
+
+    <div class="footer-marcas">
+
+        <div class="footer-logo-marca">
+            <img src="imagenes/marcas/amd.svg" alt="AMD">
+            <span>AMD</span>
+        </div>
+
+        <div class="footer-logo-marca">
+            <img src="imagenes/marcas/nvidia.svg" alt="NVIDIA">
+            <span>NVIDIA</span>
+        </div>
+
+        <div class="footer-logo-marca">
+            <img src="imagenes/marcas/asus.svg" alt="ASUS">
+            <span>ASUS</span>
+        </div>
+
+        <div class="footer-logo-marca">
+            <img src="imagenes/marcas/msi.svg" alt="MSI">
+            <span>MSI</span>
+        </div>
+
+        <div class="footer-logo-marca">
+            <img src="imagenes/marcas/gigabyte-logo.svg" alt="GIGABYTE">
+            <span>GIGABYTE</span>
+        </div>
+
+        <div class="footer-logo-marca">
+            <img src="imagenes/marcas/aorus-vertical-logo.svg" alt="AORUS">
+            <span>AORUS</span>
+        </div>
+
+        <div class="footer-logo-marca">
+    <img class="logo-claro"
+         src="imagenes/marcas/ZOTAC_LightGrey_Logo.png"
+         alt="ZOTAC">
+    <span>ZOTAC</span>
+</div>
+
+
+        <div class="footer-logo-marca">
+    <img class="logo-claro"
+         src="imagenes/marcas/sapphirewhite-web.png"
+         alt="SAPPHIRE">
+    <span>SAPPHIRE</span>
+</div>
+
+        <div class="footer-logo-marca">
+            <img src="imagenes/marcas/Powercolor_2024_logo.svg.webp" alt="PowerColor">
+            <span>POWERCOLOR</span>
+        </div>
+
+        <div class="footer-logo-marca">
+            <img src="imagenes/marcas/Inno3d_logo.svg.webp" alt="Inno3D">
+            <span>INNO3D</span>
+        </div>
+
+    </div>
+</div>
+    
+<!-- Medios de pago -->
+<div class="footer-seccion">
+    <h3>Medios de pago</h3>
+
+    <div class="footer-pagos">
+
+        <div class="footer-logo-pago">
+            <img src="imagenes/pagos/visa.svg" alt="Visa">
+            <span>VISA</span>
+        </div>
+
+        <div class="footer-logo-pago">
+            <img src="imagenes/pagos/mastercard.svg" alt="Mastercard">
+            <span>Mastercard</span>
+        </div>
+
+        <div class="footer-logo-pago">
+            <img src="imagenes/pagos/americanexpress.svg" alt="American Express">
+            <span>American Express</span>
+        </div>
+
+        <div class="footer-logo-pago">
+            <img src="imagenes/pagos/mercadopago.svg" alt="Mercado Pago">
+            <span>Mercado Pago</span>
+        </div>
+
+        <div class="footer-logo-pago">
+            <img src="imagenes/pagos/naranja-x.png" alt="Naranja X">
+            <span>Naranja X</span>
+        </div>
+
+        <div class="footer-logo-pago">
+            <img src="imagenes/pagos/paypal.svg" alt="PayPal">
+            <span>PayPal</span>
+        </div>
+
+    </div>
+</div>
+
+
+    <!-- Copyright -->
+    <div class="footer-inferior">
+        <p>© 2026 GPU FIX & STORE. Todos los derechos reservados.</p>
+        <p>Venta y reparación de placas de video.</p>
+    </div>
+</footer>
     <script src="script.js?v=20261021-9"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>
