@@ -118,7 +118,9 @@ function admin_layout_inicio(string $titulo): void {
         .panel { overflow-wrap: anywhere; }
         .table-responsive { max-width: 100%; }
         .panel input, .panel select, .panel textarea { max-width: 100%; }
-        .panel .btn { white-space: normal; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 9px 16px; border-radius: 8px; font-size: .95rem; font-weight: 600; line-height: 1.35; white-space: nowrap; overflow-wrap: normal; word-break: normal; }
+        .btn-sm { min-height: 36px; padding: 7px 12px; font-size: .875rem; }
+        .btn:focus-visible { outline: 3px solid #8eb1ee; outline-offset: 3px; }
         .navbar-toggler { min-width: 44px; min-height: 44px; }
         .admin-indicadores { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin: 0; }
         .admin-indicadores > div { width: auto; padding: 0; margin: 0; }

@@ -13,7 +13,7 @@ if (!admin_es_cuenta_principal($conexion)) {
 }
 function admin_menu_tablas(string $actual = ''): void {
     global $tablas;
-    echo '<link rel="stylesheet" href="admin-tablas.css"><div class="tablas-estructura"><aside class="tablas-menu"><h2 class="h5">Tablas</h2><label class="form-label" for="filtrarTablas">Buscar tabla</label><input class="form-control mb-3" id="filtrarTablas" type="search" autocomplete="off"><nav aria-label="Tablas de la base de datos" id="listaTablas">';
+    echo '<link rel="stylesheet" href="admin-tablas.css?v=20261104-botones"><div class="tablas-estructura"><aside class="tablas-menu"><h2 class="h5">Tablas</h2><label class="form-label" for="filtrarTablas">Buscar tabla</label><input class="form-control mb-3" id="filtrarTablas" type="search" autocomplete="off"><nav aria-label="Tablas de la base de datos" id="listaTablas">';
     foreach ($tablas as $tabla) {
         $activa = $tabla === $actual;
         echo '<a class="tablas-enlace' . ($activa ? ' activa' : '') . '" ' . ($activa ? 'aria-current="page"' : '') . ' href="admin-tablas.php?tabla=' . rawurlencode($tabla) . '"><strong>' . admin_e(admin_etiqueta_dato($tabla)) . '</strong><small>' . admin_e($tabla) . '</small></a>';
