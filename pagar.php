@@ -20,6 +20,14 @@ $datosCliente = null;
 $itemsPago = [];
 $compraConfirmada = null;
 $totalCentavos = 0;
+$costoEnvioCentavos = 500000;
+$sucursalesRetiro = [
+    'rivadavia' => 'Sucursal Rivadavia (Av Rivadavia 5376, local 1)',
+    'florida' => 'Sucursal Florida (Florida 537)',
+];
+$entrega = ($_SESSION['entrega_pago'] ?? '') === 'retiro' ? 'retiro' : 'domicilio';
+$sucursal = (string) ($_SESSION['sucursal_pago'] ?? '');
+unset($_SESSION['entrega_pago'], $_SESSION['sucursal_pago']);
 $errorCarga = false;
 $transaccionActiva = false;
 $problemaCarrito = "";
@@ -95,7 +103,7 @@ function enviarCorreoCompra(array $cliente, array $articulos, int $idVenta, stri
             $cuerpo .= '- ' . $articulo['marca'] . ' ' . $articulo['modelo'] . ' — Cantidad: ' . $cantidad
                 . ' — Precio unitario: ' . formatoPago($precio) . ' — Subtotal: ' . formatoPago($precio * $cantidad) . "\n";
         }
-        $cuerpo .= "\nTotal: " . formatoPago($totalCentavos) . "\nDirección de facturación: " . $direccion;
+        $cuerpo .= "\nTotal: " . formatoPago($totalCentavos) . "\nEntrega: " . $direccion;
         if ($metodoPago === 'Transferencia') $cuerpo .= "\n\nRecibimos tu comprobante de transferencia. El pago queda pendiente de verificación.";
         $cuerpo .= "\n\nPodés consultar tu compra desde Mi cuenta.\n\nEquipo GPUFIX";
         if (!gpufix_enviar_correo($cliente['correo'], 'Confirmación de compra GPUFIX #' . $idVenta, $cuerpo)) {
@@ -199,7 +207,15 @@ try {
             if (!$csrfValido) {
                 throw new RuntimeException("La solicitud venció. Revisá el resumen y volvé a confirmar.");
             }
-            if (mb_strlen($direccionFacturacion, "UTF-8") < 8 || mb_strlen($direccionFacturacion, "UTF-8") > 255) {
+            $entrega = is_string($_POST['entrega'] ?? null) ? $_POST['entrega'] : '';
+            $sucursal = is_string($_POST['sucursal'] ?? null) ? $_POST['sucursal'] : '';
+            if (!in_array($entrega, ['retiro', 'domicilio'], true)) {
+                throw new RuntimeException('Seleccioná un método de entrega.');
+            }
+            if ($entrega === 'retiro' && !isset($sucursalesRetiro[$sucursal])) {
+                throw new RuntimeException('Seleccioná la sucursal donde vas a retirar tu compra.');
+            }
+            if ($entrega === 'domicilio' && (mb_strlen($direccionFacturacion, "UTF-8") < 8 || mb_strlen($direccionFacturacion, "UTF-8") > 255)) {
                 throw new RuntimeException("Ingresá una dirección de facturación de entre 8 y 255 caracteres.");
             }
             if (!preg_match('/^[0-9]{7,8}$/', (string) $datosCliente["dni"])) {
@@ -292,6 +308,8 @@ try {
                 $stockPorProducto[$idGpu] = $filasStock;
             }
 
+            $cargoEnvio = $entrega === 'domicilio' ? $costoEnvioCentavos : 0;
+            $totalCentavos += $cargoEnvio;
             $totalVenta = decimalPago($totalCentavos);
             $estadoVenta = $metodoSeleccionado === "transferencia" ? "Pendiente de verificación" : "Registrada";
             $crearVenta = $conexion->prepare("INSERT INTO gpu_ventas (id_cliente, precio_total, metodo_pago, estado, tarjeta_titular, tarjeta_ultimos4, tarjeta_longitud, tarjeta_vencimiento, tarjeta_dni) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -336,10 +354,23 @@ try {
                 }
                 if ($cantidadPendiente !== 0) throw new RuntimeException('No pudimos descontar el stock completo. Revisá tu carrito e intentá nuevamente.');
             }
-            $guardarDireccion = $conexion->prepare("UPDATE cliente SET direccion = ? WHERE id_cliente = ?");
-            $guardarDireccion->bind_param("si", $direccionFacturacion, $idCliente);
-            $guardarDireccion->execute();
-            $guardarDireccion->close();
+            $direccionEntrega = $entrega === 'retiro' ? $sucursalesRetiro[$sucursal] : $direccionFacturacion;
+            $estadoEntrega = $entrega === 'retiro' ? 'Retiro en tienda' : 'Pendiente de envío';
+            $crearEnvio = $conexion->prepare("INSERT INTO envios (id_cliente, id_gpu_ventas, estado, direccion_envio) VALUES (?, ?, ?, ?)");
+            $crearEnvio->bind_param("iiss", $idCliente, $idVenta, $estadoEntrega, $direccionEntrega);
+            $crearEnvio->execute();
+            $crearEnvio->close();
+            if ($cargoEnvio > 0) {
+                $importeEnvio = decimalPago($cargoEnvio);
+                $conceptoEnvio = $conexion->prepare("INSERT INTO detalle_factura (id_factura, descripcion, cantidad, precio_unitario, subtotal) VALUES (?, 'Envío a domicilio', 1, ?, ?)");
+                $conceptoEnvio->bind_param("iss", $idFactura, $importeEnvio, $importeEnvio);
+                $conceptoEnvio->execute();
+                $conceptoEnvio->close();
+                $guardarDireccion = $conexion->prepare("UPDATE cliente SET direccion = ? WHERE id_cliente = ?");
+                $guardarDireccion->bind_param("si", $direccionFacturacion, $idCliente);
+                $guardarDireccion->execute();
+                $guardarDireccion->close();
+            }
             $vaciarCarrito = $conexion->prepare("DELETE FROM detalle_carrito WHERE id_carrito = ?");
             $vaciarCarrito->bind_param("i", $idCarrito);
             $vaciarCarrito->execute();
@@ -366,7 +397,7 @@ try {
             unset($_SESSION["csrf_pago"], $_SESSION["resumen_pago"]);
             $_SESSION['correo_compra'] = [
                 'id_venta' => $idVenta,
-                'enviado' => enviarCorreoCompra($datosCliente, $itemsPago, $idVenta, $numeroComprobante, $totalCentavos, $metodoPago, $estadoVenta, $direccionFacturacion),
+                'enviado' => enviarCorreoCompra($datosCliente, $itemsPago, $idVenta, $numeroComprobante, $totalCentavos, $metodoPago, $estadoVenta, $direccionEntrega),
             ];
             header("Location: pagar.php?compra=" . $idVenta, true, 303);
             exit;
@@ -384,6 +415,8 @@ try {
                 : ($error instanceof RuntimeException ? $error->getMessage() : "No pudimos completar la compra. Intentá nuevamente.");
             if ($csrfValido ?? false) {
                 $_SESSION["direccion_pago"] = $direccionFacturacion;
+                $_SESSION['entrega_pago'] = $entrega;
+                $_SESSION['sucursal_pago'] = $sucursal;
                 $_SESSION["metodo_pago_form"] = $metodoSeleccionado === "transferencia" ? "transferencia" : "tarjeta";
             }
             header("Location: pagar.php", true, 303);
@@ -417,6 +450,11 @@ try {
             $consultaDetalles->execute();
             $compraConfirmada["items"] = $consultaDetalles->get_result()->fetch_all(MYSQLI_ASSOC);
             $consultaDetalles->close();
+            $consultaEntrega = $conexion->prepare("SELECT estado, direccion_envio FROM envios WHERE id_gpu_ventas = ? AND id_cliente = ? ORDER BY id_envios DESC LIMIT 1");
+            $consultaEntrega->bind_param("ii", $idCompra, $idCliente);
+            $consultaEntrega->execute();
+            $compraConfirmada['entrega'] = $consultaEntrega->get_result()->fetch_assoc();
+            $consultaEntrega->close();
         }
     } else {
         $consultaCarrito = $conexion->prepare("SELECT id_carrito FROM carrito WHERE id_cliente = ? LIMIT 1");
@@ -489,6 +527,9 @@ try {
                         <li><div><strong><?= escaparPago($detalle["descripcion"]) ?></strong><span>Cantidad: <?= (int) $detalle["cantidad"] ?></span></div><strong><?= formatoPago(centavosPago($detalle["subtotal"])) ?></strong></li>
                     <?php endforeach; ?>
                 </ul>
+                <?php if (!empty($compraConfirmada['entrega']['direccion_envio'])): ?>
+                    <p><strong>Entrega</strong> · <?= escaparPago($compraConfirmada['entrega']['direccion_envio']) ?></p>
+                <?php endif; ?>
                 <div class="pago-total"><span>Total</span><strong><?= formatoPago(centavosPago($compraConfirmada["total"])) ?></strong></div>
                 <div class="pago-acciones"><a href="mi-cuenta.php" class="pago-boton">Ver mi cuenta</a><a href="productos.php" class="pago-volver">Seguir comprando</a></div>
             </section>
@@ -506,7 +547,21 @@ try {
                     <form action="pagar.php" method="post" enctype="multipart/form-data" class="pago-formulario" id="formularioPago">
                         <input type="hidden" name="csrf_pago" value="<?= escaparPago($csrfPago) ?>">
                         <input type="hidden" name="resumen_pago" value="<?= escaparPago($_SESSION["resumen_pago"] ?? "") ?>">
-                        <div><label for="direccionFacturacion">Dirección de facturación</label><input type="text" id="direccionFacturacion" name="direccion" minlength="8" maxlength="255" autocomplete="billing street-address" placeholder="Calle, número, localidad y CP" value="<?= escaparPago($direccionFacturacion) ?>" required></div>
+                        <fieldset class="pago-metodos">
+                            <legend>Entrega</legend>
+                            <div class="pago-selector">
+                                <label><input type="radio" name="entrega" value="retiro" <?= $entrega === 'retiro' ? 'checked' : '' ?>> Retirar en tienda</label>
+                                <label><input type="radio" name="entrega" value="domicilio" <?= $entrega === 'domicilio' ? 'checked' : '' ?>> Enviar a domicilio (+<?= formatoPago($costoEnvioCentavos) ?>)</label>
+                            </div>
+                            <div id="retiroCompra" <?= $entrega !== 'retiro' ? 'hidden' : '' ?>>
+                                <div class="pago-selector">
+                                    <?php foreach ($sucursalesRetiro as $clave => $nombreSucursal): ?>
+                                        <label><input type="radio" name="sucursal" value="<?= escaparPago($clave) ?>" <?= $sucursal === $clave ? 'checked' : '' ?> <?= $entrega === 'retiro' ? 'required' : 'disabled' ?>> <?= escaparPago($nombreSucursal) ?></label>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        </fieldset>
+                        <div id="domicilioCompra" <?= $entrega !== 'domicilio' ? 'hidden' : '' ?>><label for="direccionFacturacion">Dirección de facturación</label><input type="text" id="direccionFacturacion" name="direccion" minlength="8" maxlength="255" autocomplete="billing street-address" placeholder="Calle, número, localidad y CP" value="<?= escaparPago($direccionFacturacion) ?>" <?= $entrega === 'domicilio' ? 'required' : 'disabled' ?>></div>
                         <fieldset class="pago-metodos">
                             <legend>Métodos de pago</legend>
                             <div class="pago-selector">
@@ -548,7 +603,10 @@ try {
                             </li>
                         <?php endforeach; ?>
                     </ul>
-                    <?php if (!$problemaCarrito): ?><div class="pago-total"><span>Total</span><strong><?= formatoPago($totalCentavos) ?></strong></div><?php endif; ?>
+                    <?php if (!$problemaCarrito): ?>
+                        <p id="cargoEntrega" <?= $entrega !== 'domicilio' ? 'hidden' : '' ?>>Envío a domicilio: <?= formatoPago($costoEnvioCentavos) ?></p>
+                        <div class="pago-total"><span>Total</span><strong id="totalConEntrega" aria-live="polite"><?= formatoPago($totalCentavos + ($entrega === 'domicilio' ? $costoEnvioCentavos : 0)) ?></strong></div>
+                    <?php endif; ?>
                     <p class="pago-aclaracion">Garantía de 1 año en todos los productos.</p>
                 </aside>
             </div>
@@ -558,6 +616,33 @@ try {
     </main>
     <footer><p>GPU FIX &amp; STORE - Reparación y venta de GPUs</p></footer>
     <script src="script.js?v=20261027-confirmar-compra"></script>
+    <?php if (!$errorCarga && $idCompra === 0 && $itemsPago): ?>
+    <script>
+        const formularioEntrega = document.getElementById('formularioPago');
+        const actualizarEntrega = () => {
+            const domicilio = formularioEntrega.elements.entrega.value === 'domicilio';
+            document.getElementById('retiroCompra').hidden = domicilio;
+            document.getElementById('domicilioCompra').hidden = !domicilio;
+            const direccion = document.getElementById('direccionFacturacion');
+            direccion.disabled = !domicilio;
+            direccion.required = domicilio;
+            formularioEntrega.querySelectorAll('[name="sucursal"]').forEach(opcion => {
+                opcion.disabled = domicilio;
+                opcion.required = !domicilio;
+            });
+            const total = document.getElementById('totalConEntrega');
+            if (total) {
+                document.getElementById('cargoEntrega').hidden = !domicilio;
+                total.textContent = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' })
+                    .format((<?= (int) $totalCentavos ?> + (domicilio ? <?= $costoEnvioCentavos ?> : 0)) / 100);
+            }
+        };
+        formularioEntrega.querySelectorAll('[name="entrega"]').forEach(opcion => {
+            opcion.addEventListener('change', actualizarEntrega);
+        });
+        actualizarEntrega();
+    </script>
+    <?php endif; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
