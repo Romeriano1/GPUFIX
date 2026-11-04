@@ -25,7 +25,7 @@ admin_layout_inicio('Estadísticas');
 ?>
 <h1>Estadísticas de GPUFIX</h1>
 <p>Datos actuales de la base. Se actualizan al recargar la página.</p>
-<div class="row g-3">
+<div class="row g-3 admin-indicadores">
 <?php foreach ($valores as $titulo => $valor): ?>
 <div class="col-6 col-lg-3"><section class="panel h-100 m-0"><h2 class="h6"><?= admin_e($titulo) ?></h2><strong class="h2"><?= number_format((float)$valor,0,',','.') ?></strong></section></div>
 <?php endforeach; ?>

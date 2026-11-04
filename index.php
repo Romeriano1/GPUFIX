@@ -22,48 +22,14 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
         crossorigin="anonymous">
-    <link rel="stylesheet" href="style.css?v=20261102-pagos-temas">
+    <link rel="stylesheet" href="style.css?v=20261104-responsive">
 
 
 </head>
 
 <body>
     <header>
-        <nav class="navbar">
-            <div class="navbar-izquierda">
-                <a class="navbar-brand" href="index.php">
-                    GPU FIX & STORE
-                </a>
-
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="index.php">Inicio</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="productos.php">Productos</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="reparar.php">Reparar GPU</a>
-                    </li>
-
-                </ul>
-            </div>
-
-            <div class="navbar-centro">
-                <form class="search-form" action="busqueda.php" method="GET" role="search">
-                    <input class="form-control" type="search" name="buscar"
-                        placeholder="Buscar GPU" aria-label="Buscar GPU">
-                    <button class="btn" type="submit">Buscar</button>
-                </form>
-            </div>
-
-            <div class="navbar-derecha">
-                <button id="themeButton" class="theme-button" type="button" aria-label="Cambiar tema">
-                    ☀️
-                </button>
-                <?php include __DIR__ . "/menu-perfil.php"; ?>
-            </div>
-        </nav>
+        <?php include __DIR__ . "/navbar.php"; ?>
     </header>
 
     <main>
@@ -271,7 +237,7 @@ try {
         <p>Venta y reparación de placas de video.</p>
     </div>
 </footer>
-    <script src="script.js?v=20261021-9"></script>
+    <script src="script.js?v=20261104-responsive"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

@@ -489,24 +489,11 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finalizar compra - GPU FIX &amp; STORE</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=20261029-buscador">
+    <link rel="stylesheet" href="style.css?v=20261104-responsive">
 </head>
 <body>
     <header>
-        <nav class="navbar">
-            <div class="navbar-izquierda">
-                <a class="navbar-brand" href="index.php">GPU FIX &amp; STORE</a>
-                <ul class="navbar-nav">
-                    <li class="nav-item"><a class="nav-link" href="index.php">Inicio</a></li>
-                    <li class="nav-item"><a class="nav-link" href="productos.php">Productos</a></li>
-                    <li class="nav-item"><a class="nav-link" href="reparar.php">Reparar GPU</a></li>
-                </ul>
-            </div>
-            <div class="navbar-derecha">
-                <button id="themeButton" class="theme-button" type="button" aria-label="Cambiar tema">☀️</button>
-                <?php include __DIR__ . "/menu-perfil.php"; ?>
-            </div>
-        </nav>
+        <?php include __DIR__ . "/navbar.php"; ?>
     </header>
     <main class="pago-main">
         <?php if ($errorPago !== ""): ?><p class="pago-error" role="alert"><?= escaparPago($errorPago) ?></p><?php elseif ($problemaCarrito !== ""): ?><p class="pago-error" role="alert"><?= escaparPago($problemaCarrito) ?></p><?php endif; ?>
@@ -615,7 +602,7 @@ try {
         <?php endif; ?>
     </main>
     <footer><p>GPU FIX &amp; STORE - Reparación y venta de GPUs</p></footer>
-    <script src="script.js?v=20261027-confirmar-compra"></script>
+    <script src="script.js?v=20261104-responsive"></script>
     <?php if (!$errorCarga && $idCompra === 0 && $itemsPago): ?>
     <script>
         const formularioEntrega = document.getElementById('formularioPago');

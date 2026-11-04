@@ -13,34 +13,12 @@ if (isset($_SESSION["usuario_id"])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar sesión - GPU FIX & STORE</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=20261029-buscador">
+    <link rel="stylesheet" href="style.css?v=20261104-responsive">
 </head>
 <body class="pagina-login">
 
 <header class="login-header">
-    <nav class="navbar navbar-login">
-        <div class="navbar-izquierda navbar-login-izquierda">
-            <a class="navbar-brand navbar-login-brand" href="index.php">GPU FIX & STORE</a>
-            <ul class="navbar-nav navbar-login-enlaces">
-                <li class="nav-item"><a class="nav-link" href="index.php">Inicio</a></li>
-                <li class="nav-item"><a class="nav-link" href="productos.php">Productos</a></li>
-                <li class="nav-item"><a class="nav-link" href="reparar.php">Reparar GPU</a></li>
-
-            </ul>
-        </div>
-
-        <div class="navbar-centro navbar-login-centro">
-            <form class="search-form" action="busqueda.php" method="GET" role="search">
-                <input class="form-control" type="search" name="buscar" placeholder="Buscar GPU" aria-label="Buscar GPU">
-                <button class="btn" type="submit">Buscar</button>
-            </form>
-        </div>
-
-        <div class="navbar-derecha navbar-login-derecha">
-            <button id="themeButton" class="theme-button" type="button" aria-label="Cambiar tema">☀️</button>
-                <?php include __DIR__ . "/menu-perfil.php"; ?>
-        </div>
-    </nav>
+    <?php include __DIR__ . "/navbar.php"; ?>
 </header>
 
 <main class="login-main">
@@ -91,7 +69,7 @@ if (isset($_SESSION["usuario_id"])) {
     <p>GPU FIX & STORE - Reparación y venta de GPUs</p>
 </footer>
 
-<script src="script.js?v=20261021-9"></script>
+<script src="script.js?v=20261104-responsive"></script>
 <script>
 const loginForm = document.getElementById("loginForm");
 const correo = document.getElementById("correo");

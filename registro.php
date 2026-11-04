@@ -138,7 +138,7 @@ function escaparRegistro($valor)
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crear cuenta - GPU FIX & STORE</title>
-    <link rel="stylesheet" href="style.css?v=20261029-buscador">
+    <link rel="stylesheet" href="style.css?v=20261104-responsive">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
         crossorigin="anonymous">
@@ -146,29 +146,7 @@ function escaparRegistro($valor)
 <body class="pagina-login">
 
 <header>
-    <nav class="navbar">
-        <div class="navbar-izquierda">
-            <a class="navbar-brand" href="index.php">GPU FIX & STORE</a>
-            <ul class="navbar-nav">
-                <li class="nav-item"><a class="nav-link" href="index.php">Inicio</a></li>
-                <li class="nav-item"><a class="nav-link" href="productos.php">Productos</a></li>
-                <li class="nav-item"><a class="nav-link" href="reparar.php">Reparar GPU</a></li>
-
-            </ul>
-        </div>
-
-        <div class="navbar-centro">
-            <form class="search-form" action="busqueda.php" method="GET" role="search">
-                <input class="form-control" type="search" name="buscar" placeholder="Buscar GPU" aria-label="Buscar GPU">
-                <button class="btn" type="submit">Buscar</button>
-            </form>
-        </div>
-
-        <div class="navbar-derecha">
-            <button id="themeButton" class="theme-button" type="button" aria-label="Cambiar tema">☀️</button>
-            <?php include __DIR__ . "/menu-perfil.php"; ?>
-        </div>
-    </nav>
+    <?php include __DIR__ . "/navbar.php"; ?>
 </header>
 
 <main class="login-main">
@@ -254,7 +232,7 @@ function escaparRegistro($valor)
     <p>GPU FIX & STORE - Reparación y venta de GPUs</p>
 </footer>
 
-<script src="script.js?v=20261023-cuenta"></script>
+<script src="script.js?v=20261104-responsive"></script>
 <script>
 (() => {
     const patronNombre = /^[\p{L}\p{M}]+(?:[ '\u2019-][\p{L}\p{M}]+)*$/u;

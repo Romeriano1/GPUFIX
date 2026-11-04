@@ -117,6 +117,11 @@ function admin_layout_inicio(string $titulo): void {
         .panel, .row > * { min-width: 0; }
         .panel { overflow-wrap: anywhere; }
         .table-responsive { max-width: 100%; }
+        .panel input, .panel select, .panel textarea { max-width: 100%; }
+        .panel .btn { white-space: normal; }
+        .navbar-toggler { min-width: 44px; min-height: 44px; }
+        .admin-indicadores { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin: 0; }
+        .admin-indicadores > div { width: auto; padding: 0; margin: 0; }
         @media (max-width: 1199px) {
             .navbar > .container { flex-wrap: wrap; }
             .navbar-collapse .navbar-nav { flex-wrap: wrap; }
@@ -128,6 +133,9 @@ function admin_layout_inicio(string $titulo): void {
             .panel h2 { font-size: 1.25rem; }
             .panel .d-flex { flex-wrap: wrap; }
             .panel input, .panel select, .panel textarea { font-size: 16px; }
+            .panel input:not([type="checkbox"]):not([type="radio"]), .panel select, .panel .btn { min-height: 44px; }
+            .navbar-collapse .nav-link { padding: 12px 8px; border-radius: 6px; }
+            .navbar-collapse .nav-link:hover { background: #26354c; }
             .presupuesto-admin > summary { padding: 14px 12px; gap: 10px; flex-wrap: wrap; }
             .presupuesto-admin-resumen { flex-basis: calc(100% - 24px); }
             .presupuesto-admin > summary::after { margin-left: auto; }

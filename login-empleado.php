@@ -68,23 +68,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acceso de empleados - GPU FIX & STORE</title>
-    <link rel="stylesheet" href="style.css?v=20261029-buscador">
+    <link rel="stylesheet" href="style.css?v=20261104-responsive">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
           rel="stylesheet">
 </head>
 <body class="pagina-login">
 
 <header>
-    <nav class="navbar">
-        <div class="navbar-izquierda">
-            <a class="navbar-brand" href="index.php">GPU FIX & STORE</a>
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" href="index.php">Inicio</a>
-                </li>
-            </ul>
-        </div>
-    </nav>
+    <?php include __DIR__ . "/navbar.php"; ?>
 </header>
 
 <main class="login-main">
@@ -142,6 +133,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <p>GPU FIX & STORE - Reparación y venta de GPUs</p>
 </footer>
 
-<script src="script.js?v=20261021-9"></script>
+<script src="script.js?v=20261104-responsive"></script>
 </body>
 </html>

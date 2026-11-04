@@ -14,7 +14,9 @@ document.querySelectorAll("[data-validacion]").forEach(function(campo) {
 
 const themeButton = document.getElementById("themeButton");
 
-if (localStorage.getItem("tema") === "claro") {
+let temaGuardado = null;
+try { temaGuardado = localStorage.getItem("tema"); } catch (_) {}
+if (temaGuardado === "claro") {
     document.body.classList.add("light-theme");
 
     if (themeButton) {
@@ -28,10 +30,10 @@ if (themeButton) {
 
         if (document.body.classList.contains("light-theme")) {
             themeButton.textContent = "🌙";
-            localStorage.setItem("tema", "claro");
+            try { localStorage.setItem("tema", "claro"); } catch (_) {}
         } else {
             themeButton.textContent = "☀️";
-            localStorage.setItem("tema", "oscuro");
+            try { localStorage.setItem("tema", "oscuro"); } catch (_) {}
         }
     });
 }
@@ -54,7 +56,7 @@ if (cuentaButton && cuentaMenu) {
     });
 
     document.addEventListener("keydown", function(event) {
-        if (event.key === "Escape") {
+        if (event.key === "Escape" && cuentaMenu.classList.contains("visible")) {
             cuentaMenu.classList.remove("visible");
             cuentaButton.setAttribute("aria-expanded", "false");
             cuentaButton.focus();
@@ -199,4 +201,32 @@ if (formularioPago) {
         }
     });
     actualizarMetodoPago();
+}
+
+// Navegación compartida: desplegable accesible en celulares y tablets.
+const tiendaNav = document.querySelector('.tienda-navbar');
+const tiendaMenuButton = document.getElementById('tiendaMenuButton');
+const tiendaMenu = document.getElementById('tiendaMenu');
+if (tiendaNav && tiendaMenuButton && tiendaMenu) {
+    const pantallaMovil = window.matchMedia('(max-width: 1100px)');
+    function cambiarMenu(abierto, devolverFoco = false) {
+        tiendaNav.classList.toggle('menu-abierto', abierto);
+        tiendaMenuButton.setAttribute('aria-expanded', String(abierto));
+        tiendaMenuButton.setAttribute('aria-label', abierto ? 'Cerrar menú' : 'Abrir menú');
+        if (devolverFoco) tiendaMenuButton.focus();
+    }
+    tiendaNav.classList.add('navbar-interactiva');
+    tiendaMenuButton.addEventListener('click', () => cambiarMenu(!tiendaNav.classList.contains('menu-abierto')));
+    document.addEventListener('keydown', evento => {
+        if (evento.key === 'Escape' && pantallaMovil.matches && tiendaNav.classList.contains('menu-abierto')) {
+            cambiarMenu(false, true);
+        }
+    });
+    document.addEventListener('click', evento => {
+        if (pantallaMovil.matches && !tiendaNav.contains(evento.target)) cambiarMenu(false);
+    });
+    pantallaMovil.addEventListener('change', () => {
+        const focoDentro = tiendaMenu.contains(document.activeElement);
+        cambiarMenu(false, pantallaMovil.matches && focoDentro);
+    });
 }
