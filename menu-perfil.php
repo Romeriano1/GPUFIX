@@ -42,6 +42,9 @@ $etiquetaCarritoNavbar = $cantidadCarritoNavbar > 0
         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" aria-hidden="true"><?= $cantidadCarritoNavbar ?></span>
     <?php endif; ?>
 </a>
+<?php if ($estaLogueado && !empty($_SESSION['usuario_nombre'])): ?>
+    <span class="saludo-navbar">Hola, <?= htmlspecialchars((string) $_SESSION['usuario_nombre'], ENT_QUOTES, 'UTF-8') ?></span>
+<?php endif; ?>
 <div class="cuenta-contenedor">
     <button id="cuentaButton" class="cuenta-button position-relative" type="button" aria-label="<?= $estaLogueado ? 'Abrir menú de perfil, sesión iniciada' : 'Abrir menú de perfil' ?>" aria-expanded="false" aria-controls="cuentaMenu">
         👤

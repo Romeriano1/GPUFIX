@@ -153,6 +153,7 @@ function admin_layout_inicio(string $titulo): void {
 
             <div class="collapse navbar-collapse" id="adminNav">
                 <div class="navbar-nav ms-auto">
+                    '.(!empty($_SESSION['empleado_nombre']) ? '<span class="navbar-text text-white fw-semibold me-lg-3">Hola, '.admin_e($_SESSION['empleado_nombre']).'</span>' : '').'
                     <a class="nav-link" href="admin.php">Estadísticas</a>
                     <a class="nav-link" href="admin-tablas.php">Tablas SQL</a>
                     <a class="nav-link" href="cerrar-sesion-admin.php">Cerrar sesión</a>

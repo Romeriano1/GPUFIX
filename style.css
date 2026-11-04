@@ -196,6 +196,18 @@ body.light-theme .theme-button:hover {
     outline-offset: 3px;
 }
 
+.saludo-navbar {
+    font-size: .95rem;
+    font-weight: 600;
+    max-width: 180px;
+    overflow-wrap: anywhere;
+    color: #f1f3f5;
+}
+
+body.light-theme .saludo-navbar {
+    color: #202938;
+}
+
 .cuenta-contenedor {
     position: relative;
     display: flex;
