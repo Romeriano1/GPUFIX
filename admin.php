@@ -1,19 +1,41 @@
 <?php
-require_once __DIR__.'/admin-comun.php';
+require_once __DIR__ . '/admin-comun.php';
 admin_requerir_acceso();
-require_once __DIR__.'/conexion.php';
-$productos = (int)$conexion->query("SELECT COUNT(*) total FROM gpu")->fetch_assoc()['total'];
-$unidades = (int)$conexion->query("SELECT COALESCE(SUM(cantidad),0) total FROM stock_gpu")->fetch_assoc()['total'];
-$ventas = (int)$conexion->query("SELECT COUNT(*) total FROM gpu_ventas")->fetch_assoc()['total'];
-$facturas = (int)$conexion->query("SELECT COUNT(*) total FROM factura")->fetch_assoc()['total'];
-admin_layout_inicio('Inicio');
+$indicadores = [
+ 'Usuarios registrados' => 'SELECT COUNT(*) FROM usuarios',
+ 'Clientes' => 'SELECT COUNT(*) FROM cliente',
+ 'Empleados' => 'SELECT COUNT(*) FROM empleado',
+ 'Productos' => 'SELECT COUNT(*) FROM gpu',
+ 'Unidades en stock' => 'SELECT COALESCE(SUM(cantidad),0) FROM stock_gpu',
+ 'Productos sin stock' => 'SELECT COUNT(*) FROM gpu g WHERE COALESCE((SELECT SUM(s.cantidad) FROM stock_gpu s WHERE s.id_gpu=g.id_gpu),0)=0',
+ 'Ventas registradas' => 'SELECT COUNT(*) FROM gpu_ventas',
+ 'Facturas emitidas' => 'SELECT COUNT(*) FROM factura',
+ 'Presupuestos' => 'SELECT COUNT(*) FROM presupuesto',
+ 'Órdenes de reparación' => 'SELECT COUNT(*) FROM orden_reparacion',
+ 'Envíos y retiros' => 'SELECT COUNT(*) FROM envios',
+ 'Proveedores' => 'SELECT COUNT(*) FROM proveedor'
+];
+$valores = [];
+foreach ($indicadores as $titulo => $sql) $valores[$titulo] = $conexion->query($sql)->fetch_row()[0];
+$facturado = $conexion->query('SELECT COALESCE(SUM(total),0) FROM factura')->fetch_row()[0];
+$mensuales = $conexion->query("SELECT DATE_FORMAT(fecha_emision,'%Y-%m') mes, COUNT(*) cantidad, SUM(total) total FROM factura GROUP BY mes ORDER BY mes DESC LIMIT 12")->fetch_all(MYSQLI_ASSOC);
+$estados = [];
+foreach (['gpu_ventas','presupuesto','orden_reparacion','envios'] as $tabla) $estados[$tabla] = $conexion->query("SELECT COALESCE(NULLIF(estado,''),'Sin estado') estado, COUNT(*) cantidad FROM `$tabla` GROUP BY estado ORDER BY cantidad DESC")->fetch_all(MYSQLI_ASSOC);
+admin_layout_inicio('Estadísticas');
 ?>
-<h1 class="h3 mt-3">Panel de administración</h1><p class="text-secondary">Desde acá podés administrar el catálogo, el inventario, las facturas y las devoluciones.</p>
-<div class="row g-3 mt-2">
-<div class="col-sm-6 col-lg-3"><div class="panel"><div class="small-muted">Productos cargados</div><div class="display-6 fw-semibold"><?=$productos?></div><a href="admin-productos.php">Administrar productos →</a></div></div>
-<div class="col-sm-6 col-lg-3"><div class="panel"><div class="small-muted">Unidades en stock</div><div class="display-6 fw-semibold"><?=$unidades?></div><a href="admin-productos.php">Configurar stock →</a></div></div>
-<div class="col-sm-6 col-lg-3"><div class="panel"><div class="small-muted">Ventas registradas</div><div class="display-6 fw-semibold"><?=$ventas?></div><a href="admin-facturacion.php">Ver ventas →</a></div></div>
-<div class="col-sm-6 col-lg-3"><div class="panel"><div class="small-muted">Facturas emitidas</div><div class="display-6 fw-semibold"><?=$facturas?></div><a href="admin-facturacion.php">Ver facturación →</a></div></div>
+<h1>Estadísticas de GPUFIX</h1>
+<p>Datos actuales de la base. Se actualizan al recargar la página.</p>
+<div class="row g-3">
+<?php foreach ($valores as $titulo => $valor): ?>
+<div class="col-6 col-lg-3"><section class="panel h-100 m-0"><h2 class="h6"><?= admin_e($titulo) ?></h2><strong class="h2"><?= number_format((float)$valor,0,',','.') ?></strong></section></div>
+<?php endforeach; ?>
 </div>
-<div class="panel"><h2 class="h5">Antes de probar</h2><ul class="mb-0"><li>Los productos y el stock se guardan en la base de datos actual.</li><li>La sección de facturación muestra las ventas y facturas que existan en la base de datos.</li><li>La devolución permite registrar el estado de la operación y reintegrar las unidades al stock cuando corresponde. No procesa una transferencia de dinero real.</li></ul></div>
-<?php $conexion->close(); admin_layout_fin(); ?>
+<section class="panel"><h2 class="h5">Total de facturas registradas</h2><strong class="h2">$ <?= number_format((float)$facturado,2,',','.') ?></strong><p class="mb-0">Suma de todas las facturas, independientemente del estado de pago o devolución.</p></section>
+<section class="panel"><h2 class="h5">Facturación por mes</h2><div class="table-responsive"><table class="table"><thead><tr><th>Mes</th><th>Facturas</th><th>Total</th></tr></thead><tbody>
+<?php foreach ($mensuales as $mes): ?><tr><td><?= admin_e($mes['mes']) ?></td><td><?= (int)$mes['cantidad'] ?></td><td>$ <?= number_format((float)$mes['total'],2,',','.') ?></td></tr><?php endforeach; ?>
+<?php if (!$mensuales): ?><tr><td colspan="3">Todavía no hay facturas.</td></tr><?php endif; ?>
+</tbody></table></div></section>
+<div class="row">
+<?php foreach ($estados as $tabla => $filas): ?><div class="col-md-6"><section class="panel"><h2 class="h5"><?= admin_e(['gpu_ventas'=>'Ventas','presupuesto'=>'Presupuestos','orden_reparacion'=>'Reparaciones','envios'=>'Envíos y retiros'][$tabla]) ?> por estado</h2><table class="table"><thead><tr><th>Estado</th><th>Cantidad</th></tr></thead><tbody><?php foreach ($filas as $fila): ?><tr><td><?= admin_e($fila['estado']) ?></td><td><?= (int)$fila['cantidad'] ?></td></tr><?php endforeach; ?><?php if (!$filas): ?><tr><td colspan="2">Sin registros.</td></tr><?php endif; ?></tbody></table></section></div><?php endforeach; ?>
+</div>
+<?php admin_layout_fin(); ?>

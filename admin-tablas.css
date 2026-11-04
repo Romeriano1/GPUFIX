@@ -1,0 +1,16 @@
+.tablas-estructura { display: grid; grid-template-columns: 255px minmax(0, 1fr); gap: 24px; align-items: start; }
+.tablas-menu { background: #fff; border: 1px solid #d5dbe4; border-radius: 8px; padding: 16px; position: sticky; top: 16px; }
+#listaTablas { max-height: 65vh; overflow-y: auto; }
+.tablas-enlace { display: block; padding: 10px 12px; color: #202938; text-decoration: none; border-radius: 5px; margin-bottom: 4px; overflow-wrap: anywhere; }
+.tablas-enlace small { display: block; color: #596579; }
+.tablas-enlace:hover { background: #edf1f7; }
+.tablas-enlace.activa { background: #253b80; color: #fff; }
+.tablas-enlace.activa small { color: #e3eaff; }
+.tablas-enlace:focus-visible { outline: 3px solid #6797ed; outline-offset: -3px; }
+.tablas-enlace[hidden] { display: none; }
+.tablas-contenido { min-width: 0; }
+@media (max-width: 767px) {
+    .tablas-estructura { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+    .tablas-menu { position: static; }
+    #listaTablas { max-height: 220px; }
+}

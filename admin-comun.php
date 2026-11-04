@@ -153,16 +153,8 @@ function admin_layout_inicio(string $titulo): void {
 
             <div class="collapse navbar-collapse" id="adminNav">
                 <div class="navbar-nav ms-auto">
-                    <a class="nav-link" href="admin.php">Inicio</a>
-                    <a class="nav-link" href="admin-productos.php">Productos y stock</a>
-                    <a class="nav-link" href="admin-proveedores.php">Proveedores</a>
-                    '.$enlaceCuentas.'
-                    <a class="nav-link" href="admin-compras.php">Compras</a>
-                    <a class="nav-link" href="admin-componentes.php">Componentes</a>
-                    <a class="nav-link" href="admin-reparaciones.php">Reparaciones</a>
-                    <a class="nav-link" href="admin-presupuestos.php">Presupuestos</a>
-                    <a class="nav-link" href="admin-facturacion.php">Facturación</a>
-                    <a class="nav-link" href="admin-devoluciones.php">Devoluciones</a>
+                    <a class="nav-link" href="admin.php">Estadísticas</a>
+                    <a class="nav-link" href="admin-tablas.php">Tablas SQL</a>
                     <a class="nav-link" href="cerrar-sesion-admin.php">Cerrar sesión</a>
                 </div>
             </div>
@@ -193,5 +185,5 @@ function admin_layout_fin(): void {
 
 function admin_enlace_datos(string $tabla): string {
     $secciones = ['usuarios' => 'admin-cuentas.php', 'cliente' => 'admin-cuentas.php', 'empleado' => 'admin-cuentas.php', 'puesto' => 'admin-cuentas.php', 'carrito' => 'admin-cuentas.php', 'detalle_carrito' => 'admin-cuentas.php', 'gpu' => 'admin-productos.php', 'stock_gpu' => 'admin-productos.php', 'proveedor' => 'admin-proveedores.php', 'presupuesto' => 'admin-presupuestos.php', 'detalle_presupuesto' => 'admin-presupuestos.php', 'gpu_cliente' => 'admin-reparaciones.php', 'orden_reparacion' => 'admin-reparaciones.php', 'diagnostico' => 'admin-reparaciones.php', 'reparacion' => 'admin-reparaciones.php', 'detalle_reparacion' => 'admin-reparaciones.php', 'gpu_ventas' => 'admin-facturacion.php', 'detalle_venta' => 'admin-facturacion.php', 'factura' => 'admin-facturacion.php', 'detalle_factura' => 'admin-facturacion.php', 'envios' => 'admin-facturacion.php', 'orden_compra' => 'admin-compras.php', 'detalle_compra' => 'admin-compras.php', 'componente' => 'admin-componentes.php', 'stock' => 'admin-componentes.php'];
-    return ($secciones[$tabla] ?? 'admin.php') . '?modo=datos&tabla=' . rawurlencode($tabla);
+    return 'admin-tablas.php?modo=datos&tabla=' . rawurlencode($tabla);
 }
