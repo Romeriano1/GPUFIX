@@ -1,11 +1,13 @@
 <?php
 session_start();
 $productosCarrusel = [];
+$marcasInicio = [];
 try {
     require_once __DIR__ . '/conexion.php';
     $resultadoCarrusel = $conexion->query('SELECT id_gpu, marca, modelo, imagen FROM gpu WHERE id_gpu IN (10, 15, 13, 18, 19) ORDER BY FIELD(id_gpu, 10, 15, 13, 18, 19)');
     $productosCarrusel = $resultadoCarrusel->fetch_all(MYSQLI_ASSOC);
     $resultadoCarrusel->free();
+    $marcasInicio = $conexion->query("SELECT DISTINCT TRIM(razon_social) AS nombre FROM proveedor WHERE TRIM(razon_social) <> '' ORDER BY nombre")->fetch_all(MYSQLI_ASSOC);
     $conexion->close();
 } catch (Throwable $errorCarrusel) {
     error_log('Error al consultar carrusel: ' . $errorCarrusel->getMessage());
@@ -73,38 +75,13 @@ try {
             </div>
 
             <div class="marcas-grid">
-                <a href="busqueda.php?buscar=Gigabyte" class="marca-boton">
-                    <span>GIGABYTE</span>
+                <?php foreach ($marcasInicio as $marcaInicio): ?>
+                <a href="busqueda.php?buscar=<?= rawurlencode($marcaInicio['nombre']) ?>" class="marca-boton">
+                    <span><?= htmlspecialchars($marcaInicio['nombre'], ENT_QUOTES, 'UTF-8') ?></span>
                     <span class="marca-flecha" aria-hidden="true">↗</span>
                 </a>
-                <a href="busqueda.php?buscar=Aorus" class="marca-boton">
-                    <span>AORUS</span>
-                    <span class="marca-flecha" aria-hidden="true">↗</span>
-                </a>
-                <a href="busqueda.php?buscar=Sapphire" class="marca-boton">
-                    <span>SAPPHIRE</span>
-                    <span class="marca-flecha" aria-hidden="true">↗</span>
-                </a>
-                <a href="busqueda.php?buscar=ASUS" class="marca-boton">
-                    <span>ASUS</span>
-                    <span class="marca-flecha" aria-hidden="true">↗</span>
-                </a>
-                <a href="busqueda.php?buscar=PowerColor" class="marca-boton">
-                    <span>POWERCOLOR</span>
-                    <span class="marca-flecha" aria-hidden="true">↗</span>
-                </a>
-                <a href="busqueda.php?buscar=INNO3D" class="marca-boton">
-                    <span>INNO3D</span>
-                    <span class="marca-flecha" aria-hidden="true">↗</span>
-                </a>
-                <a href="busqueda.php?buscar=MSI" class="marca-boton">
-                    <span>MSI</span>
-                    <span class="marca-flecha" aria-hidden="true">↗</span>
-                </a>
-                <a href="busqueda.php?buscar=ZOTAC" class="marca-boton">
-                    <span>ZOTAC</span>
-                    <span class="marca-flecha" aria-hidden="true">↗</span>
-                </a>
+                <?php endforeach; ?>
+                <?php if (!$marcasInicio): ?><p>No hay marcas disponibles.</p><?php endif; ?>
             </div>
         </section>
         <section class="reviews-clientes" aria-labelledby="titulo-reviews">

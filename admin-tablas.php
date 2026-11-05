@@ -18,6 +18,7 @@ function admin_menu_tablas(string $actual = ''): void {
         $activa = $tabla === $actual;
         echo '<a class="tablas-enlace' . ($activa ? ' activa' : '') . '" ' . ($activa ? 'aria-current="page"' : '') . ' href="admin-tablas.php?tabla=' . rawurlencode($tabla) . '"><strong>' . admin_e(admin_etiqueta_dato($tabla)) . '</strong><small>' . admin_e($tabla) . '</small></a>';
     }
+    echo '<a class="tablas-enlace" href="admin-comprobantes.php"><strong>Comprobantes</strong><small>Archivos vinculados a ventas</small></a>';
     echo '</nav><p id="tablasSinResultados" hidden>No hay tablas que coincidan.</p></aside><div class="tablas-contenido">';
     echo '<script>document.getElementById("filtrarTablas").addEventListener("input",function(){const normalizar=t=>t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();const filtro=normalizar(this.value);let visibles=0;document.querySelectorAll("#listaTablas a").forEach(a=>{a.hidden=!normalizar(a.textContent).includes(filtro);if(!a.hidden)visibles++;});document.getElementById("tablasSinResultados").hidden=visibles>0;});</script>';
 }
