@@ -24,43 +24,55 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $accion = (string) ($_POST["accion"] ?? "");
     $idGpu = filter_var($_POST["id_gpu"] ?? null, FILTER_VALIDATE_INT);
 
-    if ($accion === "eliminar") {
-        if (!$idGpu || $idGpu < 1) {
-            $_SESSION["mensaje_carrito"] = "No pudimos identificar el producto que querés eliminar.";
-            header("Location: carrito.php");
+    if (in_array($accion, ['quitar', 'eliminar'], true)) {
+        if (empty($_SESSION['usuario_id'])) {
+            header('Location: login.php?requerido=carrito');
             exit;
         }
-
-        if (empty($_SESSION["usuario_id"])) {
-            header("Location: login.php?requerido=carrito");
+        $cantidadQuitar = filter_var($_POST['cantidad_quitar'] ?? null, FILTER_VALIDATE_INT);
+        if (!$idGpu || $idGpu < 1 || ($accion === 'quitar' && (!$cantidadQuitar || $cantidadQuitar < 1))) {
+            $_SESSION['mensaje_carrito'] = 'Seleccioná un producto y una cantidad válida para quitar.';
+            header('Location: carrito.php', true, 303);
             exit;
         }
-
+        $transaccionActiva = false;
         try {
-            require_once __DIR__ . "/conexion.php";
-            $usuarioId = (int) $_SESSION["usuario_id"];
-            $eliminarDetalle = $conexion->prepare(
-                "DELETE d FROM detalle_carrito AS d " .
-                "INNER JOIN carrito AS ca ON ca.id_carrito = d.id_carrito " .
-                "INNER JOIN cliente AS c ON c.id_cliente = ca.id_cliente " .
-                "WHERE c.id_correo = ? AND d.id_gpu = ?"
-            );
-            $eliminarDetalle->bind_param("ii", $usuarioId, $idGpu);
-            $eliminarDetalle->execute();
-            $_SESSION["mensaje_carrito"] = $eliminarDetalle->affected_rows > 0
-                ? "Producto eliminado del carrito."
-                : "Ese producto ya no estaba en tu carrito.";
-            $eliminarDetalle->close();
-            $conexion->close();
-        } catch (Throwable $error) {
-            error_log("Error al eliminar GPU del carrito: " . $error->getMessage());
-            if (isset($conexion)) {
-                try { $conexion->close(); } catch (Throwable $errorCierre) {}
+            require_once __DIR__ . '/conexion.php';
+            $conexion->begin_transaction();
+            $transaccionActiva = true;
+            $usuarioId = (int) $_SESSION['usuario_id'];
+            $buscarCarrito = $conexion->prepare('SELECT ca.id_carrito FROM carrito ca INNER JOIN cliente c ON c.id_cliente=ca.id_cliente WHERE c.id_correo=? FOR UPDATE');
+            $buscarCarrito->bind_param('i', $usuarioId);
+            $buscarCarrito->execute();
+            $carritoPropio = $buscarCarrito->get_result()->fetch_assoc();
+            if (!$carritoPropio) throw new RuntimeException('Tu carrito ya no está disponible.');
+            $idCarrito = (int) $carritoPropio['id_carrito'];
+            $buscarDetalle = $conexion->prepare('SELECT id_detalle_carrito,cantidad FROM detalle_carrito WHERE id_carrito=? AND id_gpu=? FOR UPDATE');
+            $buscarDetalle->bind_param('ii', $idCarrito, $idGpu);
+            $buscarDetalle->execute();
+            $detalle = $buscarDetalle->get_result()->fetch_assoc();
+            if (!$detalle) throw new RuntimeException('Ese producto ya no está en tu carrito.');
+            $cantidadActual = (int) $detalle['cantidad'];
+            if ($accion === 'quitar' && $cantidadQuitar > $cantidadActual) throw new RuntimeException('La cantidad del carrito cambió. Podés quitar hasta ' . $cantidadActual . ' unidades.');
+            $cantidadRestante = $accion === 'eliminar' ? 0 : $cantidadActual - $cantidadQuitar;
+            $idDetalle = (int) $detalle['id_detalle_carrito'];
+            if ($cantidadRestante === 0) {
+                $guardar = $conexion->prepare('DELETE FROM detalle_carrito WHERE id_detalle_carrito=?');
+                $guardar->bind_param('i', $idDetalle);
+            } else {
+                $guardar = $conexion->prepare('UPDATE detalle_carrito SET cantidad=? WHERE id_detalle_carrito=?');
+                $guardar->bind_param('ii', $cantidadRestante, $idDetalle);
             }
-            $_SESSION["mensaje_carrito"] = "No pudimos eliminar el producto. Revisá la conexión con la base de datos e intentá nuevamente.";
+            $guardar->execute();
+            $conexion->commit();
+            $transaccionActiva = false;
+            $_SESSION['mensaje_carrito'] = $cantidadRestante === 0 ? 'Producto quitado del carrito.' : 'Quitaste ' . $cantidadQuitar . ' unidades. Quedan ' . $cantidadRestante . ' en el carrito.';
+        } catch (Throwable $error) {
+            if ($transaccionActiva) $conexion->rollback();
+            error_log('Error al quitar unidades del carrito: ' . $error->getMessage());
+            $_SESSION['mensaje_carrito'] = $error instanceof mysqli_sql_exception ? 'No pudimos actualizar el carrito. Intentá nuevamente.' : $error->getMessage();
         }
-
-        header("Location: carrito.php");
+        header('Location: carrito.php', true, 303);
         exit;
     }
 
@@ -306,7 +318,7 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Carrito - GPU FIX &amp; STORE</title>
-    <link rel="stylesheet" href="style.css?v=20261104-responsive">
+    <link rel="stylesheet" href="style.css?v=20261106-carrito">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
@@ -348,10 +360,15 @@ try {
                                 <p>Cantidad: <?= (int) $item["cantidad"] ?></p>
                                 <p><?= $item["stock"] > 0 ? "Hay stock" : "No hay stock" ?></p>
                                 <form action="carrito.php" method="post" class="carrito-item-accion">
-                                    <input type="hidden" name="accion" value="eliminar">
                                     <input type="hidden" name="id_gpu" value="<?= (int) $item["id"] ?>">
                                     <input type="hidden" name="csrf_carrito" value="<?= $escapar($csrfCarrito) ?>">
-                                    <button type="submit" class="boton-eliminar-carrito" aria-label="Eliminar <?= $escapar($item["modelo"]) ?> del carrito">Eliminar del carrito</button>
+                                    <label class="carrito-quitar-cantidad" for="quitar-<?= (int)$item['id'] ?>">Cantidad a quitar
+                                        <input id="quitar-<?= (int)$item['id'] ?>" type="number" name="cantidad_quitar" value="1" min="1" max="<?= (int)$item['cantidad'] ?>" step="1" required>
+                                    </label>
+                                    <div class="carrito-quitar-botones">
+                                        <button type="submit" name="accion" value="quitar" class="boton-eliminar-carrito">Quitar cantidad</button>
+                                        <button type="submit" name="accion" value="eliminar" class="boton-eliminar-carrito" formnovalidate>Quitar todo</button>
+                                    </div>
                                 </form>
                             </div>
                             <div class="carrito-item-precio">

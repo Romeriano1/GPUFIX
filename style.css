@@ -3009,3 +3009,7 @@ main img, main iframe { max-width: 100%; }
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }
+
+.carrito-quitar-cantidad { display: flex; flex-direction: column; gap: 6px; max-width: 160px; margin-bottom: 10px; }
+.carrito-quitar-cantidad input { width: 100%; padding: 8px 10px; border: 1px solid #8993a1; border-radius: 6px; background: transparent; color: inherit; }
+.carrito-quitar-botones { display: flex; flex-wrap: wrap; gap: 8px; }
