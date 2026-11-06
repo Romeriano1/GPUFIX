@@ -5,7 +5,7 @@ require_once __DIR__ . '/admin-edicion-datos.php';
 $tablas = array_column($conexion->query("SHOW FULL TABLES WHERE Table_type = 'BASE TABLE'")->fetch_all(MYSQLI_NUM), 0);
 sort($tablas);
 $tablas = array_values(array_filter($tablas, static function ($tabla) use ($conexion) {
-    return admin_puede_ver($conexion, admin_permiso_tabla($tabla)) || ($tabla === 'gpu_ventas' && admin_puede_ver($conexion, 'admin-devoluciones.php'));
+    return admin_puede_tabla($conexion, $tabla);
 }));
 function admin_menu_tablas(string $actual = ''): void {
     global $tablas, $conexion;
@@ -29,7 +29,12 @@ $seleccion = is_string($_GET['tabla']) && in_array($_GET['tabla'], $tablas, true
 if ($seleccion === '') { http_response_code(404); exit('Tabla no disponible.'); }
 $funcion = admin_funciones_tablas()[$seleccion] ?? '';
 $esPrincipal = admin_es_cuenta_principal($conexion);
-if (($_GET['vista'] ?? '') === 'acciones' || !$esPrincipal) {
+if (!$esPrincipal && ($_GET['vista'] ?? '') !== 'acciones') {
+    admin_mostrar_tabla_empleado($conexion, $seleccion);
+    exit;
+}
+if (($_GET['vista'] ?? '') === 'acciones') {
+    if (!$esPrincipal && !admin_puede_ver($conexion, admin_permiso_tabla($seleccion))) { http_response_code(403); exit('Esta función necesita acceso a todas sus tablas relacionadas.'); }
     if (($_GET['accion_tabla'] ?? '') === 'devoluciones') {
         if ($seleccion !== 'gpu_ventas' || !admin_puede_ver($conexion, 'admin-devoluciones.php')) { http_response_code(403); exit('Acceso restringido.'); }
         $funcion = 'devoluciones';

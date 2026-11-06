@@ -30,7 +30,8 @@ function admin_requerir_acceso(): void {
         $permiso = admin_permiso_tabla($tabla);
         if ($tabla === 'gpu_ventas' && ($_GET['accion_tabla'] ?? '') === 'devoluciones') $permiso = 'admin-devoluciones.php';
     }
-    if ($pagina !== 'admin.php' && !$inicioTablas && !admin_puede_ver($conexion, $permiso)) {
+    $puedeAbrir = $pagina === 'admin-tablas.php' && isset($tabla) ? admin_puede_tabla($conexion, $tabla) : admin_puede_ver($conexion, $permiso);
+    if ($pagina !== 'admin.php' && !$inicioTablas && !$puedeAbrir) {
         http_response_code(403);
         admin_layout_inicio('Acceso restringido');
         echo '<p>Tu puesto no tiene acceso a esta sección.</p><a href="admin.php">Ir al panel</a>';
