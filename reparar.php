@@ -1,6 +1,5 @@
 <?php
 session_start();
-$sesionReparacion = !empty($_SESSION['usuario_id']);
 if (empty($_SESSION['csrf_consulta_gpu'])) {
     $_SESSION['csrf_consulta_gpu'] = bin2hex(random_bytes(32));
 }
@@ -102,17 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </section>
 
-        <section class="seguimiento" id="seguimiento-reparacion">
-            <div class="acceso-reparaciones">
-                <h3>Seguimiento de tu reparación</h3>
-                <p>Una vez registrada por nuestro equipo, podés ver el estado y las respuestas desde Mi cuenta.</p>
-                <?php if ($sesionReparacion): ?>
-                    <a href="mi-cuenta.php#reparaciones" class="boton-iniciar-sesion">Ver mis reparaciones</a>
-                <?php else: ?>
-                    <a href="login.php?requerido=reparacion" class="boton-iniciar-sesion">Iniciar sesión</a>
-                <?php endif; ?>
-            </div>
-        </section>
+
 
         <section class="reparaciones">
 
