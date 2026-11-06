@@ -85,7 +85,7 @@ function prepararCarpetaComprobantes(): string
     return $directorio;
 }
 
-function enviarCorreoCompra(array $cliente, array $articulos, int $idVenta, string $numeroComprobante, int $totalCentavos, string $metodoPago, string $estadoVenta, string $direccion): bool
+function enviarCorreoCompra(array $cliente, array $articulos, int $idVenta, string $numeroComprobante, int $totalCentavos, int $cargoEnvio, string $metodoPago, string $estadoVenta, string $direccion): bool
 {
     try {
         if (!is_callable('gpufix_enviar_correo') && is_file(__DIR__ . '/correo-config.php')) {
@@ -103,7 +103,9 @@ function enviarCorreoCompra(array $cliente, array $articulos, int $idVenta, stri
             $cuerpo .= '- ' . $articulo['marca'] . ' ' . $articulo['modelo'] . ' — Cantidad: ' . $cantidad
                 . ' — Precio unitario: ' . formatoPago($precio) . ' — Subtotal: ' . formatoPago($precio * $cantidad) . "\n";
         }
-        $cuerpo .= "\nTotal: " . formatoPago($totalCentavos) . "\nEntrega: " . $direccion;
+        $cuerpo .= "\nMonto bruto de los productos: " . formatoPago($totalCentavos - $cargoEnvio)
+            . "\nEnvío: " . formatoPago($cargoEnvio) . ($cargoEnvio === 0 ? " (retiro en tienda)" : " (a domicilio)")
+            . "\nTotal: " . formatoPago($totalCentavos) . "\nEntrega: " . $direccion;
         if ($metodoPago === 'Transferencia') $cuerpo .= "\n\nRecibimos tu comprobante de transferencia. El pago queda pendiente de verificación.";
         $cuerpo .= "\n\nPodés consultar tu compra desde Mi cuenta.\n\nEquipo GPUFIX";
         if (!gpufix_enviar_correo($cliente['correo'], 'Confirmación de compra GPUFIX #' . $idVenta, $cuerpo)) {
@@ -397,7 +399,7 @@ try {
             unset($_SESSION["csrf_pago"], $_SESSION["resumen_pago"]);
             $_SESSION['correo_compra'] = [
                 'id_venta' => $idVenta,
-                'enviado' => enviarCorreoCompra($datosCliente, $itemsPago, $idVenta, $numeroComprobante, $totalCentavos, $metodoPago, $estadoVenta, $direccionEntrega),
+                'enviado' => enviarCorreoCompra($datosCliente, $itemsPago, $idVenta, $numeroComprobante, $totalCentavos, $cargoEnvio, $metodoPago, $estadoVenta, $direccionEntrega),
             ];
             header("Location: pagar.php?compra=" . $idVenta, true, 303);
             exit;

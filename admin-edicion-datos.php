@@ -227,6 +227,7 @@ if ($paginaOrigen === 'admin-tablas.php') admin_menu_tablas($tabla);
 <?php foreach (['agregar'=>'Agregar','editar'=>'Editar','eliminar'=>'Eliminar'] as $accionTabla=>$etiquetaTabla): ?>
 <a class="btn <?= $accionTabla === 'eliminar' ? ($eliminar ? 'btn-danger' : 'btn-outline-danger') : ($operacion === $accionTabla ? 'btn-primary' : 'btn-outline-secondary') ?>" href="<?= admin_e($paginaOrigen) ?>?tabla=<?= rawurlencode($tabla) ?>&amp;modo=datos&amp;<?= $accionTabla === 'agregar' ? 'nuevo=1' : 'operacion=' . $accionTabla ?>"><?= $etiquetaTabla ?></a>
 <?php endforeach; ?></nav>
+<?php if ($tabla === 'presupuesto'): ?><p><a class="btn btn-primary" href="admin-presupuestos.php<?= $idRegistro !== '' ? '#solicitud-p-' . (int)$idRegistro : '' ?>">Responder consulta y enviar por correo</a></p><?php endif; ?>
 <?php if ($tabla === 'gpu_ventas'): ?><p><a class="btn btn-outline-primary" href="admin-comprobantes.php<?= $idRegistro !== '' ? '?venta=' . (int)$idRegistro : '' ?>">Ver o agregar comprobantes de transferencia</a></p><?php endif; ?>
 <?php if ($registro): ?>
 <section class="panel" id="editar-registro"><h2 class="h5"><?= ucfirst($operacion) ?> · <?= admin_e(admin_etiqueta_dato($tabla)) ?><?= $idRegistro !== '' ? ' #' . admin_e($idRegistro) : '' ?></h2>

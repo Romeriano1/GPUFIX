@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/admin-comun.php';
+require_once __DIR__ . '/consultas-panel.php';
 admin_requerir_acceso();
 require_once __DIR__ . '/admin-edicion-datos.php';
 admin_edicion_seccion('Presupuestos', ['presupuesto', 'detalle_presupuesto'], 'admin-presupuestos.php');
@@ -8,7 +9,8 @@ require_once __DIR__ . '/conexion.php';
 $correoDisponible = false;
 if (is_file(__DIR__ . '/correo-config.php')) {
     try {
-        require_once __DIR__ . '/correo-config.php';
+        ob_start();
+        try { require_once __DIR__ . '/correo-config.php'; } finally { ob_end_clean(); }
         $correoDisponible = is_callable('gpufix_enviar_correo');
     } catch (Throwable $errorCorreo) {
         error_log('Error al cargar el correo de presupuestos: ' . $errorCorreo->getMessage());
@@ -18,11 +20,13 @@ admin_validar_csrf();
 
 $mensaje = (string) ($_SESSION['mensaje_presupuesto_admin'] ?? '');
 unset($_SESSION['mensaje_presupuesto_admin']);
-$error = '';
+$error = (string) ($_SESSION['error_presupuesto_admin'] ?? '');
+unset($_SESSION['error_presupuesto_admin']);
 $formularioEditado = '';
 $respuestaIngresada = '';
 $precioIngresado = '';
 $transaccionActiva = false;
+$respuestaGuardada = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $accion = is_string($_POST['accion'] ?? null) ? $_POST['accion'] : '';
@@ -81,10 +85,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $guardar->close();
             $conexion->commit();
             $transaccionActiva = false;
-            $_SESSION['mensaje_presupuesto_admin'] = 'Respuesta guardada. El cliente ya puede verla en Mi cuenta.';
-            header('Location: admin-presupuestos.php#solicitud-p-' . $idPresupuesto, true, 303);
-            exit;
-        } elseif ($accion === 'enviar') {
+            $respuestaGuardada = true;
+        }
+        if (in_array($accion, ['responder_consulta', 'enviar'], true)) {
             if (!$correoDisponible) throw new RuntimeException('El envío por correo no está configurado. La respuesta está disponible en Mi cuenta.');
             if (!$idPresupuesto) throw new RuntimeException('Seleccioná una solicitud respondida.');
             $buscar = $conexion->prepare("SELECT p.id_presupuesto, p.total, p.respuesta, COALESCE(p.consulta, o.motivo, '') AS consulta_cliente, u.nombre, u.apellido, u.correo FROM presupuesto p LEFT JOIN orden_reparacion o ON o.id_orden_reparacion = p.id_orden_reparacion LEFT JOIN gpu_cliente g ON g.id_gpu_cliente = o.id_gpu_cliente INNER JOIN cliente c ON c.id_cliente = COALESCE(p.id_cliente, g.id_cliente) INNER JOIN usuarios u ON u.id_correo = c.id_correo WHERE p.id_presupuesto = ? LIMIT 1");
@@ -102,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!gpufix_enviar_correo($solicitud['correo'], 'Respuesta a tu solicitud GPUFIX #' . $idPresupuesto, $cuerpo)) {
                 throw new RuntimeException('No se pudo enviar el correo. La respuesta sigue guardada y disponible en Mi cuenta.');
             }
-            $_SESSION['mensaje_presupuesto_admin'] = 'Respuesta enviada por correo al cliente.';
+            $_SESSION['mensaje_presupuesto_admin'] = 'Respuesta disponible en Mi cuenta. El servidor de correo aceptó el envío al cliente.';
             header('Location: admin-presupuestos.php#solicitud-p-' . $idPresupuesto, true, 303);
             exit;
         } else {
@@ -114,50 +117,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $transaccionActiva = false;
         }
         error_log('Error en presupuestos de administración: ' . $fallo->getMessage());
+        if ($respuestaGuardada || $accion === 'enviar') {
+            $_SESSION['error_presupuesto_admin'] = 'El correo no se pudo enviar. Revisá la respuesta guardada y usá «Reenviar respuesta por correo».';
+            header('Location: admin-presupuestos.php#solicitud-p-' . $idPresupuesto, true, 303);
+            exit;
+        }
         $error = $fallo instanceof mysqli_sql_exception ? 'No pudimos guardar la respuesta. Intentá nuevamente.' : $fallo->getMessage();
     }
 }
 
-// Una sola lista para todas las solicitudes, incluidas las anteriores.
-$solicitudes = $conexion->query("
-    SELECT p.id_presupuesto, p.id_orden_reparacion, p.fecha_emision,
-           COALESCE(p.consulta, o.motivo, '') AS consulta, p.respuesta, p.fecha_respuesta,
-           p.total, p.estado, u.nombre, u.apellido, u.correo,
-           (p.fecha_respuesta IS NULL) AS sin_respuesta
-    FROM presupuesto p
-    LEFT JOIN orden_reparacion o ON o.id_orden_reparacion = p.id_orden_reparacion
-    LEFT JOIN gpu_cliente g ON g.id_gpu_cliente = o.id_gpu_cliente
-    INNER JOIN cliente c ON c.id_cliente = COALESCE(p.id_cliente, g.id_cliente)
-    INNER JOIN usuarios u ON u.id_correo = c.id_correo
-    WHERE COALESCE(p.estado, '') NOT IN ('Consulta de garantía', 'Reparación en garantía')
-    UNION ALL
-    SELECT NULL, o.id_orden_reparacion, o.fecha_ingreso, o.motivo, NULL, NULL,
-           NULL, o.estado, u.nombre, u.apellido, u.correo, 1
-    FROM orden_reparacion o
-    INNER JOIN gpu_cliente g ON g.id_gpu_cliente = o.id_gpu_cliente
-    INNER JOIN cliente c ON c.id_cliente = g.id_cliente
-    INNER JOIN usuarios u ON u.id_correo = c.id_correo
-    LEFT JOIN presupuesto p ON p.id_orden_reparacion = o.id_orden_reparacion
-    WHERE p.id_presupuesto IS NULL
-    ORDER BY sin_respuesta DESC, fecha_emision DESC, id_presupuesto DESC
-");
-
+$estadoFiltro = $_GET['estado'] ?? 'todas';
+$buscar = is_string($_GET['buscar'] ?? null) ? trim($_GET['buscar']) : '';
+$solicitudes = array_filter(consultas_presupuestos($conexion), static function ($fila) use ($estadoFiltro, $buscar) {
+    if ($estadoFiltro === 'pendientes' && !$fila['sin_respuesta']) return false;
+    if ($estadoFiltro === 'respondidas' && $fila['sin_respuesta']) return false;
+    $texto = implode(' ', [$fila['nombre'], $fila['apellido'], $fila['correo'], $fila['consulta'], $fila['id_presupuesto'] ?? $fila['id_orden_reparacion']]);
+    return $buscar === '' || mb_stripos($texto, $buscar) !== false;
+});
 admin_layout_inicio('Presupuestos');
 ?>
 <h1 class="h3 mt-3">Presupuestos</h1>
 <p class="text-secondary">Respondé la consulta del cliente. Podés informar el total o dejarlo vacío.</p>
 <?php if ($mensaje !== ''): ?><div class="alert alert-success" role="status"><?= admin_e($mensaje) ?></div><?php endif; ?>
 <?php if ($error !== ''): ?><div class="alert alert-danger" role="alert"><?= admin_e($error) ?></div><?php endif; ?>
+<form method="get" class="panel d-flex flex-wrap gap-3 align-items-end">
+    <label>Estado<select class="form-select" name="estado"><?php foreach (['todas'=>'Todas', 'pendientes'=>'Sin responder', 'respondidas'=>'Respondidas'] as $valor=>$texto): ?><option value="<?= $valor ?>" <?= $estadoFiltro === $valor ? 'selected' : '' ?>><?= $texto ?></option><?php endforeach; ?></select></label>
+    <label>Buscar por cliente, correo o consulta<input class="form-control" name="buscar" value="<?= admin_e($buscar) ?>"></label>
+    <button class="btn btn-primary">Filtrar</button><a href="admin-presupuestos.php">Limpiar</a>
+</form>
 <section class="panel" aria-labelledby="tituloSolicitudes">
     <h2 class="h5 mb-3" id="tituloSolicitudes">Solicitudes de clientes</h2>
-    <?php if ($solicitudes->num_rows === 0): ?>
-        <p class="mb-0">Todavía no hay solicitudes de clientes.</p>
-    <?php else: while ($solicitud = $solicitudes->fetch_assoc()):
+    <?php if (!$solicitudes): ?>
+        <p class="mb-0">No hay consultas que coincidan.</p>
+    <?php else: foreach ($solicitudes as $solicitud):
         $idPresupuesto = (int) ($solicitud['id_presupuesto'] ?? 0);
         $idOrden = (int) ($solicitud['id_orden_reparacion'] ?? 0);
         $idFormulario = $idPresupuesto ? 'p-' . $idPresupuesto : 'o-' . $idOrden;
-        $respuesta = $formularioEditado === $idFormulario ? $respuestaIngresada : (string) ($solicitud['respuesta'] ?? '');
-        $precio = $formularioEditado === $idFormulario ? $precioIngresado : (string) ($solicitud['total'] ?? '');
+        $respuesta = $formularioEditado === $idFormulario && $accion === 'responder_consulta' ? $respuestaIngresada : (string) ($solicitud['respuesta'] ?? '');
+        $precio = $formularioEditado === $idFormulario && $accion === 'responder_consulta' ? $precioIngresado : (string) ($solicitud['total'] ?? '');
     ?>
         <details class="presupuesto-admin border rounded mb-3" id="solicitud-<?= admin_e($idFormulario) ?>" <?= $formularioEditado === $idFormulario && $error !== '' ? 'open' : '' ?>>
             <summary>
@@ -187,7 +184,7 @@ admin_layout_inicio('Presupuestos');
                         <input type="text" class="form-control" id="precio-<?= admin_e($idFormulario) ?>" name="precio" inputmode="decimal" maxlength="13" pattern="[0-9]+([.,][0-9]{1,2})?" value="<?= admin_e($precio) ?>">
                         <div class="form-text">Dejalo vacío para responder solo la consulta.</div>
                     </div>
-                    <div class="col-md-auto"><button type="submit" class="btn btn-primary"><?= $solicitud['respuesta'] === null ? 'Responder' : 'Guardar respuesta' ?></button></div>
+                    <div class="col-md-auto"><button type="submit" class="btn btn-primary">Guardar y enviar respuesta</button></div>
                 </div>
                 <?php if ($solicitud['fecha_respuesta'] !== null): ?><p class="small text-secondary mt-3 mb-0">Última respuesta: <?= admin_e($solicitud['fecha_respuesta']) ?></p><?php endif; ?>
             </form>
@@ -196,13 +193,13 @@ admin_layout_inicio('Presupuestos');
                     <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">
                     <input type="hidden" name="accion" value="enviar">
                     <input type="hidden" name="id_presupuesto" value="<?= $idPresupuesto ?>">
-                    <button type="submit" class="btn btn-outline-success btn-sm" <?= $correoDisponible ? '' : 'disabled' ?>>Enviar respuesta por correo</button>
+                    <button type="submit" class="btn btn-outline-success btn-sm" <?= $correoDisponible ? '' : 'disabled' ?>>Reenviar respuesta por correo</button>
                     <?php if (!$correoDisponible): ?><small class="text-secondary ms-2">Correo no configurado. La respuesta está disponible en Mi cuenta.</small><?php endif; ?>
                 </form>
             <?php endif; ?>
             </div>
         </details>
-    <?php endwhile; endif; ?>
+    <?php endforeach; endif; ?>
 </section>
 <script>
 (function () {
@@ -215,6 +212,5 @@ admin_layout_inicio('Presupuestos');
 })();
 </script>
 <?php
-$solicitudes->free();
 $conexion->close();
 admin_layout_fin();
