@@ -1,6 +1,12 @@
 <?php
 require_once __DIR__ . '/admin-comun.php';
 admin_requerir_acceso();
+if (!admin_puede_ver($conexion, 'admin.php')) {
+    admin_layout_inicio('Panel de empleados');
+    echo '<h1 class="h3">Panel de empleados</h1><p>Elegí una sección habilitada en el menú. Si necesitás otro acceso, consultá a GPUFIX.</p>';
+    admin_layout_fin();
+    exit;
+}
 $indicadores = [
  'Usuarios registrados' => 'SELECT COUNT(*) FROM usuarios',
  'Clientes' => 'SELECT COUNT(*) FROM cliente',
@@ -22,15 +28,16 @@ $mensuales = $conexion->query("SELECT DATE_FORMAT(fecha_emision,'%Y-%m') mes, CO
 $estados = [];
 foreach (['gpu_ventas','presupuesto','orden_reparacion','envios'] as $tabla) $estados[$tabla] = $conexion->query("SELECT COALESCE(NULLIF(estado,''),'Sin estado') estado, COUNT(*) cantidad FROM `$tabla` GROUP BY estado ORDER BY cantidad DESC")->fetch_all(MYSQLI_ASSOC);
 require_once __DIR__ . '/consultas-panel.php';
-$pendientes = array_filter(consultas_presupuestos($conexion), static fn ($fila) => $fila['sin_respuesta']);
+$verConsultas = admin_puede_ver($conexion, 'admin-presupuestos.php');
+$pendientes = $verConsultas ? array_filter(consultas_presupuestos($conexion), static fn ($fila) => $fila['sin_respuesta']) : [];
 admin_layout_inicio('Estadísticas');
 ?>
 <h1>Estadísticas de GPUFIX</h1>
 <p>Datos actuales de la base. Se actualizan al recargar la página.</p>
-<section class="panel"><h2 class="h5">Consultas sin responder (<?= count($pendientes) ?>)</h2>
+<?php if ($verConsultas): ?><section class="panel"><h2 class="h5">Consultas sin responder (<?= count($pendientes) ?>)</h2>
 <?php foreach ($pendientes as $fila): ?><div class="d-flex flex-wrap align-items-center gap-2 mb-2"><span>Presupuesto · <?= admin_e($fila['nombre'].' '.$fila['apellido']) ?> · <?= admin_e($fila['fecha_emision']) ?></span><a class="btn btn-sm btn-primary" href="<?= admin_e(enlace_presupuesto($fila)) ?>">Abrir consulta</a></div><?php endforeach; ?>
 <?php if (!$pendientes): ?><p>No hay consultas pendientes.</p><?php endif; ?>
-<a href="admin-presupuestos.php">Ver todos los presupuestos</a></section>
+<a href="admin-tablas.php?tabla=presupuesto&vista=acciones">Ver todos los presupuestos</a></section><?php endif; ?>
 <div class="row g-3 admin-indicadores">
 <?php foreach ($valores as $titulo => $valor): ?>
 <div class="col-6 col-lg-3"><section class="panel h-100 m-0"><h2 class="h6"><?= admin_e($titulo) ?></h2><strong class="h2"><?= number_format((float)$valor,0,',','.') ?></strong></section></div>

@@ -2,6 +2,8 @@
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
+require_once __DIR__ . '/admin-permisos.php';
+require_once __DIR__ . '/admin-tablas-funciones.php';
 function admin_requerir_acceso(): void {
     if (empty($_SESSION['empleado_id'])) {
         header('Location: login-empleado.php');
@@ -18,6 +20,21 @@ function admin_requerir_acceso(): void {
     if (!$existe) {
         unset($_SESSION['empleado_id'], $_SESSION['empleado_nombre'], $_SESSION['empleado_apellido'], $_SESSION['gpufix_admin'], $_SESSION['admin_correo'], $_SESSION['admin_csrf']);
         header('Location: login-empleado.php');
+        exit;
+    }
+    $pagina = basename($_SERVER['SCRIPT_NAME'] ?? '');
+    $permiso = $pagina;
+    $inicioTablas = $pagina === 'admin-tablas.php' && !isset($_GET['tabla']);
+    if ($pagina === 'admin-tablas.php') {
+        $tabla = is_string($_GET['tabla'] ?? null) ? $_GET['tabla'] : '';
+        $permiso = admin_permiso_tabla($tabla);
+        if ($tabla === 'gpu_ventas' && ($_GET['accion_tabla'] ?? '') === 'devoluciones') $permiso = 'admin-devoluciones.php';
+    }
+    if ($pagina !== 'admin.php' && !$inicioTablas && !admin_puede_ver($conexion, $permiso)) {
+        http_response_code(403);
+        admin_layout_inicio('Acceso restringido');
+        echo '<p>Tu puesto no tiene acceso a esta sección.</p><a href="admin.php">Ir al panel</a>';
+        admin_layout_fin();
         exit;
     }
 }
@@ -164,9 +181,7 @@ function admin_layout_inicio(string $titulo): void {
             <div class="collapse navbar-collapse" id="adminNav">
                 <div class="navbar-nav ms-auto">
                     '.(!empty($_SESSION['empleado_nombre']) ? '<span class="navbar-text text-white fw-semibold me-lg-3">Hola, '.admin_e($_SESSION['empleado_nombre']).'</span>' : '').'
-                    <a class="nav-link" href="admin.php">Estadísticas</a>
-                    <a class="nav-link" href="admin-tablas.php">Tablas SQL</a>
-                    <a class="nav-link" href="admin-comprobantes.php">Comprobantes</a>
+                    '.admin_menu_permitido($conexion).'
                     <a class="nav-link" href="cerrar-sesion-admin.php">Cerrar sesión</a>
                 </div>
             </div>
@@ -174,6 +189,10 @@ function admin_layout_inicio(string $titulo): void {
     </nav>
 
     <main class="container py-3">';
+    if (isset($GLOBALS['tabla_funciones_actual'])) {
+        admin_menu_tablas($GLOBALS['tabla_funciones_actual']);
+        admin_tabs_tabla($GLOBALS['tabla_funciones_actual']);
+    }
     $seccionesEditables = [
         'admin-cuentas.php' => 'Cuentas',
         'admin-productos.php' => 'Productos y stock',
@@ -192,6 +211,7 @@ function admin_layout_inicio(string $titulo): void {
 }
 
 function admin_layout_fin(): void {
+    if (isset($GLOBALS['tabla_funciones_actual'])) echo '</div></div>';
     echo '</main><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script></body></html>';
 }
 

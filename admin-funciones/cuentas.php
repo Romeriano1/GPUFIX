@@ -1,8 +1,8 @@
 <?php
-require_once __DIR__ . '/admin-comun.php';
+if (!defined('GPUFIX_TABLA_ACCIONES')) { http_response_code(404); exit; }
+require_once dirname(__DIR__) . '/admin-comun.php';
 admin_requerir_acceso();
-require_once __DIR__ . '/admin-edicion-datos.php';
-admin_edicion_seccion('Cuentas', ['usuarios', 'cliente', 'empleado', 'puesto', 'carrito', 'detalle_carrito'], 'admin-cuentas.php');
+require_once dirname(__DIR__) . '/admin-edicion-datos.php';
 $esAdministradorPrincipal = admin_es_cuenta_principal($conexion);
 
 function buscarCuentaAdmin(mysqli $conexion, int $id, bool $bloquear = false): ?array
@@ -41,7 +41,7 @@ $busquedaCuentas = mb_substr($busquedaCuentas, 0, 150, 'UTF-8');
 $tipoFiltro = is_string($_GET['tipo'] ?? null) && in_array($_GET['tipo'], ['cliente', 'empleado'], true) ? $_GET['tipo'] : '';
 $ordenCuentas = ($_GET['orden'] ?? '') === 'desc' ? 'desc' : 'asc';
 $parametrosFiltro = ['buscar' => $busquedaCuentas, 'tipo' => $tipoFiltro, 'orden' => $ordenCuentas];
-$urlListado = 'admin-cuentas.php?' . http_build_query($parametrosFiltro);
+$urlListado = 'admin-tablas.php?tabla=usuarios&vista=acciones&' . http_build_query($parametrosFiltro);
 $puestosDisponibles = $conexion->query('SELECT id_puesto, nombre FROM puesto ORDER BY nombre')->fetch_all(MYSQLI_ASSOC);
 $idCuenta = filter_input(INPUT_GET, 'editar', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -97,6 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $idPuesto = filter_input(INPUT_POST, 'id_puesto', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
         $cuentaEditada['tipo_cuenta'] = $tipoCuenta;
         $cuentaEditada['id_puesto'] = $idPuesto;
+        if (!$esAdministradorPrincipal && $tipoCuenta === 'empleado' && (!$cuentaEditada['id_empleado'] || $idPuesto !== $idPuestoActual)) throw new RuntimeException('Solo GPUFIX puede asignar o cambiar puestos.');
         if (!in_array($tipoCuenta, ['cliente', 'empleado'], true)) throw new RuntimeException('Seleccioná si la cuenta es de cliente o empleado.');
         if (!$esAdministradorPrincipal && $cuentaEditada['id_empleado'] && $tipoCuenta !== 'empleado') {
             $cuentaEditada['tipo_cuenta'] = 'empleado';
@@ -268,21 +269,21 @@ admin_layout_inicio('Cuentas');
 <?php endif; ?>
 <section class="panel" id="lista-cuentas" aria-labelledby="tituloCuentas">
     <h2 class="h5 mb-3" id="tituloCuentas">Cuentas registradas</h2>
-    <form method="get" action="admin-cuentas.php#lista-cuentas" class="row g-3 align-items-end mb-3" role="search">
+    <form method="get" action="admin-tablas.php?tabla=usuarios&vista=acciones#lista-cuentas" class="row g-3 align-items-end mb-3" role="search"><input type="hidden" name="tabla" value="usuarios"><input type="hidden" name="vista" value="acciones">
         <div class="col-md-7"><label class="form-label" for="buscarCuentas">Buscar por nombre, apellido, correo o DNI</label><input class="form-control" id="buscarCuentas" name="buscar" type="search" maxlength="150" value="<?= admin_e($busquedaCuentas) ?>"></div>
         <input type="hidden" name="tipo" value="<?= admin_e($tipoFiltro) ?>">
         <input type="hidden" name="orden" value="<?= admin_e($ordenCuentas) ?>">
-        <div class="col-md-auto d-flex gap-2"><button class="btn btn-primary" type="submit">Buscar</button><a class="btn btn-outline-secondary" href="admin-cuentas.php#lista-cuentas">Limpiar filtros</a></div>
+        <div class="col-md-auto d-flex gap-2"><button class="btn btn-primary" type="submit">Buscar</button><a class="btn btn-outline-secondary" href="admin-tablas.php?tabla=usuarios&vista=acciones#lista-cuentas">Limpiar filtros</a></div>
     </form>
     <div class="d-flex flex-wrap justify-content-between gap-3 mb-3">
         <div class="d-flex flex-wrap gap-2" role="group" aria-label="Filtrar tipo de cuenta">
             <?php foreach (['' => 'Todos', 'cliente' => 'Clientes', 'empleado' => 'Empleados'] as $tipo => $etiqueta): ?>
-                <a class="btn btn-sm <?= $tipoFiltro === $tipo ? 'btn-primary' : 'btn-outline-primary' ?>" href="admin-cuentas.php?<?= admin_e(http_build_query(array_replace($parametrosFiltro, ['tipo' => $tipo]))) ?>#lista-cuentas" <?= $tipoFiltro === $tipo ? 'aria-current="true"' : '' ?>><?= $etiqueta ?></a>
+                <a class="btn btn-sm <?= $tipoFiltro === $tipo ? 'btn-primary' : 'btn-outline-primary' ?>" href="admin-tablas.php?tabla=usuarios&vista=acciones&<?= admin_e(http_build_query(array_replace($parametrosFiltro, ['tipo' => $tipo]))) ?>#lista-cuentas" <?= $tipoFiltro === $tipo ? 'aria-current="true"' : '' ?>><?= $etiqueta ?></a>
             <?php endforeach; ?>
         </div>
         <div class="d-flex flex-wrap gap-2" role="group" aria-label="Ordenar por nombre">
             <?php foreach (['asc' => 'Nombre A–Z', 'desc' => 'Nombre Z–A'] as $orden => $etiqueta): ?>
-                <a class="btn btn-sm <?= $ordenCuentas === $orden ? 'btn-secondary' : 'btn-outline-secondary' ?>" href="admin-cuentas.php?<?= admin_e(http_build_query(array_replace($parametrosFiltro, ['orden' => $orden]))) ?>#lista-cuentas" <?= $ordenCuentas === $orden ? 'aria-current="true"' : '' ?>><?= $etiqueta ?></a>
+                <a class="btn btn-sm <?= $ordenCuentas === $orden ? 'btn-secondary' : 'btn-outline-secondary' ?>" href="admin-tablas.php?tabla=usuarios&vista=acciones&<?= admin_e(http_build_query(array_replace($parametrosFiltro, ['orden' => $orden]))) ?>#lista-cuentas" <?= $ordenCuentas === $orden ? 'aria-current="true"' : '' ?>><?= $etiqueta ?></a>
             <?php endforeach; ?>
         </div>
     </div>

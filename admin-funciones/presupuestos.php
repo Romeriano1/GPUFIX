@@ -1,16 +1,16 @@
 <?php
-require_once __DIR__ . '/admin-comun.php';
-require_once __DIR__ . '/consultas-panel.php';
+if (!defined('GPUFIX_TABLA_ACCIONES')) { http_response_code(404); exit; }
+require_once dirname(__DIR__) . '/admin-comun.php';
+require_once dirname(__DIR__) . '/consultas-panel.php';
 admin_requerir_acceso();
-require_once __DIR__ . '/admin-edicion-datos.php';
-admin_edicion_seccion('Presupuestos', ['presupuesto', 'detalle_presupuesto'], 'admin-presupuestos.php');
-require_once __DIR__ . '/conexion.php';
+require_once dirname(__DIR__) . '/admin-edicion-datos.php';
+require_once dirname(__DIR__) . '/conexion.php';
 
 $correoDisponible = false;
-if (is_file(__DIR__ . '/correo-config.php')) {
+if (is_file(dirname(__DIR__) . '/correo-config.php')) {
     try {
         ob_start();
-        try { require_once __DIR__ . '/correo-config.php'; } finally { ob_end_clean(); }
+        try { require_once dirname(__DIR__) . '/correo-config.php'; } finally { ob_end_clean(); }
         $correoDisponible = is_callable('gpufix_enviar_correo');
     } catch (Throwable $errorCorreo) {
         error_log('Error al cargar el correo de presupuestos: ' . $errorCorreo->getMessage());
@@ -106,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new RuntimeException('No se pudo enviar el correo. La respuesta sigue guardada y disponible en Mi cuenta.');
             }
             $_SESSION['mensaje_presupuesto_admin'] = 'Respuesta disponible en Mi cuenta. El servidor de correo aceptó el envío al cliente.';
-            header('Location: admin-presupuestos.php#solicitud-p-' . $idPresupuesto, true, 303);
+            header('Location: admin-tablas.php?tabla=presupuesto&vista=acciones#solicitud-p-' . $idPresupuesto, true, 303);
             exit;
         } else {
             throw new RuntimeException('No se reconoció la acción solicitada.');
@@ -119,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         error_log('Error en presupuestos de administración: ' . $fallo->getMessage());
         if ($respuestaGuardada || $accion === 'enviar') {
             $_SESSION['error_presupuesto_admin'] = 'El correo no se pudo enviar. Revisá la respuesta guardada y usá «Reenviar respuesta por correo».';
-            header('Location: admin-presupuestos.php#solicitud-p-' . $idPresupuesto, true, 303);
+            header('Location: admin-tablas.php?tabla=presupuesto&vista=acciones#solicitud-p-' . $idPresupuesto, true, 303);
             exit;
         }
         $error = $fallo instanceof mysqli_sql_exception ? 'No pudimos guardar la respuesta. Intentá nuevamente.' : $fallo->getMessage();
@@ -140,10 +140,10 @@ admin_layout_inicio('Presupuestos');
 <p class="text-secondary">Respondé la consulta del cliente. Podés informar el total o dejarlo vacío.</p>
 <?php if ($mensaje !== ''): ?><div class="alert alert-success" role="status"><?= admin_e($mensaje) ?></div><?php endif; ?>
 <?php if ($error !== ''): ?><div class="alert alert-danger" role="alert"><?= admin_e($error) ?></div><?php endif; ?>
-<form method="get" class="panel d-flex flex-wrap gap-3 align-items-end">
+<form method="get" class="panel d-flex flex-wrap gap-3 align-items-end"><input type="hidden" name="tabla" value="presupuesto"><input type="hidden" name="vista" value="acciones">
     <label>Estado<select class="form-select" name="estado"><?php foreach (['todas'=>'Todas', 'pendientes'=>'Sin responder', 'respondidas'=>'Respondidas'] as $valor=>$texto): ?><option value="<?= $valor ?>" <?= $estadoFiltro === $valor ? 'selected' : '' ?>><?= $texto ?></option><?php endforeach; ?></select></label>
     <label>Buscar por cliente, correo o consulta<input class="form-control" name="buscar" value="<?= admin_e($buscar) ?>"></label>
-    <button class="btn btn-primary">Filtrar</button><a href="admin-presupuestos.php">Limpiar</a>
+    <button class="btn btn-primary">Filtrar</button><a href="admin-tablas.php?tabla=presupuesto&vista=acciones">Limpiar</a>
 </form>
 <section class="panel" aria-labelledby="tituloSolicitudes">
     <h2 class="h5 mb-3" id="tituloSolicitudes">Solicitudes de clientes</h2>
@@ -169,7 +169,7 @@ admin_layout_inicio('Presupuestos');
                 <strong>Motivo o consulta</strong>
                 <p class="mb-0 mt-2"><?= nl2br(admin_e($solicitud['consulta'])) ?></p>
             </div>
-            <form method="post" action="admin-presupuestos.php#solicitud-<?= admin_e($idFormulario) ?>">
+            <form method="post" action="admin-tablas.php?tabla=presupuesto&vista=acciones#solicitud-<?= admin_e($idFormulario) ?>">
                 <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">
                 <input type="hidden" name="accion" value="responder_consulta">
                 <input type="hidden" name="id_presupuesto" value="<?= $idPresupuesto ?>">

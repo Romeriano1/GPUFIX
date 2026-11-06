@@ -1,9 +1,9 @@
 <?php
-require_once __DIR__ . '/admin-comun.php';
+if (!defined('GPUFIX_TABLA_ACCIONES')) { http_response_code(404); exit; }
+require_once dirname(__DIR__) . '/admin-comun.php';
 admin_requerir_acceso();
-require_once __DIR__ . '/admin-edicion-datos.php';
-admin_edicion_seccion('Productos y stock', ['gpu', 'stock_gpu'], 'admin-productos.php');
-require_once __DIR__ . '/conexion.php';
+require_once dirname(__DIR__) . '/admin-edicion-datos.php';
+require_once dirname(__DIR__) . '/conexion.php';
 
 function opcionesMarcaProducto(mysqli $conexion): array
 {
@@ -156,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $conexion->commit();
             $transaccionActiva = false;
             $_SESSION['mensaje_producto_admin'] = 'Producto eliminado junto con su stock y las entradas en carritos.';
-            header('Location: admin-productos.php#catalogo-productos', true, 303);
+            header('Location: admin-tablas.php?tabla=gpu&vista=acciones#catalogo-productos', true, 303);
             exit;
         }
         if (!in_array($accion, ['agregar', 'editar'], true) || ($modoEdicion && !$idProducto)) {
@@ -212,7 +212,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $conexion->commit();
         $transaccionActiva = false;
         $_SESSION['mensaje_producto_admin'] = $modoEdicion ? 'Ficha del producto actualizada.' : 'Producto agregado al catálogo.';
-        header('Location: admin-productos.php?editar=' . $idProducto . '#ficha-producto', true, 303);
+        header('Location: admin-tablas.php?tabla=gpu&vista=acciones&editar=' . $idProducto . '#ficha-producto', true, 303);
         exit;
     } catch (Throwable $fallo) {
         if ($transaccionActiva) $conexion->rollback();
@@ -245,7 +245,7 @@ admin_layout_inicio('Productos y stock');
 ?>
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3">
     <h1 class="h3 mb-0">Productos y stock</h1>
-    <a class="btn btn-primary" href="admin-productos.php#ficha-producto">Agregar producto</a>
+    <a class="btn btn-primary" href="admin-tablas.php?tabla=gpu&vista=acciones#ficha-producto">Agregar producto</a>
 </div>
 <p class="text-secondary mt-2">Cargá o editá la ficha completa. Las especificaciones usan el mismo formato del catálogo.</p>
 <?php if ($mensaje !== ''): ?><div class="alert alert-success" role="status"><?= admin_e($mensaje) ?></div><?php endif; ?>
@@ -254,7 +254,7 @@ admin_layout_inicio('Productos y stock');
 <?php if ($mostrarFormulario): ?>
 <section class="panel" id="ficha-producto" aria-labelledby="tituloFicha">
     <h2 class="h5 mb-3" id="tituloFicha"><?= $modoEdicion ? 'Editar ficha del producto #' . $idProducto : 'Agregar producto' ?></h2>
-    <form method="post" action="admin-productos.php<?= $modoEdicion ? '?editar=' . $idProducto : '' ?>#ficha-producto" class="row g-3">
+    <form method="post" action="admin-tablas.php?tabla=gpu&vista=acciones<?= $modoEdicion ? '&editar=' . $idProducto : '' ?>#ficha-producto" class="row g-3">
         <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">
         <input type="hidden" name="accion" value="<?= $modoEdicion ? 'editar' : 'agregar' ?>">
         <input type="hidden" name="id_gpu" value="<?= $idProducto ?>">
@@ -287,7 +287,7 @@ admin_layout_inicio('Productos y stock');
         </fieldset>
         <div class="col-12 d-flex flex-wrap gap-2">
             <button type="submit" class="btn btn-primary"><?= $modoEdicion ? 'Guardar ficha' : 'Agregar producto' ?></button>
-            <?php if ($modoEdicion): ?><a class="btn btn-outline-secondary" href="producto-gpu.php?id=<?= $idProducto ?>" target="_blank" rel="noopener">Abrir ficha</a><a class="btn btn-outline-secondary" href="admin-productos.php#catalogo-productos">Cancelar edición</a><?php endif; ?>
+            <?php if ($modoEdicion): ?><a class="btn btn-outline-secondary" href="producto-gpu.php?id=<?= $idProducto ?>" target="_blank" rel="noopener">Abrir ficha</a><a class="btn btn-outline-secondary" href="admin-tablas.php?tabla=gpu&vista=acciones#catalogo-productos">Cancelar edición</a><?php endif; ?>
         </div>
     </form>
 </section>
@@ -305,8 +305,8 @@ admin_layout_inicio('Productos y stock');
                 <td><?= $productoCatalogo['precio_especial'] === null ? 'Sin precio' : '$ ' . number_format((float) $productoCatalogo['precio_especial'], 2, ',', '.') ?></td>
                 <td><?= (int) $productoCatalogo['cantidad'] ?></td>
                 <td><div class="d-flex flex-wrap gap-2">
-                    <a class="btn btn-sm btn-outline-primary" href="admin-productos.php?editar=<?= (int) $productoCatalogo['id_gpu'] ?>#ficha-producto">Editar ficha</a>
-                    <form method="post" action="admin-productos.php#catalogo-productos">
+                    <a class="btn btn-sm btn-outline-primary" href="admin-tablas.php?tabla=gpu&vista=acciones&editar=<?= (int) $productoCatalogo['id_gpu'] ?>#ficha-producto">Editar ficha</a>
+                    <form method="post" action="admin-tablas.php?tabla=gpu&vista=acciones#catalogo-productos">
                         <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">
                         <input type="hidden" name="accion" value="eliminar">
                         <input type="hidden" name="id_gpu" value="<?= (int) $productoCatalogo['id_gpu'] ?>">

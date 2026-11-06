@@ -1,8 +1,8 @@
 <?php
-require_once __DIR__ . '/admin-comun.php';
+if (!defined('GPUFIX_TABLA_ACCIONES')) { http_response_code(404); exit; }
+require_once dirname(__DIR__) . '/admin-comun.php';
 admin_requerir_acceso();
-require_once __DIR__ . '/admin-edicion-datos.php';
-admin_edicion_seccion('Reparaciones', ['gpu_cliente', 'orden_reparacion', 'diagnostico', 'reparacion', 'detalle_reparacion'], 'admin-reparaciones.php');
+require_once dirname(__DIR__) . '/admin-edicion-datos.php';
 admin_validar_csrf();
 
 $estadosReparacion = ['Pendiente de presupuesto', 'Pendiente', 'En diagnóstico', 'Presupuestada', 'En reparación', 'Finalizada', 'Entregada', 'Cancelada'];
@@ -18,7 +18,7 @@ function leerEstadosPersonalizados($archivo): array {
 }
 function guardarEstadoPersonalizado(string $estado, array $existentes): void {
     if ($estado === '' || mb_strlen($estado, 'UTF-8') > 50 || !preg_match('/^[A-Za-zÀ-ÖØ-öø-ÿ0-9][A-Za-zÀ-ÖØ-öø-ÿ0-9 .()\/_-]*$/uD', $estado)) throw new RuntimeException('Ingresá un estado de 1 a 50 caracteres, con letras, números, espacios o signos . / ( ) _ -.');
-    $archivo = @fopen(__DIR__ . '/estados-reparacion.json', 'c+');
+    $archivo = @fopen(dirname(__DIR__) . '/estados-reparacion.json', 'c+');
     if (!$archivo) throw new RuntimeException('No pudimos guardar el estado. Revisá el permiso de escritura de estados-reparacion.json.');
     try {
         if (!flock($archivo, LOCK_EX)) throw new RuntimeException('No se pudo bloquear la configuración de estados.');
@@ -32,7 +32,7 @@ function guardarEstadoPersonalizado(string $estado, array $existentes): void {
 }
 $errorConfiguracionEstados = '';
 try {
-    $archivoEstados = fopen(__DIR__ . '/estados-reparacion.json', 'r');
+    $archivoEstados = fopen(dirname(__DIR__) . '/estados-reparacion.json', 'r');
     if (!$archivoEstados || !flock($archivoEstados, LOCK_SH)) throw new RuntimeException('No pudimos leer la configuración de estados.');
     try { $estadosPersonalizados = leerEstadosPersonalizados($archivoEstados); }
     finally { flock($archivoEstados, LOCK_UN); fclose($archivoEstados); }
@@ -98,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $estadoNuevo = is_string($_POST['estado_nuevo'] ?? null) ? trim(preg_replace('/ +/', ' ', $_POST['estado_nuevo'])) : '';
             guardarEstadoPersonalizado($estadoNuevo, $estadosReparacion);
             $_SESSION['mensaje_reparaciones_admin'] = 'Estado agregado. Ya está disponible para todos los empleados.';
-            header('Location: admin-reparaciones.php#nueva-reparacion', true, 303);
+            header('Location: admin-tablas.php?tabla=orden_reparacion&vista=acciones#nueva-reparacion', true, 303);
             exit;
         }
         if (!in_array($accion, ['crear', 'responder', 'guardar_orden', 'cancelar'], true)) throw new RuntimeException('No se reconoció la acción.');
@@ -162,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $vincular->execute();
             $vincular->close();
             $mensaje = 'Reparación #' . $idOrden . ' creada y asignada al cliente.';
-            $destino = 'admin-reparaciones.php#orden-' . $idOrden;
+            $destino = 'admin-tablas.php?tabla=orden_reparacion&vista=acciones#orden-' . $idOrden;
         } elseif ($accion === 'responder') {
             $idConsulta = filter_input(INPUT_POST, 'id_consulta', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
             $respuesta = is_string($_POST['respuesta'] ?? null) ? trim($_POST['respuesta']) : '';
@@ -178,7 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $guardarRespuesta->execute();
             $guardarRespuesta->close();
             $mensaje = 'Respuesta guardada. El cliente puede verla en Mi cuenta.';
-            $destino = 'admin-reparaciones.php#consulta-' . $idConsulta;
+            $destino = 'admin-tablas.php?tabla=orden_reparacion&vista=acciones#consulta-' . $idConsulta;
         } else {
             $idOrden = filter_input(INPUT_POST, 'id_orden_reparacion', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
             $estado = $accion === 'cancelar' ? 'Cancelada' : (is_string($_POST['estado'] ?? null) ? $_POST['estado'] : '');
@@ -208,7 +208,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $guardarRespuesta->close();
             }
             $mensaje = $accion === 'cancelar' ? 'Reparación cancelada. El cliente verá Finalizado y la aclaración Reparación cancelada.' : 'Estado y respuesta actualizados.';
-            $destino = 'admin-reparaciones.php#orden-' . $idOrden;
+            $destino = 'admin-tablas.php?tabla=orden_reparacion&vista=acciones#orden-' . $idOrden;
         }
         $conexion->commit();
         $transaccionActiva = false;
@@ -257,13 +257,13 @@ admin_layout_inicio('Reparaciones');
         <h3 class="h6">Consulta #<?= (int) $consulta['id_presupuesto'] ?> · <?= admin_e($consulta['nombre'] . ' ' . $consulta['apellido']) ?></h3>
         <p class="small text-secondary"><?= admin_e($consulta['correo']) ?> · <?= admin_e($consulta['fecha_emision']) ?> · Garantía: sí</p>
         <p><?= nl2br(admin_e($consulta['consulta'])) ?></p>
-        <form method="post" action="admin-reparaciones.php#consulta-<?= (int) $consulta['id_presupuesto'] ?>" class="d-grid gap-2">
+        <form method="post" action="admin-tablas.php?tabla=orden_reparacion&vista=acciones#consulta-<?= (int) $consulta['id_presupuesto'] ?>" class="d-grid gap-2">
             <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">
             <input type="hidden" name="accion" value="responder">
             <input type="hidden" name="id_consulta" value="<?= (int) $consulta['id_presupuesto'] ?>">
             <label class="form-label mb-0" for="respuestaConsulta-<?= (int) $consulta['id_presupuesto'] ?>">Respuesta al cliente</label>
             <textarea class="form-control" id="respuestaConsulta-<?= (int) $consulta['id_presupuesto'] ?>" name="respuesta" rows="3" maxlength="5000" required><?= admin_e($consulta['respuesta']) ?></textarea>
-            <div class="d-flex flex-wrap gap-2"><button class="btn btn-primary" type="submit">Guardar respuesta</button><a class="btn btn-outline-primary" href="admin-reparaciones.php?consulta=<?= (int) $consulta['id_presupuesto'] ?>#nueva-reparacion">Crear reparación para esta consulta</a></div>
+            <div class="d-flex flex-wrap gap-2"><button class="btn btn-primary" type="submit">Guardar respuesta</button><a class="btn btn-outline-primary" href="admin-tablas.php?tabla=orden_reparacion&vista=acciones&consulta=<?= (int) $consulta['id_presupuesto'] ?>#nueva-reparacion">Crear reparación para esta consulta</a></div>
         </form>
     </article>
     <?php endwhile; ?>
@@ -271,7 +271,7 @@ admin_layout_inicio('Reparaciones');
 
 <section class="panel" id="nueva-reparacion" aria-labelledby="tituloNuevaReparacion">
     <h2 class="h5 mb-3" id="tituloNuevaReparacion">Crear reparación<?= $idConsultaOrigen ? ' desde consulta #' . $idConsultaOrigen : '' ?></h2>
-    <form method="post" action="admin-reparaciones.php#nueva-reparacion" class="row g-3" id="formularioNuevaReparacion">
+    <form method="post" action="admin-tablas.php?tabla=orden_reparacion&vista=acciones#nueva-reparacion" class="row g-3" id="formularioNuevaReparacion">
         <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">
         <input type="hidden" name="accion" value="crear">
         <input type="hidden" name="id_consulta" value="<?= $idConsultaOrigen ?>">
@@ -307,7 +307,7 @@ admin_layout_inicio('Reparaciones');
         <p class="small text-secondary">Ingreso: <?= admin_e($orden['fecha_ingreso']) ?></p>
         <p><strong><?= admin_e($orden['marca'] . ' ' . $orden['modelo']) ?></strong> · Serie: <?= admin_e($orden['numero_serie']) ?></p>
         <p><?= nl2br(admin_e($orden['motivo'])) ?></p>
-        <form method="post" action="admin-reparaciones.php#orden-<?= (int) $orden['id_orden_reparacion'] ?>" class="row g-3">
+        <form method="post" action="admin-tablas.php?tabla=orden_reparacion&vista=acciones#orden-<?= (int) $orden['id_orden_reparacion'] ?>" class="row g-3">
             <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">
             <input type="hidden" name="id_orden_reparacion" value="<?= (int) $orden['id_orden_reparacion'] ?>">
             <div class="col-md-5"><label class="form-label" for="estadoOrden-<?= (int) $orden['id_orden_reparacion'] ?>">Estado</label><div class="d-flex gap-2 align-items-center"><select class="form-select" id="estadoOrden-<?= (int) $orden['id_orden_reparacion'] ?>" name="estado" required><?php foreach ($estadosReparacion as $estado): ?><option value="<?= admin_e($estado) ?>" <?= $orden['estado'] === $estado ? 'selected' : '' ?>><?= admin_e($estado) ?></option><?php endforeach; ?></select><?php if ($puedeAgregarEstado): ?><button class="btn btn-outline-primary flex-shrink-0" style="width:40px;height:40px" type="button" data-bs-toggle="modal" data-bs-target="#agregarEstadoModal" aria-label="Agregar nuevo estado" title="Agregar nuevo estado">+</button><?php endif; ?></div></div>
@@ -321,7 +321,7 @@ admin_layout_inicio('Reparaciones');
 <?php if ($puedeAgregarEstado): ?>
 <div class="modal fade" id="agregarEstadoModal" tabindex="-1" aria-labelledby="tituloAgregarEstado" aria-hidden="true">
     <div class="modal-dialog"><div class="modal-content">
-        <form method="post" action="admin-reparaciones.php">
+        <form method="post" action="admin-tablas.php?tabla=orden_reparacion&vista=acciones">
             <div class="modal-header"><h2 class="modal-title fs-5" id="tituloAgregarEstado">Agregar nuevo estado</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
             <div class="modal-body">
                 <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>"><input type="hidden" name="accion" value="agregar_estado">

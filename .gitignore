@@ -3,3 +3,6 @@ comprobantes/*
 !comprobantes/.htaccess
 reca/comprobantes/*
 !reca/comprobantes/.htaccess
+
+permisos-puestos.php.lock
+.permisos-*

@@ -1,7 +1,8 @@
 <?php
-require_once __DIR__.'/admin-comun.php';
+if (!defined('GPUFIX_TABLA_ACCIONES')) { http_response_code(404); exit; }
+require_once dirname(__DIR__).'/admin-comun.php';
 admin_requerir_acceso();
-require_once __DIR__.'/conexion.php';
+require_once dirname(__DIR__).'/conexion.php';
 $mensaje='';$tipo='success';
 if($_SERVER['REQUEST_METHOD']==='POST'){
     admin_validar_csrf();

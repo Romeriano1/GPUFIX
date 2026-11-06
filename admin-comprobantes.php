@@ -96,7 +96,7 @@ admin_layout_inicio('Comprobantes');
 <section class="panel" id="venta-<?= $id ?>">
 <h2 class="h5">Compra #<?= $id ?> · <?= admin_e($venta['nombre'] . ' ' . $venta['apellido']) ?></h2>
 <p><?= admin_e($venta['correo']) ?><br>Fecha: <?= admin_e($venta['fecha_venta']) ?> · Estado: <?= admin_e($venta['estado']) ?></p>
-<p><a href="admin-facturacion.php#venta-<?= $id ?>">Ver venta y verificar transferencia</a><?php if ($puedeEditar): ?> · <a href="admin-tablas.php?tabla=gpu_ventas&amp;editar=<?= $id ?>">Editar datos de la venta</a> · <a href="admin-tablas.php?tabla=cliente&amp;editar=<?= (int)$venta['id_cliente'] ?>">Ver cliente</a><?php endif; ?></p>
+<p><a href="admin-tablas.php?tabla=gpu_ventas&vista=acciones#venta-<?= $id ?>">Ver venta y verificar transferencia</a><?php if ($puedeEditar): ?> · <a href="admin-tablas.php?tabla=gpu_ventas&amp;editar=<?= $id ?>">Editar datos de la venta</a> · <a href="admin-tablas.php?tabla=cliente&amp;editar=<?= (int)$venta['id_cliente'] ?>">Ver cliente</a><?php endif; ?></p>
 <?php if ($archivos): $extension = array_key_first($archivos); ?>
 <p>Archivo: <?= admin_e('comprobantes/' . $id . '.' . $extension) ?> · Asociado a esta transferencia.</p>
 <?php if ($extension !== 'pdf'): ?><a href="comprobante.php?compra=<?= $id ?>&amp;vista=1" target="_blank" rel="noopener"><img src="comprobante.php?compra=<?= $id ?>&amp;vista=1&amp;v=<?= admin_e($version) ?>" alt="Comprobante de la compra <?= $id ?>" class="img-thumbnail mb-3" style="max-width:100%;width:320px;max-height:360px;object-fit:contain" loading="lazy"></a><?php endif; ?>

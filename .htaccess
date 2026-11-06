@@ -9,3 +9,7 @@
 <Files "registro-error.log">
     Require all denied
 </Files>
+
+<FilesMatch "^(permisos-puestos\.php(?:\.lock)?|\.permisos-.*)$">
+    Require all denied
+</FilesMatch>

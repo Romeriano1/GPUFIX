@@ -1,15 +1,15 @@
 <?php
-require_once __DIR__ . '/admin-comun.php';
+if (!defined('GPUFIX_TABLA_ACCIONES')) { http_response_code(404); exit; }
+require_once dirname(__DIR__) . '/admin-comun.php';
 admin_requerir_acceso();
-require_once __DIR__ . '/admin-edicion-datos.php';
-admin_edicion_seccion('Facturación y envíos', ['gpu_ventas', 'detalle_venta', 'factura', 'detalle_factura', 'envios'], 'admin-facturacion.php');
-require_once __DIR__ . '/conexion.php';
+require_once dirname(__DIR__) . '/admin-edicion-datos.php';
+require_once dirname(__DIR__) . '/conexion.php';
 header('Cache-Control: private, no-store');
 
 function comprobanteVentaAdmin(int $idVenta): ?string
 {
     foreach (['pdf', 'jpg', 'png'] as $extension) {
-        $ruta = __DIR__ . '/comprobantes/' . $idVenta . '.' . $extension;
+        $ruta = dirname(__DIR__) . '/comprobantes/' . $idVenta . '.' . $extension;
         if (is_file($ruta) && is_readable($ruta)) return $extension;
     }
     return null;
@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $verificada = $consultar->get_result()->fetch_assoc();
         $consultar->close();
         if ($verificada) {
-            header('Location: admin-facturacion.php?verificada=' . $idVenta . '#venta-' . $idVenta, true, 303);
+            header('Location: admin-tablas.php?tabla=gpu_ventas&vista=acciones&verificada=' . $idVenta . '#venta-' . $idVenta, true, 303);
             exit;
         }
         $errorFacturacion = 'La operación no es una transferencia pendiente o su estado ya no permite verificarla.';
@@ -111,7 +111,7 @@ admin_layout_inicio('Facturación');
                         <a class="btn btn-sm btn-outline-secondary" href="comprobante.php?compra=<?= $idVenta ?>">Descargar</a>
                     </div>
                     <?php if (in_array($v['estado'], ['Simulada', 'Registrada', 'Pendiente de verificación'], true)): ?>
-                        <form method="post" action="admin-facturacion.php">
+                        <form method="post" action="admin-tablas.php?tabla=gpu_ventas&vista=acciones">
                             <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">
                             <input type="hidden" name="accion" value="verificar_transferencia">
                             <input type="hidden" name="id_gpu_ventas" value="<?= $idVenta ?>">

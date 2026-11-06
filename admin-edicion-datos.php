@@ -187,7 +187,7 @@ foreach ($consultasPersonas as $destino => $sqlPersonas) {
         }
     }
 }
-if ($paginaOrigen === 'admin-reparaciones.php') {
+if ($paginaOrigen === 'admin-tablas.php?tabla=orden_reparacion&vista=acciones') {
     $consultasReferencias = [
         'cliente' => "SELECT c.id_cliente AS id, CONCAT('Cliente #', c.id_cliente, ' · ', u.nombre, ' ', u.apellido, ' · ', u.correo) AS etiqueta FROM cliente c INNER JOIN usuarios u ON u.id_correo = c.id_correo ORDER BY u.nombre, u.apellido",
         'gpu_cliente' => "SELECT g.id_gpu_cliente AS id, CONCAT('Placa #', g.id_gpu_cliente, ' · ', g.marca, ' ', g.modelo, ' · Serie: ', COALESCE(g.numero_serie, ''), ' · Cliente: ', u.nombre, ' ', u.apellido, ' · ', u.correo) AS etiqueta FROM gpu_cliente g INNER JOIN cliente c ON c.id_cliente = g.id_cliente INNER JOIN usuarios u ON u.id_correo = c.id_correo ORDER BY u.nombre, u.apellido, g.id_gpu_cliente",
@@ -210,7 +210,7 @@ $total = (int)tablas_consultar($conexion,'SELECT COUNT(*) FROM ' . $nombreTabla 
 $paginas = max(1,(int)ceil($total/25)); $pagina=min($pagina,$paginas); $desplazamiento=($pagina-1)*25;
 $registros = tablas_consultar($conexion,'SELECT * FROM ' . $nombreTabla . $where . ' ORDER BY ' . tablas_identificador($clavePrimaria) . ' LIMIT 25 OFFSET ' . $desplazamiento,$filtros)->get_result()->fetch_all(MYSQLI_ASSOC);
 admin_layout_inicio($tituloSeccion);
-if ($paginaOrigen === 'admin-tablas.php') admin_menu_tablas($tabla);
+if ($paginaOrigen === 'admin-tablas.php') { admin_menu_tablas($tabla); admin_tabs_tabla($tabla); }
 ?>
 <h1 class="h3 mt-3"><?= ucfirst($operacion) ?> · <?= admin_e($tituloSeccion) ?></h1>
 <p class="text-secondary">Agregá, editá o eliminá registros. Los ID se generan automáticamente y se conservan al editar. Esta edición actúa directamente sobre las tablas: no recalcula ventas ni stock de otras tablas ni envía correos.</p>
@@ -227,7 +227,7 @@ if ($paginaOrigen === 'admin-tablas.php') admin_menu_tablas($tabla);
 <?php foreach (['agregar'=>'Agregar','editar'=>'Editar','eliminar'=>'Eliminar'] as $accionTabla=>$etiquetaTabla): ?>
 <a class="btn <?= $accionTabla === 'eliminar' ? ($eliminar ? 'btn-danger' : 'btn-outline-danger') : ($operacion === $accionTabla ? 'btn-primary' : 'btn-outline-secondary') ?>" href="<?= admin_e($paginaOrigen) ?>?tabla=<?= rawurlencode($tabla) ?>&amp;modo=datos&amp;<?= $accionTabla === 'agregar' ? 'nuevo=1' : 'operacion=' . $accionTabla ?>"><?= $etiquetaTabla ?></a>
 <?php endforeach; ?></nav>
-<?php if ($tabla === 'presupuesto'): ?><p><a class="btn btn-primary" href="admin-presupuestos.php<?= $idRegistro !== '' ? '#solicitud-p-' . (int)$idRegistro : '' ?>">Responder consulta y enviar por correo</a></p><?php endif; ?>
+<?php if ($tabla === 'presupuesto'): ?><p><a class="btn btn-primary" href="admin-tablas.php?tabla=presupuesto&vista=acciones<?= $idRegistro !== '' ? '#solicitud-p-' . (int)$idRegistro : '' ?>">Responder consulta y enviar por correo</a></p><?php endif; ?>
 <?php if ($tabla === 'gpu_ventas'): ?><p><a class="btn btn-outline-primary" href="admin-comprobantes.php<?= $idRegistro !== '' ? '?venta=' . (int)$idRegistro : '' ?>">Ver o agregar comprobantes de transferencia</a></p><?php endif; ?>
 <?php if ($registro): ?>
 <section class="panel" id="editar-registro"><h2 class="h5"><?= ucfirst($operacion) ?> · <?= admin_e(admin_etiqueta_dato($tabla)) ?><?= $idRegistro !== '' ? ' #' . admin_e($idRegistro) : '' ?></h2>
