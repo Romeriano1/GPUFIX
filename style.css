@@ -2952,7 +2952,7 @@ body.light-theme .footer-seccion .footer-pagos img {
 .tienda-navbar .tienda-enlaces { flex-direction: row; gap: 16px; margin: 0; padding: 0; white-space: nowrap; }
 .tienda-navbar .nav-link { padding: 10px 0; }
 .tienda-navbar .nav-link.active { box-shadow: inset 0 -2px #00bfff; }
-.tienda-busqueda { min-width: 0; width: 100%; }
+.tienda-busqueda { min-width: 0; width: 100%; max-width: 340px; justify-self: center; }
 .tienda-busqueda .form-control { flex: 1; width: 100%; min-width: 0; min-height: 44px; }
 .tienda-busqueda .btn { min-height: 44px; flex-shrink: 0; }
 .tienda-cuenta { min-width: 0; gap: 12px; }

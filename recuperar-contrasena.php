@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $pendiente = $_SESSION['recuperacion'] ?? null;
 $mostrarCodigo = $pendiente && $pendiente['acceso'] === $acceso;
 ?>
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Recuperar contraseña - GPUFIX</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"><link rel="stylesheet" href="style.css?v=20261104-responsive"></head>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Recuperar contraseña - GPUFIX</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"><link rel="stylesheet" href="style.css?v=20261106-navbar"></head>
 <body class="pagina-login"><header><?php include __DIR__ . '/navbar.php'; ?></header>
 <main class="login-main"><section class="login-contenedor"><div class="login-formulario">
 <h1 class="h3">Olvidé mi contraseña</h1><p class="login-descripcion">Acceso de <?= $acceso === 'empleado' ? 'empleados' : 'clientes' ?></p>

@@ -9,7 +9,7 @@ $tablas = array_values(array_filter($tablas, static function ($tabla) use ($cone
 }));
 function admin_menu_tablas(string $actual = ''): void {
     global $tablas, $conexion;
-    echo '<link rel="stylesheet" href="admin-tablas.css?v=20261104-botones"><div class="tablas-estructura"><aside class="tablas-menu"><h2 class="h5">Tablas</h2><label class="form-label" for="filtrarTablas">Buscar tabla</label><input class="form-control mb-3" id="filtrarTablas" type="search" autocomplete="off"><nav aria-label="Tablas de la base de datos" id="listaTablas">';
+    echo '<link rel="stylesheet" href="admin-tablas.css?v=20261104-botones"><div class="tablas-estructura"><aside class="tablas-menu"><h2 class="h5">Tablas</h2><a class="btn btn-outline-primary mb-3" href="admin-tablas.php">Ver todas las columnas</a><label class="form-label" for="filtrarTablas">Buscar tabla</label><input class="form-control mb-3" id="filtrarTablas" type="search" autocomplete="off"><nav aria-label="Tablas de la base de datos" id="listaTablas">';
     foreach ($tablas as $tabla) {
         $activa = $tabla === $actual;
         echo '<a class="tablas-enlace' . ($activa ? ' activa' : '') . '" ' . ($activa ? 'aria-current="page"' : '') . ' href="admin-tablas.php?tabla=' . rawurlencode($tabla) . '"><strong>' . admin_e(admin_etiqueta_dato($tabla)) . '</strong><small>' . admin_e($tabla) . '</small></a>';
@@ -21,7 +21,31 @@ function admin_menu_tablas(string $actual = ''): void {
 if (!isset($_GET['tabla'])) {
     admin_layout_inicio('Tablas SQL');
     admin_menu_tablas();
-    echo '<section class="panel mt-0"><h1 class="h3">Administrar tablas</h1><p>Elegí una tabla en el menú para abrir sus registros.</p><p class="mb-0">Dentro de cada tabla tenés las opciones <strong>Agregar</strong>, <strong>Editar</strong> y <strong>Eliminar</strong>.</p></section></div></div>';
+    $relaciones = [];
+    $resultadoRelaciones = $conexion->query('SELECT TABLE_NAME,COLUMN_NAME,REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=DATABASE() AND REFERENCED_TABLE_NAME IS NOT NULL');
+    foreach ($resultadoRelaciones as $relacion) {
+        $relaciones[$relacion['TABLE_NAME']][$relacion['COLUMN_NAME']] = $relacion['REFERENCED_TABLE_NAME'] . '.' . $relacion['REFERENCED_COLUMN_NAME'];
+    }
+    echo '<h1 class="h3">Tablas y columnas</h1><p>' . count($tablas) . ' tablas disponibles. Abrí los registros de una tabla para administrar sus datos.</p>';
+    foreach ($tablas as $tabla) {
+        $columnas = $conexion->query('SHOW FULL COLUMNS FROM `' . str_replace('`', '``', $tabla) . '`')->fetch_all(MYSQLI_ASSOC);
+        echo '<section class="panel" id="estructura-' . admin_e($tabla) . '">';
+        echo '<div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3"><h2 class="h5 mb-0">' . admin_e(admin_etiqueta_dato($tabla)) . ' <small class="text-secondary">(' . admin_e($tabla) . ')</small></h2><a class="btn btn-sm btn-primary" href="admin-tablas.php?tabla=' . rawurlencode($tabla) . '">Abrir registros</a></div>';
+        echo '<div class="table-responsive"><table class="table table-striped"><thead><tr><th>Columna</th><th>Tipo</th><th>Obligatorio</th><th>Clave</th><th>Referencia</th><th>Valor predeterminado</th><th>Extra</th></tr></thead><tbody>';
+        foreach ($columnas as $columna) {
+            $campo = $columna['Field'];
+            $claves = [];
+            if ($columna['Key'] === 'PRI') $claves[] = 'Primaria';
+            if ($columna['Key'] === 'UNI') $claves[] = 'Única';
+            if (isset($relaciones[$tabla][$campo])) $claves[] = 'Foránea';
+            if (!$claves && $columna['Key'] === 'MUL') $claves[] = 'Índice';
+            $predeterminado = $columna['Default'];
+            if ($predeterminado === null) $predeterminado = $columna['Null'] === 'YES' ? 'NULL' : 'Sin valor predeterminado';
+            echo '<tr><th scope="row">' . admin_e($campo) . '</th><td>' . admin_e($columna['Type']) . '</td><td>' . ($columna['Null'] === 'NO' ? 'Sí' : 'No') . '</td><td>' . admin_e(implode(', ', $claves)) . '</td><td>' . admin_e($relaciones[$tabla][$campo] ?? '—') . '</td><td>' . admin_e($predeterminado) . '</td><td>' . admin_e($columna['Extra']) . '</td></tr>';
+        }
+        echo '</tbody></table></div></section>';
+    }
+    echo '</div></div>';
     admin_layout_fin();
     exit;
 }
