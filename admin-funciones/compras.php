@@ -6,6 +6,7 @@ require_once dirname(__DIR__) . '/admin-edicion-datos.php';
 require_once dirname(__DIR__) . '/compras-proveedores.php';
 admin_validar_csrf();
 $error = '';
+$sucursalesCompra = sucursales_listar($conexion);
 $mensaje = (string) ($_SESSION['mensaje_compra_proveedor'] ?? '');
 unset($_SESSION['mensaje_compra_proveedor']);
 if (empty($_SESSION['token_recepcion_compra'])) $_SESSION['token_recepcion_compra'] = bin2hex(random_bytes(32));
@@ -35,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $compra = compras_validar_lineas($productos, $cantidades, $costos);
         $conexion->begin_transaction();
         $transaccion = true;
-        $idCompra = compras_registrar_recepcion($conexion, (int) $proveedor, (int) $_SESSION['empleado_id'], $compra);
+        $idCompra = compras_registrar_recepcion($conexion, (int) $proveedor, (int) $_SESSION['empleado_id'], $compra, is_string($_POST['ubicacion'] ?? null) ? $_POST['ubicacion'] : '');
         $conexion->commit();
         $transaccion = false;
         $_SESSION['recepciones_completadas'][$token] = $idCompra;
@@ -91,6 +92,7 @@ admin_layout_inicio('Compras a proveedores');
             <option value="">Seleccionar proveedor</option>
             <?php foreach ($proveedores as $proveedor): ?><option value="<?= (int) $proveedor['id_proveedor'] ?>" <?= $proveedorIngresado === (string) $proveedor['id_proveedor'] ? 'selected' : '' ?>><?= admin_e($proveedor['razon_social']) ?></option><?php endforeach; ?>
         </select></div>
+        <div class="mb-3"><label class="form-label" for="sucursalCompra">Sucursal que recibe el stock</label><select class="form-select" id="sucursalCompra" name="ubicacion" required><option value="">Seleccionar sucursal</option><?php foreach ($sucursalesCompra as $local): ?><option value="<?= admin_e($local['ubicacion']) ?>"><?= admin_e($local['nombre']) ?></option><?php endforeach; ?></select></div>
         <div id="lineasCompra" class="d-grid gap-3">
             <?php foreach ($filasFormulario as $fila): ?>
             <div class="fila-compra border rounded p-3"><div class="row g-3 align-items-end">

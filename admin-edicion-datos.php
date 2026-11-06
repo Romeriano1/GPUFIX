@@ -130,6 +130,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $valores[] = $idRegistro;
             tablas_consultar($conexion, 'UPDATE ' . $nombreTabla . ' SET ' . implode(', ', $campos) . ' WHERE ' . tablas_identificador($clavePrimaria) . ' = ?', $valores);
         }
+        if (in_array($tabla, ['stock', 'stock_gpu'], true)) {
+            $estadoStock = tablas_consultar($conexion, 'SELECT cantidad,ubicacion FROM ' . $nombreTabla . ' WHERE ' . tablas_identificador($clavePrimaria) . '=?', [$idRegistro])->get_result()->fetch_assoc();
+            if (trim((string)$estadoStock['ubicacion']) === '') throw new RuntimeException('Seleccioná la sucursal del stock.');
+            $estadoAutomatico = (int)$estadoStock['cantidad'] > 0 ? 'Disponible' : 'Sin stock';
+            tablas_consultar($conexion, 'UPDATE ' . $nombreTabla . ' SET estado=? WHERE ' . tablas_identificador($clavePrimaria) . '=?', [$estadoAutomatico, $idRegistro]);
+        }
         admin_validar_relaciones($conexion, $tabla, $idRegistro);
         $conexion->commit();
         $_SESSION['tablas_mensaje'] = 'Registro ' . ($crear ? 'agregado' : 'actualizado') . ' en ' . $tabla . '.';
@@ -153,7 +159,7 @@ if ($crear) {
 }
 $relaciones = tablas_consultar($conexion, 'SELECT COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND REFERENCED_TABLE_NAME IS NOT NULL', [$tabla])->get_result()->fetch_all(MYSQLI_ASSOC);
 $relacionesPorCampo = array_column($relaciones,null,'COLUMN_NAME');
-$vinculosObligatorios = ['presupuesto'=>['id_cliente'], 'empleado'=>['id_correo']];
+$vinculosObligatorios = ['presupuesto'=>['id_cliente'], 'empleado'=>['id_correo'], 'stock_gpu'=>['ubicacion'], 'stock'=>['ubicacion']];
 $referenciasReparacion = [];
 foreach ($relaciones as $relacion) {
     $destino = $relacion['REFERENCED_TABLE_NAME'];

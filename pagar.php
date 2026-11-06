@@ -21,10 +21,7 @@ $itemsPago = [];
 $compraConfirmada = null;
 $totalCentavos = 0;
 $costoEnvioCentavos = 500000;
-$sucursalesRetiro = [
-    'rivadavia' => 'Sucursal Rivadavia (Av Rivadavia 5376, local 1)',
-    'florida' => 'Sucursal Florida (Florida 537)',
-];
+$sucursalesRetiro = [];
 $entrega = ($_SESSION['entrega_pago'] ?? '') === 'retiro' ? 'retiro' : 'domicilio';
 $sucursal = (string) ($_SESSION['sucursal_pago'] ?? '');
 unset($_SESSION['entrega_pago'], $_SESSION['sucursal_pago']);
@@ -168,6 +165,10 @@ function validarArticulosPago(array $articulos): int
 
 try {
     require_once __DIR__ . "/conexion.php";
+    require_once __DIR__ . '/sucursales.php';
+    foreach (sucursales_listar($conexion) as $local) {
+        $sucursalesRetiro[(string)$local['ubicacion']] = $local['nombre'] . ' (' . $local['direccion'] . ')';
+    }
     $consultaCliente = $conexion->prepare(
         "SELECT c.id_cliente, c.direccion, u.nombre, u.apellido, u.correo, u.dni, u.telefono " .
         "FROM cliente c INNER JOIN usuarios u ON u.id_correo = c.id_correo WHERE u.id_correo = ? LIMIT 1"
@@ -214,8 +215,8 @@ try {
             if (!in_array($entrega, ['retiro', 'domicilio'], true)) {
                 throw new RuntimeException('Seleccioná un método de entrega.');
             }
-            if ($entrega === 'retiro' && !isset($sucursalesRetiro[$sucursal])) {
-                throw new RuntimeException('Seleccioná la sucursal donde vas a retirar tu compra.');
+            if (!isset($sucursalesRetiro[$sucursal])) {
+                throw new RuntimeException('Seleccioná una sucursal con stock para tu compra.');
             }
             if ($entrega === 'domicilio' && (mb_strlen($direccionFacturacion, "UTF-8") < 8 || mb_strlen($direccionFacturacion, "UTF-8") > 255)) {
                 throw new RuntimeException("Ingresá una dirección de facturación de entre 8 y 255 caracteres.");
@@ -295,17 +296,19 @@ try {
                 throw new RuntimeException("Cambió el carrito o alguno de sus precios. Revisá el resumen actualizado antes de confirmar.");
             }
 
+            $idSucursalVenta = (string)$sucursal;
+            $sucursalElegida = sucursal_validar($conexion, $idSucursalVenta);
             $stockPorProducto = [];
             foreach ($itemsPago as $item) {
                 $idGpu = (int) $item["id_gpu"];
-                $consultaStock = $conexion->prepare("SELECT id_stock_gpu, cantidad FROM stock_gpu WHERE id_gpu = ? ORDER BY id_stock_gpu FOR UPDATE");
-                $consultaStock->bind_param("i", $idGpu);
+                $consultaStock = $conexion->prepare("SELECT id_stock_gpu, cantidad FROM stock_gpu WHERE id_gpu = ? AND ubicacion = ? ORDER BY id_stock_gpu FOR UPDATE");
+                $consultaStock->bind_param("is", $idGpu, $idSucursalVenta);
                 $consultaStock->execute();
                 $filasStock = $consultaStock->get_result()->fetch_all(MYSQLI_ASSOC);
                 $consultaStock->close();
                 $stockDisponible = array_sum(array_map(static fn ($fila) => max(0, (int) $fila["cantidad"]), $filasStock));
                 if ($stockDisponible < (int) $item["cantidad"]) {
-                    throw new RuntimeException("No hay stock suficiente de " . $item["modelo"] . ". Revisá tu carrito.");
+                    throw new RuntimeException("No hay stock suficiente de " . $item["modelo"] . " en la sucursal seleccionada. Elegí otra sucursal o revisá tu carrito.");
                 }
                 $stockPorProducto[$idGpu] = $filasStock;
             }
@@ -356,7 +359,7 @@ try {
                 }
                 if ($cantidadPendiente !== 0) throw new RuntimeException('No pudimos descontar el stock completo. Revisá tu carrito e intentá nuevamente.');
             }
-            $direccionEntrega = $entrega === 'retiro' ? $sucursalesRetiro[$sucursal] : $direccionFacturacion;
+            $direccionEntrega = $entrega === 'retiro' ? $sucursalElegida['nombre'] . ' (' . $sucursalElegida['direccion'] . ')' : $direccionFacturacion;
             $estadoEntrega = $entrega === 'retiro' ? 'Retiro en tienda' : 'Pendiente de envío';
             $crearEnvio = $conexion->prepare("INSERT INTO envios (id_cliente, id_gpu_ventas, estado, direccion_envio) VALUES (?, ?, ?, ?)");
             $crearEnvio->bind_param("iiss", $idCliente, $idVenta, $estadoEntrega, $direccionEntrega);
@@ -465,8 +468,11 @@ try {
         $carrito = $consultaCarrito->get_result()->fetch_assoc();
         $consultaCarrito->close();
         $itemsPago = articulosPago($conexion, (int) ($carrito["id_carrito"] ?? 0));
+        $sucursalesRetiro = sucursales_para_carrito($conexion, $itemsPago);
+        if (count($sucursalesRetiro) === 1) $sucursal = (string)array_key_first($sucursalesRetiro);
         try {
             $totalCentavos = validarArticulosPago($itemsPago);
+            if (!$sucursalesRetiro) $problemaCarrito = 'Ninguna sucursal tiene stock suficiente de todos los productos. Revisá las cantidades del carrito.';
             $_SESSION["resumen_pago"] = resumenPago($itemsPago);
         } catch (RuntimeException $error) {
             $problemaCarrito = $error->getMessage();
@@ -542,10 +548,10 @@ try {
                                 <label><input type="radio" name="entrega" value="retiro" <?= $entrega === 'retiro' ? 'checked' : '' ?>> Retirar en tienda</label>
                                 <label><input type="radio" name="entrega" value="domicilio" <?= $entrega === 'domicilio' ? 'checked' : '' ?>> Enviar a domicilio (+<?= formatoPago($costoEnvioCentavos) ?>)</label>
                             </div>
-                            <div id="retiroCompra" <?= $entrega !== 'retiro' ? 'hidden' : '' ?>>
+                            <div id="retiroCompra"><p>Sucursal de retiro o despacho con stock disponible</p>
                                 <div class="pago-selector">
                                     <?php foreach ($sucursalesRetiro as $clave => $nombreSucursal): ?>
-                                        <label><input type="radio" name="sucursal" value="<?= escaparPago($clave) ?>" <?= $sucursal === $clave ? 'checked' : '' ?> <?= $entrega === 'retiro' ? 'required' : 'disabled' ?>> <?= escaparPago($nombreSucursal) ?></label>
+                                        <label><input type="radio" name="sucursal" value="<?= escaparPago($clave) ?>" <?= (string)$sucursal === (string)$clave ? 'checked' : '' ?> required> <?= escaparPago($nombreSucursal) ?></label>
                                     <?php endforeach; ?>
                                 </div>
                             </div>
@@ -610,14 +616,14 @@ try {
         const formularioEntrega = document.getElementById('formularioPago');
         const actualizarEntrega = () => {
             const domicilio = formularioEntrega.elements.entrega.value === 'domicilio';
-            document.getElementById('retiroCompra').hidden = domicilio;
+            document.getElementById('retiroCompra').hidden = false;
             document.getElementById('domicilioCompra').hidden = !domicilio;
             const direccion = document.getElementById('direccionFacturacion');
             direccion.disabled = !domicilio;
             direccion.required = domicilio;
             formularioEntrega.querySelectorAll('[name="sucursal"]').forEach(opcion => {
-                opcion.disabled = domicilio;
-                opcion.required = !domicilio;
+                opcion.disabled = false;
+                opcion.required = true;
             });
             const total = document.getElementById('totalConEntrega');
             if (total) {

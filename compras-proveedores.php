@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . "/sucursales.php";
 // El llamador inicia y confirma la transacción de compra y stock.
 function compras_validar_lineas(array $productos, array $cantidades, array $costos): array
 {
@@ -36,8 +37,9 @@ function compras_validar_lineas(array $productos, array $cantidades, array $cost
     return ['lineas' => array_values($lineas), 'total' => intdiv($totalCentavos, 100) . '.' . str_pad((string) ($totalCentavos % 100), 2, '0', STR_PAD_LEFT)];
 }
 
-function compras_registrar_recepcion(mysqli $db, int $proveedor, int $empleado, array $compra): int
+function compras_registrar_recepcion(mysqli $db, int $proveedor, int $empleado, array $compra, string $idSucursal): int
 {
+    sucursal_validar($db, $idSucursal);
     $buscar = $db->prepare('SELECT id_proveedor FROM proveedor WHERE id_proveedor = ? LOCK IN SHARE MODE');
     $buscar->bind_param('i', $proveedor);
     $buscar->execute();
@@ -63,8 +65,8 @@ function compras_registrar_recepcion(mysqli $db, int $proveedor, int $empleado, 
         $producto = $buscar->get_result()->fetch_assoc();
         $buscar->close();
         if (!$producto) throw new RuntimeException('Uno de los productos seleccionados ya no existe. Revisá la compra.');
-        $buscar = $db->prepare("SELECT $campoStock AS id, cantidad FROM $tablaStock WHERE $campoProducto = ? ORDER BY $campoStock FOR UPDATE");
-        $buscar->bind_param('i', $idProducto);
+        $buscar = $db->prepare("SELECT $campoStock AS id, cantidad FROM $tablaStock WHERE $campoProducto = ? AND ubicacion = ? ORDER BY $campoStock FOR UPDATE");
+        $buscar->bind_param('is', $idProducto, $idSucursal);
         $buscar->execute();
         $stocks = $buscar->get_result()->fetch_all(MYSQLI_ASSOC);
         $buscar->close();
@@ -77,8 +79,8 @@ function compras_registrar_recepcion(mysqli $db, int $proveedor, int $empleado, 
             $actualizar = $db->prepare("UPDATE $tablaStock SET cantidad = cantidad + ?, estado = 'Disponible' WHERE $campoStock = ?");
             $actualizar->bind_param('ii', $cantidad, $stock['id']);
         } else {
-            $actualizar = $db->prepare("INSERT INTO $tablaStock ($campoProducto, cantidad, estado, ubicacion) VALUES (?, ?, 'Disponible', 'A')");
-            $actualizar->bind_param('ii', $idProducto, $cantidad);
+            $actualizar = $db->prepare("INSERT INTO $tablaStock ($campoProducto, cantidad, estado, ubicacion) VALUES (?, ?, 'Disponible', ?)");
+            $actualizar->bind_param('iis', $idProducto, $cantidad, $idSucursal);
         }
         $actualizar->execute();
         $actualizar->close();
