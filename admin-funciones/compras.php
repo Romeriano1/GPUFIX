@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $token = is_string($_POST['token_recepcion'] ?? null) ? $_POST['token_recepcion'] : '';
         if ($token !== '' && isset($_SESSION['recepciones_completadas'][$token])) {
             $_SESSION['mensaje_compra_proveedor'] = 'Esta compra ya estaba registrada. No se volvió a sumar stock.';
-            header('Location: admin-tablas.php?tabla=orden_compra&vista=acciones#compra-' . (int) $_SESSION['recepciones_completadas'][$token], true, 303);
+            header('Location: ' . admin_url_panel('compras') . '#compra-' . (int) $_SESSION['recepciones_completadas'][$token], true, 303);
             exit;
         }
         if (!hash_equals($_SESSION['token_recepcion_compra'], $token)) throw new RuntimeException('La solicitud venció. Recargá la página antes de registrar la compra.');
@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (count($_SESSION['recepciones_completadas']) > 20) array_shift($_SESSION['recepciones_completadas']);
         $_SESSION['token_recepcion_compra'] = bin2hex(random_bytes(32));
         $_SESSION['mensaje_compra_proveedor'] = 'Compra #' . $idCompra . ' recibida. Las unidades ya se sumaron al stock.';
-        header('Location: admin-tablas.php?tabla=orden_compra&vista=acciones#compra-' . $idCompra, true, 303);
+        header('Location: ' . admin_url_panel('compras') . '#compra-' . $idCompra, true, 303);
         exit;
     } catch (Throwable $fallo) {
         if ($transaccion) $conexion->rollback();
@@ -83,9 +83,9 @@ admin_layout_inicio('Compras a proveedores');
 <section class="panel" aria-labelledby="tituloRecepcion">
     <h2 class="h5 mb-3" id="tituloRecepcion">Registrar compra recibida</h2>
     <?php if (!$proveedores || (!$productos && !$componentes)): ?>
-        <p>Para registrar una compra, primero cargá un <a href="admin-tablas.php?tabla=proveedor&vista=acciones">proveedor</a> y un <a href="admin-tablas.php?tabla=gpu&vista=acciones">producto</a>.</p>
+        <p>Para registrar una compra, primero cargá un <a href="<?= admin_e(admin_url_panel('proveedores')) ?>">proveedor</a> y un <a href="<?= admin_e(admin_url_panel('productos')) ?>">producto</a>.</p>
     <?php else: ?>
-    <form method="post" action="admin-tablas.php?tabla=orden_compra&vista=acciones" id="formularioCompraProveedor">
+    <form method="post" action="<?= admin_e(admin_url_panel('compras')) ?>" id="formularioCompraProveedor">
         <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">
         <input type="hidden" name="token_recepcion" value="<?= admin_e($_SESSION['token_recepcion_compra']) ?>">
         <div class="mb-4"><label class="form-label" for="proveedorCompra">Proveedor</label><select class="form-select" id="proveedorCompra" name="id_proveedor" required>
@@ -121,7 +121,7 @@ admin_layout_inicio('Compras a proveedores');
         </tbody></table></div>
     </details>
     <?php endforeach; ?>
-    <nav class="d-flex gap-3" aria-label="Páginas de compras"><?php if ($pagina > 1): ?><a href="admin-tablas.php?tabla=orden_compra&vista=acciones&pagina=<?= $pagina - 1 ?>#tituloHistorialCompras">Anterior</a><?php endif; ?><span>Página <?= $pagina ?> de <?= $paginas ?></span><?php if ($pagina < $paginas): ?><a href="admin-tablas.php?tabla=orden_compra&vista=acciones&pagina=<?= $pagina + 1 ?>#tituloHistorialCompras">Siguiente</a><?php endif; ?></nav>
+    <nav class="d-flex gap-3" aria-label="Páginas de compras"><?php if ($pagina > 1): ?><a href="<?= admin_e(admin_url_panel('compras')) ?>&pagina=<?= $pagina - 1 ?>#tituloHistorialCompras">Anterior</a><?php endif; ?><span>Página <?= $pagina ?> de <?= $paginas ?></span><?php if ($pagina < $paginas): ?><a href="<?= admin_e(admin_url_panel('compras')) ?>&pagina=<?= $pagina + 1 ?>#tituloHistorialCompras">Siguiente</a><?php endif; ?></nav>
 </section>
 <script>
 (() => {

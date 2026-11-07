@@ -34,31 +34,11 @@ function admin_tabs_tabla(string $tabla): void
     echo '</nav>';
 }
 
-function admin_mostrar_tabla_empleado(mysqli $conexion, string $tabla): void
+function admin_url_panel(string $funcion): string
 {
-    $tablas = array_column($conexion->query("SHOW FULL TABLES WHERE Table_type = 'BASE TABLE'")->fetch_all(MYSQLI_NUM), 0);
-    if (!in_array($tabla, $tablas, true) || !admin_puede_tabla($conexion, $tabla)) { http_response_code(403); exit('Acceso restringido.'); }
-    if ($_SERVER['REQUEST_METHOD'] !== 'GET') { http_response_code(403); exit('Abrí las funciones habilitadas para realizar esta operación.'); }
-    $pagina = max(1, filter_input(INPUT_GET, 'pagina', FILTER_VALIDATE_INT) ?: 1);
-    $cantidad = (int)$conexion->query('SELECT COUNT(*) FROM `' . $tabla . '`')->fetch_row()[0];
-    $pagina = min($pagina, max(1, (int)ceil($cantidad / 25)));
-    $offset = ($pagina - 1) * 25;
-    $filas = $conexion->query('SELECT * FROM `' . $tabla . '` LIMIT 25 OFFSET ' . $offset)->fetch_all(MYSQLI_ASSOC);
-    $columnas = array_column($conexion->query('SHOW COLUMNS FROM `' . $tabla . '`')->fetch_all(MYSQLI_ASSOC), 'Field');
-    admin_layout_inicio(admin_etiqueta_dato($tabla));
-    admin_menu_tablas($tabla);
-    admin_tabs_tabla($tabla);
-    echo '<section class="panel"><h1 class="h3">' . admin_e(admin_etiqueta_dato($tabla)) . '</h1><div class="table-responsive"><table class="table"><thead><tr>';
-    foreach ($columnas as $columna) echo '<th>' . admin_e(admin_etiqueta_dato($columna)) . '</th>';
-    echo '</tr></thead><tbody>';
-    foreach ($filas as $fila) {
-        echo '<tr>';
-        foreach ($fila as $campo => $valor) echo '<td>' . ($campo === 'contraseña' ? 'Contraseña guardada' : admin_e($valor)) . '</td>';
-        echo '</tr>';
-    }
-    echo '</tbody></table></div><nav class="d-flex gap-3">';
-    if ($pagina > 1) echo '<a href="admin-tablas.php?tabla=' . rawurlencode($tabla) . '&amp;pagina=' . ($pagina - 1) . '">Anterior</a>';
-    if ($pagina * 25 < $cantidad) echo '<a href="admin-tablas.php?tabla=' . rawurlencode($tabla) . '&amp;pagina=' . ($pagina + 1) . '">Siguiente</a>';
-    echo '</nav></section></div></div>';
-    admin_layout_fin();
+    global $conexion;
+    if (!admin_es_cuenta_principal($conexion)) return 'admin-' . $funcion . '.php?panel=1';
+    if ($funcion === 'devoluciones') return 'admin-tablas.php?tabla=gpu_ventas&vista=acciones&accion_tabla=devoluciones';
+    $tabla = array_search($funcion, admin_funciones_tablas(), true);
+    return 'admin-tablas.php?tabla=' . rawurlencode((string)$tabla) . '&vista=acciones';
 }

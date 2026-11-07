@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $verificada = $consultar->get_result()->fetch_assoc();
         $consultar->close();
         if ($verificada) {
-            header('Location: admin-tablas.php?tabla=gpu_ventas&vista=acciones&verificada=' . $idVenta . '#venta-' . $idVenta, true, 303);
+            header('Location: ' . admin_url_panel('facturacion') . '&verificada=' . $idVenta . '#venta-' . $idVenta, true, 303);
             exit;
         }
         $errorFacturacion = 'La operación no es una transferencia pendiente o su estado ya no permite verificarla.';
@@ -111,7 +111,7 @@ admin_layout_inicio('Facturación');
                         <a class="btn btn-sm btn-outline-secondary" href="comprobante.php?compra=<?= $idVenta ?>">Descargar</a>
                     </div>
                     <?php if (in_array($v['estado'], ['Simulada', 'Registrada', 'Pendiente de verificación'], true)): ?>
-                        <form method="post" action="admin-tablas.php?tabla=gpu_ventas&vista=acciones">
+                        <form method="post" action="<?= admin_e(admin_url_panel('facturacion')) ?>">
                             <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">
                             <input type="hidden" name="accion" value="verificar_transferencia">
                             <input type="hidden" name="id_gpu_ventas" value="<?= $idVenta ?>">

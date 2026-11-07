@@ -13,7 +13,7 @@ try {
         require_once __DIR__ . '/admin-comun.php';
         if (!admin_puede_ver($conexion, 'admin-comprobantes.php') && !admin_puede_ver($conexion, 'admin-facturacion.php')) $empleadoId = 0;
     }
-    $consulta = $conexion->prepare("SELECT v.id_gpu_ventas FROM gpu_ventas v INNER JOIN cliente c ON c.id_cliente = v.id_cliente WHERE v.id_gpu_ventas = ? AND (c.id_correo = ? OR EXISTS (SELECT 1 FROM empleado e WHERE e.id_empleado = ? AND e.id_correo IS NOT NULL)) AND v.metodo_pago IN ('Transferencia', 'Transferencia (simulada)') LIMIT 1");
+    $consulta = $conexion->prepare("SELECT v.id_gpu_ventas FROM gpu_ventas v INNER JOIN cliente c ON c.id_cliente = v.id_cliente WHERE v.id_gpu_ventas = ? AND (c.id_correo = ? OR EXISTS (SELECT 1 FROM empleado e WHERE e.id_empleado = ?)) AND v.metodo_pago IN ('Transferencia', 'Transferencia (simulada)') LIMIT 1");
     $consulta->bind_param("iii", $idVenta, $usuarioId, $empleadoId);
     $consulta->execute();
     $existe = $consulta->get_result()->fetch_assoc();

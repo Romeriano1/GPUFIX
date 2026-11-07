@@ -29,5 +29,5 @@ function consultas_presupuestos(mysqli $conexion): array
 function enlace_presupuesto(array $fila): string
 {
     $id = $fila['id_presupuesto'] ? 'p-' . $fila['id_presupuesto'] : 'o-' . $fila['id_orden_reparacion'];
-    return 'admin-tablas.php?tabla=presupuesto&vista=acciones#solicitud-' . $id;
+    return admin_url_panel('presupuestos') . '#solicitud-' . $id;
 }

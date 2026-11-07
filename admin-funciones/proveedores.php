@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $conexion->commit();
             $transaccionActiva = false;
             $_SESSION['mensaje_proveedor_admin'] = 'Proveedor eliminado.';
-            header('Location: admin-tablas.php?tabla=proveedor&vista=acciones#lista-proveedores', true, 303);
+            header('Location: ' . admin_url_panel('proveedores') . '#lista-proveedores', true, 303);
             exit;
         }
 
@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $conexion->commit();
         $transaccionActiva = false;
         $_SESSION['mensaje_proveedor_admin'] = $accion === 'agregar' ? 'Proveedor agregado.' : 'Proveedor actualizado.';
-        header('Location: admin-tablas.php?tabla=proveedor&vista=acciones&editar=' . $idProveedor . '#ficha-proveedor', true, 303);
+        header('Location: ' . admin_url_panel('proveedores') . '&editar=' . $idProveedor . '#ficha-proveedor', true, 303);
         exit;
     } catch (Throwable $fallo) {
         if ($transaccionActiva) $conexion->rollback();
@@ -105,7 +105,7 @@ admin_layout_inicio('Proveedores');
 ?>
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3">
     <h1 class="h3 mb-0">Proveedores</h1>
-    <a class="btn btn-primary" href="admin-tablas.php?tabla=proveedor&vista=acciones#ficha-proveedor">Agregar proveedor</a>
+    <a class="btn btn-primary" href="<?= admin_e(admin_url_panel('proveedores')) ?>#ficha-proveedor">Agregar proveedor</a>
 </div>
 <p class="text-secondary mt-2">Estos nombres aparecen en el selector de marca al cargar un producto.</p>
 <?php if ($mensaje !== ''): ?><div class="alert alert-success" role="status"><?= admin_e($mensaje) ?></div><?php endif; ?>
@@ -114,13 +114,13 @@ admin_layout_inicio('Proveedores');
 <?php if ($mostrarFormulario): ?>
 <section class="panel" id="ficha-proveedor" aria-labelledby="tituloProveedor">
     <h2 class="h5 mb-3" id="tituloProveedor"><?= $modoEdicion ? 'Editar proveedor' : 'Agregar proveedor' ?></h2>
-    <form method="post" action="admin-tablas.php?tabla=proveedor&vista=acciones<?= $modoEdicion ? '&editar=' . $idProveedor : '' ?>" class="row g-3 align-items-end">
+    <form method="post" action="<?= admin_e(admin_url_panel('proveedores')) ?><?= $modoEdicion ? '&editar=' . $idProveedor : '' ?>" class="row g-3 align-items-end">
         <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">
         <input type="hidden" name="accion" value="<?= $modoEdicion ? 'editar' : 'agregar' ?>">
         <input type="hidden" name="id_proveedor" value="<?= $idProveedor ?>">
         <div class="col-md-8"><label for="nombreProveedor" class="form-label">Nombre del proveedor</label><input id="nombreProveedor" class="form-control" name="nombre" maxlength="100" value="<?= admin_e($nombreProveedor) ?>" required></div>
         <div class="col-md-auto"><button class="btn btn-primary" type="submit">Guardar proveedor</button></div>
-        <?php if ($modoEdicion): ?><div class="col-md-auto"><a class="btn btn-outline-secondary" href="admin-tablas.php?tabla=proveedor&vista=acciones#lista-proveedores">Cancelar</a></div><?php endif; ?>
+        <?php if ($modoEdicion): ?><div class="col-md-auto"><a class="btn btn-outline-secondary" href="<?= admin_e(admin_url_panel('proveedores')) ?>#lista-proveedores">Cancelar</a></div><?php endif; ?>
     </form>
 </section>
 <?php endif; ?>
@@ -136,8 +136,8 @@ admin_layout_inicio('Proveedores');
             <tr>
                 <td><?= admin_e($proveedor['razon_social']) ?></td>
                 <td><div class="d-flex flex-wrap gap-2">
-                    <a class="btn btn-sm btn-outline-primary" href="admin-tablas.php?tabla=proveedor&vista=acciones&editar=<?= (int) $proveedor['id_proveedor'] ?>#ficha-proveedor">Editar</a>
-                    <form method="post" action="admin-tablas.php?tabla=proveedor&vista=acciones" onsubmit="return confirm('¿Eliminar este proveedor?');">
+                    <a class="btn btn-sm btn-outline-primary" href="<?= admin_e(admin_url_panel('proveedores')) ?>&editar=<?= (int) $proveedor['id_proveedor'] ?>#ficha-proveedor">Editar</a>
+                    <form method="post" action="<?= admin_e(admin_url_panel('proveedores')) ?>" onsubmit="return confirm('¿Eliminar este proveedor?');">
                         <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">
                         <input type="hidden" name="accion" value="eliminar">
                         <input type="hidden" name="id_proveedor" value="<?= (int) $proveedor['id_proveedor'] ?>">

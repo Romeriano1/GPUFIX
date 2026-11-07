@@ -10,8 +10,8 @@ if (!empty($_SESSION["empleado_id"])) {
 }
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $correo = strtolower(trim($_POST["correo"] ?? ""));
-    $contrasena = $_POST["contrasena"] ?? "";
+    $correo = is_string($_POST["correo"] ?? null) ? strtolower(trim($_POST["correo"])) : "";
+    $contrasena = is_string($_POST["contrasena"] ?? null) ? $_POST["contrasena"] : "";
 
     if ($correo === "" || $contrasena === "") {
         $error = "Completá todos los campos.";
@@ -20,10 +20,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             require_once __DIR__ . "/conexion.php";
 
             $consulta = $conexion->prepare(
-                "SELECT e.id_empleado, e.nombre, e.apellido, u.id_correo, u.contraseña
+                "SELECT e.id_empleado, e.nombre, e.apellido, e.id_correo, e.contraseña
                  FROM empleado e
-                 INNER JOIN usuarios u ON u.id_correo = e.id_correo
-                 WHERE u.correo = ?
+                 WHERE e.email = ?
                  LIMIT 1"
             );
 
@@ -40,7 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $encontrado = $consulta->fetch();
             $consulta->close();
 
-            if ($encontrado && password_verify($contrasena, $contrasenaGuardada)) {
+            if ($encontrado && is_string($contrasenaGuardada) && password_verify($contrasena, $contrasenaGuardada)) {
                 session_regenerate_id(true);
 
                 $_SESSION["empleado_id"] = (int) $empleadoId;

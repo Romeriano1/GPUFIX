@@ -19,17 +19,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             require_once __DIR__ . '/conexion.php';
 
             $consulta = $conexion->prepare(
-                "SELECT u.id_correo, u.`contraseña`, u.nombre, u.apellido, e.id_empleado
-                 FROM usuarios u
-                 INNER JOIN empleado e ON e.id_correo = u.id_correo
-                 INNER JOIN puesto p ON p.id_puesto = e.id_puesto
-                 WHERE u.correo = ? AND p.nombre = 'Administrador' LIMIT 1"
+                "SELECT e.id_empleado, e.`contraseña`, e.nombre, e.apellido, e.id_empleado
+                 FROM empleado e WHERE e.email = ? LIMIT 1"
             );
             $consulta->bind_param('s', $correo);
             $consulta->execute();
             $consulta->bind_result($id, $hash, $nombre, $apellido, $empleadoId);
 
-            if ($consulta->fetch() && password_verify($clave, $hash)) {
+            if ($consulta->fetch() && is_string($hash) && password_verify($clave, $hash)) {
                 $consulta->close();
                 session_regenerate_id(true);
 

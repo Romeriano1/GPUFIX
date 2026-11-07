@@ -11,7 +11,7 @@ function admin_requerir_acceso(): void {
     }
     global $conexion;
     require_once __DIR__ . '/conexion.php';
-    $validar = $conexion->prepare('SELECT e.id_empleado FROM empleado e INNER JOIN usuarios u ON u.id_correo = e.id_correo WHERE e.id_empleado = ? LIMIT 1');
+    $validar = $conexion->prepare('SELECT e.id_empleado,e.nombre,e.apellido FROM empleado e WHERE e.id_empleado = ? LIMIT 1');
     $idEmpleado = (int) $_SESSION['empleado_id'];
     $validar->bind_param('i', $idEmpleado);
     $validar->execute();
@@ -22,25 +22,22 @@ function admin_requerir_acceso(): void {
         header('Location: login-empleado.php');
         exit;
     }
+    $_SESSION['empleado_nombre'] = $existe['nombre'];
+    $_SESSION['empleado_apellido'] = $existe['apellido'];
     $pagina = basename($_SERVER['SCRIPT_NAME'] ?? '');
-    $permiso = $pagina;
-    $inicioTablas = $pagina === 'admin-tablas.php' && !isset($_GET['tabla']);
-    if ($pagina === 'admin-tablas.php') {
-        $tabla = is_string($_GET['tabla'] ?? null) ? $_GET['tabla'] : '';
-        $permiso = admin_permiso_tabla($tabla);
-        if ($tabla === 'gpu_ventas' && ($_GET['accion_tabla'] ?? '') === 'devoluciones') $permiso = 'admin-devoluciones.php';
-    }
-    $puedeAbrir = $pagina === 'admin-tablas.php' && isset($tabla) ? admin_puede_tabla($conexion, $tabla) : admin_puede_ver($conexion, $permiso);
-    if ($pagina !== 'admin.php' && !$inicioTablas && !$puedeAbrir) {
+    $soloPrincipal = in_array($pagina, ['admin-tablas.php','admin-empleos.php'], true);
+    $puedeAbrir = $soloPrincipal ? admin_es_cuenta_principal($conexion) : admin_puede_ver($conexion, $pagina);
+    if ($pagina !== 'admin.php' && !$puedeAbrir) {
         http_response_code(403);
         admin_layout_inicio('Acceso restringido');
         echo '<p>Tu puesto no tiene acceso a esta sección.</p><a href="admin.php">Ir al panel</a>';
         admin_layout_fin();
         exit;
     }
+
 }
 function admin_es_cuenta_principal(mysqli $conexion): bool {
-    $consulta = $conexion->prepare("SELECT e.id_empleado FROM empleado e INNER JOIN usuarios u ON u.id_correo = e.id_correo INNER JOIN puesto p ON p.id_puesto = e.id_puesto WHERE e.id_empleado = ? AND u.correo = 'gpufixstore@gmail.com' AND p.nombre = 'Administrador' LIMIT 1");
+    $consulta = $conexion->prepare("SELECT id_empleado FROM empleado WHERE id_empleado=? AND email='gpufixstore@gmail.com' LIMIT 1");
     $idEmpleado = (int) ($_SESSION['empleado_id'] ?? 0);
     $consulta->bind_param('i', $idEmpleado);
     $consulta->execute();
@@ -190,7 +187,8 @@ function admin_layout_inicio(string $titulo): void {
     </nav>
 
     <main class="container py-3">';
-    if (isset($GLOBALS['tabla_funciones_actual'])) {
+    if (isset($GLOBALS['tabla_funciones_actual']) && admin_es_cuenta_principal($conexion)) {
+        $GLOBALS['tabla_funciones_con_menu'] = true;
         admin_menu_tablas($GLOBALS['tabla_funciones_actual']);
         admin_tabs_tabla($GLOBALS['tabla_funciones_actual']);
     }
@@ -212,7 +210,7 @@ function admin_layout_inicio(string $titulo): void {
 }
 
 function admin_layout_fin(): void {
-    if (isset($GLOBALS['tabla_funciones_actual'])) echo '</div></div>';
+    if (!empty($GLOBALS['tabla_funciones_con_menu'])) echo '</div></div>';
     echo '</main><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script></body></html>';
 }
 

@@ -37,7 +37,7 @@ admin_layout_inicio('Estadísticas');
 <?php if ($verConsultas): ?><section class="panel"><h2 class="h5">Consultas sin responder (<?= count($pendientes) ?>)</h2>
 <?php foreach ($pendientes as $fila): ?><div class="d-flex flex-wrap align-items-center gap-2 mb-2"><span>Presupuesto · <?= admin_e($fila['nombre'].' '.$fila['apellido']) ?> · <?= admin_e($fila['fecha_emision']) ?></span><a class="btn btn-sm btn-primary" href="<?= admin_e(enlace_presupuesto($fila)) ?>">Abrir consulta</a></div><?php endforeach; ?>
 <?php if (!$pendientes): ?><p>No hay consultas pendientes.</p><?php endif; ?>
-<a href="admin-tablas.php?tabla=presupuesto&vista=acciones">Ver todos los presupuestos</a></section><?php endif; ?>
+<a href="<?= admin_e(admin_url_panel('presupuestos')) ?>">Ver todos los presupuestos</a></section><?php endif; ?>
 <div class="row g-3 admin-indicadores">
 <?php foreach ($valores as $titulo => $valor): ?>
 <div class="col-6 col-lg-3"><section class="panel h-100 m-0"><h2 class="h6"><?= admin_e($titulo) ?></h2><strong class="h2"><?= number_format((float)$valor,0,',','.') ?></strong></section></div>
