@@ -41,6 +41,27 @@ function admin_puede_ver(mysqli $conexion, string $pagina): bool
     return $puesto && in_array($pagina, $configuracion[(string)$puesto[0]] ?? [], true);
 }
 
+function admin_guardar_paneles_puesto(int $puestoId, array $seleccion): void
+{
+    foreach ($seleccion as $panel) {
+        if (!is_string($panel) || !isset(admin_secciones_permisos()[$panel])) throw new RuntimeException('Panel no disponible.');
+    }
+    $archivo = __DIR__ . '/permisos-puestos.php';
+    $candado = fopen($archivo . '.lock', 'c');
+    if (!$candado) throw new RuntimeException('No se pudo abrir la configuración de permisos.');
+    try {
+        if (!flock($candado, LOCK_EX)) throw new RuntimeException('No se pudo guardar la configuración de permisos.');
+        $permisos = admin_leer_permisos();
+        $permisos[(string) $puestoId] = array_values(array_unique($seleccion));
+        $contenido = "<?php exit; ?>\n" . json_encode($permisos, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR);
+        $temporal = tempnam(__DIR__, '.permisos-');
+        if (!$temporal) throw new RuntimeException('No se pudo preparar el archivo.');
+        try {
+            if (file_put_contents($temporal, $contenido) !== strlen($contenido) || !rename($temporal, $archivo)) throw new RuntimeException('No se pudieron guardar los paneles del rol.');
+        } finally { if (is_file($temporal)) unlink($temporal); }
+    } finally { flock($candado, LOCK_UN); fclose($candado); }
+}
+
 function admin_puede_tabla(mysqli $conexion, string $tabla): bool
 {
     return admin_es_cuenta_principal($conexion);

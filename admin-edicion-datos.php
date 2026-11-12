@@ -87,6 +87,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else { $registro = []; }
         if (($_POST['accion'] ?? '') === 'eliminar') {
             if ($crear || ($_POST['confirmar_eliminar'] ?? '') !== '1') throw new RuntimeException('Confirmá la eliminación del registro.');
+            if ($tabla === 'presupuesto') {
+                require_once __DIR__ . '/consultas-panel.php';
+                consultas_eliminar_presupuesto($conexion, (int) $idRegistro);
+                $conexion->commit();
+                $_SESSION['tablas_mensaje'] = 'Consulta y detalles del presupuesto eliminados.';
+                header('Location: ' . $paginaOrigen . '?modo=datos&operacion=eliminar&tabla=' . rawurlencode($tabla) . $filtroColumna, true, 303);
+                exit;
+            }
             if (($tabla === 'empleado' && $registro['email'] === 'gpufixstore@gmail.com') || ($tabla === 'usuarios' && $registro['correo'] === 'gpufixstore@gmail.com') || ($tabla === 'empleado' && (int)$registro['id_empleado'] === (int)$_SESSION['empleado_id']) || ($tabla === 'puesto' && $registro['nombre'] === 'Administrador')) throw new RuntimeException('No se puede eliminar la cuenta principal, su empleado o su puesto desde el panel.');
             $dependencias = tablas_consultar($conexion, 'SELECT TABLE_NAME, COLUMN_NAME, REFERENCED_COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = DATABASE() AND REFERENCED_TABLE_NAME = ?', [$tabla])->get_result()->fetch_all(MYSQLI_ASSOC);
             foreach ($dependencias as $dependencia) {
@@ -284,7 +292,7 @@ $soloLectura = $columnaElegida === $clavePrimaria;
 </form><?php endif; ?>
 <?php if ($eliminar): ?><dl class="row"><?php foreach ($registro as $campoResumen=>$valorResumen): if ($campoResumen === 'contraseña') continue; ?><dt class="col-sm-4"><?= admin_e($campoResumen) ?></dt><dd class="col-sm-8"><?= admin_e($valorResumen ?? 'Sin valor') ?></dd><?php endforeach; ?></dl><form method="post" class="mt-4 border-top pt-3 tablas-confirmar-baja">
 <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>"><input type="hidden" name="version" value="<?= admin_e(tablas_version($registro)) ?>"><input type="hidden" name="accion" value="eliminar">
-<label><input type="checkbox" name="confirmar_eliminar" value="1" required> Confirmo eliminar este registro de <?= admin_e($tabla) ?>.</label>
+<label><input type="checkbox" name="confirmar_eliminar" value="1" required> <?= $tabla === 'presupuesto' ? 'Confirmo eliminar todos los registros de esta consulta y los detalles de su presupuesto. Si su orden antigua solo corresponde a esta consulta, también se eliminará.' : 'Confirmo eliminar este registro de ' . admin_e($tabla) . '.' ?></label>
 <button class="btn btn-danger" type="submit">Eliminar registro</button></form><?php endif; ?>
 </section><?php endif; ?>
 <?php if (!$crear): ?><section class="panel"><h2 class="h5"><?= admin_e(admin_etiqueta_dato($tabla)) ?> · <?= $total ?> registros</h2>

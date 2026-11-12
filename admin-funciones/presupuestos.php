@@ -35,6 +35,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $formularioEditado = $idPresupuesto ? 'p-' . $idPresupuesto : 'o-' . $idOrden;
 
     try {
+        if ($accion === 'eliminar_consulta') {
+            if (($_POST['confirmar_eliminar'] ?? '') !== '1') throw new RuntimeException('Confirmá eliminar todos los registros de esta consulta.');
+            $conexion->begin_transaction();
+            $transaccionActiva = true;
+            consultas_eliminar_presupuesto($conexion, $idPresupuesto, $idOrden);
+            $conexion->commit();
+            $transaccionActiva = false;
+            $_SESSION['mensaje_presupuesto_admin'] = 'Consulta y detalles del presupuesto eliminados. Ya no figura como consulta sin responder.';
+            header('Location: ' . admin_url_panel('presupuestos'), true, 303);
+            exit;
+        }
         if ($accion === 'responder_consulta') {
             $respuestaIngresada = is_string($_POST['respuesta'] ?? null) ? trim($_POST['respuesta']) : '';
             $precioIngresado = is_string($_POST['precio'] ?? null) ? trim($_POST['precio']) : '';
@@ -197,6 +208,15 @@ admin_layout_inicio('Presupuestos');
                     <?php if (!$correoDisponible): ?><small class="text-secondary ms-2">Correo no configurado. La respuesta está disponible en Mi cuenta.</small><?php endif; ?>
                 </form>
             <?php endif; ?>
+            <form method="post" class="mt-4 border-top pt-3">
+                <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">
+                <input type="hidden" name="accion" value="eliminar_consulta">
+                <input type="hidden" name="id_presupuesto" value="<?= $idPresupuesto ?>">
+                <input type="hidden" name="id_orden_reparacion" value="<?= $idOrden ?>">
+                <label class="d-block mb-2"><input type="checkbox" name="confirmar_eliminar" value="1" required> Eliminar todos los registros de esta consulta y los detalles de su presupuesto.</label>
+                <p class="small text-secondary">Si existe una orden antigua usada solo para esta consulta, también se elimina. Se conservan clientes, placas e historiales de reparación.</p>
+                <button class="btn btn-outline-danger" type="submit">Eliminar consulta completa</button>
+            </form>
             </div>
         </details>
     <?php endforeach; endif; ?>
