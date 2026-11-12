@@ -54,6 +54,9 @@ $tabla = is_string($_GET['tabla'] ?? null) ? $_GET['tabla'] : $tablasPermitidas[
 if (!in_array($tabla, $tablasPermitidas, true)) { http_response_code(404); exit('Tabla no disponible.'); }
 $nombreTabla = tablas_identificador($tabla);
 $columnas = $conexion->query('SHOW FULL COLUMNS FROM ' . $nombreTabla)->fetch_all(MYSQLI_ASSOC);
+if ($tabla === 'empleado') {
+    $columnas = array_values(array_filter($columnas, static fn ($columna) => $columna['Field'] !== 'contraseña'));
+}
 $clavePrimaria = '';
 foreach ($columnas as $columna) if ($columna['Key'] === 'PRI') $clavePrimaria = $columna['Field'];
 if ($clavePrimaria === '') throw new RuntimeException('La tabla necesita una clave primaria.');
@@ -103,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!isset($_POST['datos']) || !is_array($_POST['datos']) || !array_key_exists($campo, $_POST['datos']) || !is_string($_POST['datos'][$campo])) throw new RuntimeException('Falta el campo ' . $campo . '.');
             $valor = $_POST['datos'][$campo];
             if ($crear && isset($_POST['predeterminados'][$campo]) && $columna['Default'] !== null) continue;
-            if (in_array($tabla, ['usuarios','empleado'], true) && $campo === 'contraseña') {
+            if ($tabla === 'usuarios' && $campo === 'contraseña') {
                 if ($valor === '' && !$crear) continue;
                 if (strlen($valor) < 8 || strlen($valor) > 72) throw new RuntimeException('La contraseña debe tener entre 8 y 72 bytes.');
                 $valor = password_hash($valor, PASSWORD_DEFAULT);
@@ -111,6 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (isset($_POST['nulos']) && is_array($_POST['nulos']) && ($_POST['nulos'][$campo] ?? '') === '1') $valor = null;
                 tablas_validar_campo($columna, $valor);
             }
+            if ($tabla === 'empleado' && $campo === 'id_correo' && ($valor === null || trim($valor) === '')) throw new RuntimeException('Seleccioná el usuario con el que iniciará sesión el empleado.');
             if (in_array($tabla, ['usuarios', 'empleado'], true) && in_array($campo, ['nombre', 'apellido', 'dni', 'telefono'], true)) {
                 if ($valor === null || trim($valor) === '') throw new RuntimeException('El campo ' . admin_etiqueta_dato($campo) . ' es obligatorio y no puede quedar vacío.');
                 $valor = trim($valor);
@@ -165,7 +169,7 @@ if ($crear) {
 }
 $relaciones = tablas_consultar($conexion, 'SELECT COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND REFERENCED_TABLE_NAME IS NOT NULL', [$tabla])->get_result()->fetch_all(MYSQLI_ASSOC);
 $relacionesPorCampo = array_column($relaciones,null,'COLUMN_NAME');
-$vinculosObligatorios = ['presupuesto'=>['id_cliente'], 'empleado'=>['email'], 'stock_gpu'=>['ubicacion'], 'stock'=>['ubicacion']];
+$vinculosObligatorios = ['presupuesto'=>['id_cliente'], 'empleado'=>['email','id_correo'], 'stock_gpu'=>['ubicacion'], 'stock'=>['ubicacion']];
 $referenciasReparacion = [];
 foreach ($relaciones as $relacion) {
     $destino = $relacion['REFERENCED_TABLE_NAME'];
@@ -225,10 +229,11 @@ $registros = tablas_consultar($conexion,'SELECT * FROM ' . $nombreTabla . $where
 admin_layout_inicio($tituloSeccion);
 if ($paginaOrigen === 'admin-tablas.php') { admin_menu_tablas($tabla); admin_tabs_tabla($tabla); }
 $columnasVisibles = array_values(array_filter($columnas, static fn ($columna) => $columnaElegida === '' || $columna['Field'] === $columnaElegida || $columna['Field'] === $clavePrimaria));
-$soloLectura = $columnaElegida === $clavePrimaria || ($tabla === 'empleado' && $columnaElegida === 'id_correo');
+$soloLectura = $columnaElegida === $clavePrimaria;
 
 ?>
 <h1 class="h3 mt-3"><?= admin_e($tituloSeccion) ?></h1>
+<?php if ($tabla === 'empleado'): ?><p>El empleado inicia sesión con el correo y la contraseña del usuario vinculado. La contraseña se administra en Usuarios.</p><?php endif; ?>
 <form method="get" class="panel d-flex flex-wrap gap-3 align-items-end">
 <input type="hidden" name="tabla" value="<?= admin_e($tabla) ?>">
 <label class="flex-grow-1" for="elegirColumna">Columna<select class="form-select" id="elegirColumna" name="columna" required>
@@ -260,11 +265,7 @@ $soloLectura = $columnaElegida === $clavePrimaria || ($tabla === 'empleado' && $
 <?php if (isset($referenciasReparacion[$tabla][$idRegistro])): ?><p class="border rounded p-3 bg-light"><?= admin_e($referenciasReparacion[$tabla][$idRegistro]) ?></p><?php endif; ?>
 <?php if (!$eliminar && !$soloLectura): ?><form method="post" action="<?= admin_e($paginaOrigen) ?>?modo=datos&amp;tabla=<?= rawurlencode($tabla) ?>&amp;<?= $crear ? "nuevo=1" : "editar=" . rawurlencode($idRegistro) ?><?= admin_e($crear ? '' : $filtroColumna) ?>" class="row g-3">
 <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>"><input type="hidden" name="version" value="<?= admin_e(tablas_version($registro)) ?>">
-<?php foreach ($columnas as $indice=>$columna): $campo=$columna['Field']; if ($crear && $campo === $clavePrimaria) continue; if (!$crear && $columnaElegida !== '' && $campo !== $columnaElegida) continue; $esClave=$campo===$clavePrimaria; $esSecreto=in_array($tabla, ['usuarios','empleado'], true) && $campo==='contraseña'; $valor=$esSecreto ? '' : ($valoresFormulario[$campo] ?? $registro[$campo]); if ($valor!==null) $valor=is_scalar($valor) ? (string)$valor : ''; $esTexto=str_contains($columna['Type'],'text'); $esObligatorioCuenta=(in_array($tabla, ['usuarios','empleado'], true) && in_array($campo, ['nombre','apellido','dni','telefono'], true)) || in_array($campo, $vinculosObligatorios[$tabla] ?? [], true); ?>
-<?php if ($tabla === 'empleado' && $campo === 'id_correo'): ?>
-<input type="hidden" name="datos[id_correo]" value="<?= admin_e($registro['id_correo'] ?? '') ?>">
-<?php if ($crear || $registro['id_correo'] === null): ?><input type="hidden" name="nulos[id_correo]" value="1"><?php endif; ?>
-<?php continue; endif; ?>
+<?php foreach ($columnas as $indice=>$columna): $campo=$columna['Field']; if ($crear && $campo === $clavePrimaria) continue; if (!$crear && $columnaElegida !== '' && $campo !== $columnaElegida) continue; $esClave=$campo===$clavePrimaria; $esSecreto=$tabla === 'usuarios' && $campo==='contraseña'; $valor=$esSecreto ? '' : ($valoresFormulario[$campo] ?? $registro[$campo]); if ($valor!==null) $valor=is_scalar($valor) ? (string)$valor : ''; $esTexto=str_contains($columna['Type'],'text'); $esObligatorioCuenta=(in_array($tabla, ['usuarios','empleado'], true) && in_array($campo, ['nombre','apellido','dni','telefono'], true)) || in_array($campo, $vinculosObligatorios[$tabla] ?? [], true); ?>
 <div class="<?= $esTexto ? 'col-12' : 'col-md-6' ?>"><label class="form-label" for="campo-<?= $indice ?>"><?= admin_e($esSecreto && $crear ? 'Contraseña' : admin_etiqueta_dato($campo)) ?><?= $esClave ? ' · ID' : '' ?></label>
 <?php $opcionesRelacion = isset($relacionesPorCampo[$campo]) ? ($referenciasReparacion[$relacionesPorCampo[$campo]['REFERENCED_TABLE_NAME']] ?? null) : null; ?>
 <?php if (!$esClave && $opcionesRelacion !== null): ?>
@@ -288,7 +289,7 @@ $soloLectura = $columnaElegida === $clavePrimaria || ($tabla === 'empleado' && $
 </section><?php endif; ?>
 <?php if (!$crear): ?><section class="panel"><h2 class="h5"><?= admin_e(admin_etiqueta_dato($tabla)) ?> · <?= $total ?> registros</h2>
 <div class="table-responsive" tabindex="0" aria-label="Registros de <?= admin_e($tabla) ?>"><table class="table table-striped"><thead><tr><th>Acción</th><?php foreach ($columnasVisibles as $columna): ?><th scope="col"><?= admin_e(admin_etiqueta_dato($columna['Field'])) ?></th><?php endforeach; ?></tr></thead><tbody>
-<?php foreach ($registros as $fila): ?><tr><td><?php if (!$soloLectura || $eliminar): ?><a class="btn btn-sm <?= $eliminar ? 'btn-outline-danger' : 'btn-outline-primary' ?>" href="<?= admin_e($paginaOrigen) ?>?modo=datos&amp;tabla=<?= rawurlencode($tabla) ?>&amp;operacion=<?= admin_e($operacion) ?>&amp;editar=<?= rawurlencode($fila[$clavePrimaria]) ?><?= admin_e($filtroColumna) ?>#editar-registro"><?= $eliminar ? "Eliminar registro" : "Editar valor" ?></a><?php else: ?>ID<?php endif; ?></td><?php foreach ($columnasVisibles as $columna): $campo=$columna['Field']; $contenido=$fila[$campo]; $etiquetaRelacion = isset($relacionesPorCampo[$campo]) ? ($referenciasReparacion[$relacionesPorCampo[$campo]['REFERENCED_TABLE_NAME']][$contenido ?? ''] ?? null) : null; ?><td><?php if (in_array($tabla, ['usuarios','empleado'], true) && $campo==='contraseña'): ?>Contraseña guardada<?php elseif ($campo==='imagen' && is_string($contenido) && preg_match('~^https?://~i', $contenido)): ?><a href="<?= admin_e($contenido) ?>" target="_blank" rel="noopener noreferrer"><img src="<?= admin_e($contenido) ?>" alt="Imagen del producto" loading="lazy" class="img-thumbnail" style="width:100px;height:80px;object-fit:contain"></a><?php elseif ($contenido===null): ?><span class="text-secondary">Sin valor</span><?php elseif ($etiquetaRelacion !== null): ?><?= admin_e($etiquetaRelacion) ?><?php else: ?><?= admin_e(mb_strimwidth((string)$contenido,0,160,'…','UTF-8')) ?><?php endif; ?></td><?php endforeach; ?></tr><?php endforeach; ?>
+<?php foreach ($registros as $fila): ?><tr><td><?php if (!$soloLectura || $eliminar): ?><a class="btn btn-sm <?= $eliminar ? 'btn-outline-danger' : 'btn-outline-primary' ?>" href="<?= admin_e($paginaOrigen) ?>?modo=datos&amp;tabla=<?= rawurlencode($tabla) ?>&amp;operacion=<?= admin_e($operacion) ?>&amp;editar=<?= rawurlencode($fila[$clavePrimaria]) ?><?= admin_e($filtroColumna) ?>#editar-registro"><?= $eliminar ? "Eliminar registro" : "Editar valor" ?></a><?php else: ?>ID<?php endif; ?></td><?php foreach ($columnasVisibles as $columna): $campo=$columna['Field']; $contenido=$fila[$campo]; $etiquetaRelacion = isset($relacionesPorCampo[$campo]) ? ($referenciasReparacion[$relacionesPorCampo[$campo]['REFERENCED_TABLE_NAME']][$contenido ?? ''] ?? null) : null; ?><td><?php if ($tabla === 'usuarios' && $campo==='contraseña'): ?>Contraseña guardada<?php elseif ($campo==='imagen' && is_string($contenido) && preg_match('~^https?://~i', $contenido)): ?><a href="<?= admin_e($contenido) ?>" target="_blank" rel="noopener noreferrer"><img src="<?= admin_e($contenido) ?>" alt="Imagen del producto" loading="lazy" class="img-thumbnail" style="width:100px;height:80px;object-fit:contain"></a><?php elseif ($contenido===null): ?><span class="text-secondary">Sin valor</span><?php elseif ($etiquetaRelacion !== null): ?><?= admin_e($etiquetaRelacion) ?><?php else: ?><?= admin_e(mb_strimwidth((string)$contenido,0,160,'…','UTF-8')) ?><?php endif; ?></td><?php endforeach; ?></tr><?php endforeach; ?>
 <?php if (!$registros): ?><tr><td colspan="<?= count($columnasVisibles)+1 ?>">No hay registros para mostrar.</td></tr><?php endif; ?></tbody></table></div>
 <nav aria-label="Páginas de registros" class="d-flex flex-wrap gap-3 align-items-center"><?php foreach (['Anterior'=>$pagina-1,'Siguiente'=>$pagina+1] as $etiqueta=>$numero): if ($numero<1 || $numero>$paginas) continue; ?><a href="<?= admin_e($paginaOrigen) ?>?modo=datos&amp;<?= admin_e(http_build_query(['tabla'=>$tabla,'buscar'=>$buscar,'pagina'=>$numero,'operacion'=>$operacion,'columna'=>$columnaElegida])) ?>"><?= $etiqueta ?></a><?php endforeach; ?><span>Página <?= $pagina ?> de <?= $paginas ?></span></nav></section>
 <?php endif; if ($paginaOrigen === 'admin-tablas.php') echo '</div></div>'; admin_layout_fin(); exit; }
