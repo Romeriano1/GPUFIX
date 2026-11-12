@@ -47,7 +47,7 @@ if (($_GET['vista'] ?? '') === 'acciones') {
     define('GPUFIX_TABLA_ACCIONES', true);
     $GLOBALS['tabla_funciones_actual'] = $seleccion;
     $_GET['modo'] = 'acciones';
-    require __DIR__ . '/admin-funciones/' . $funcion . '.php';
+    require __DIR__ . '/admin-' . $funcion . '.php';
     exit;
 }
 $_GET['modo'] = 'datos';
