@@ -19,8 +19,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             require_once __DIR__ . '/conexion.php';
 
             $consulta = $conexion->prepare(
-                "SELECT e.id_empleado, e.`contraseña`, e.nombre, e.apellido, e.id_empleado
-                 FROM empleado e WHERE e.email = ? LIMIT 1"
+                "SELECT u.id_correo, u.`contraseña`, e.nombre, e.apellido, e.id_empleado
+                 FROM usuarios u
+                 INNER JOIN empleado e ON e.id_correo = u.id_correo
+                 WHERE u.correo = ? LIMIT 1"
             );
             $consulta->bind_param('s', $correo);
             $consulta->execute();
