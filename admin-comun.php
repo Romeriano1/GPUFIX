@@ -148,10 +148,14 @@ function admin_layout_inicio(string $titulo): void {
         .navbar-toggler { min-width: 44px; min-height: 44px; }
         .admin-indicadores { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin: 0; }
         .admin-indicadores > div { width: auto; padding: 0; margin: 0; }
-        @media (max-width: 1199px) {
-            .navbar > .container { flex-wrap: wrap; }
-            .navbar-collapse .navbar-nav { flex-wrap: wrap; }
-        }
+        .navbar > .container { flex-wrap: wrap; }
+        .navbar-collapse { min-width: 0; }
+        .navbar-collapse .navbar-nav { flex-wrap: wrap; }
+        .admin-menu .navbar-collapse { flex-basis: 100%; }
+        .admin-menu .navbar-nav { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 6px; padding: 16px 0; }
+        .admin-menu .nav-link { padding: 12px; border-radius: 8px; }
+        .admin-menu .nav-link:hover, .admin-menu .nav-link:focus-visible { background: #26354c; }
+        .admin-menu .navbar-text { grid-column: 1 / -1; }
         @media (max-width: 575px) {
             .navbar-brand { font-size: 1rem; white-space: normal; max-width: calc(100% - 64px); }
             .panel { padding: 16px 12px; margin: 14px 0; }
@@ -170,13 +174,13 @@ function admin_layout_inicio(string $titulo): void {
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg">
+    <nav class="navbar'.(admin_es_cuenta_principal($conexion) ? ' admin-menu' : ' navbar-expand-lg').'">
         <div class="container">
             <a class="navbar-brand fw-bold" href="admin.php">
                 GPUFIX | Administración
             </a>
 
-            <button class="navbar-toggler bg-light"
+            <button class="navbar-toggler bg-light" type="button"
                     data-bs-toggle="collapse"
                     data-bs-target="#adminNav"
                     aria-controls="adminNav"

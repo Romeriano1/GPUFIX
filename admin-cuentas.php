@@ -10,6 +10,7 @@ if (!defined('GPUFIX_TABLA_ACCIONES')) {
 }
 require_once __DIR__ . '/admin-edicion-datos.php';
 $esAdministradorPrincipal = admin_es_cuenta_principal($conexion);
+$puedeHabilitarEmpleado = $esAdministradorPrincipal || admin_es_rrhh($conexion);
 
 function buscarCuentaAdmin(mysqli $conexion, int $id, bool $bloquear = false): ?array
 {
@@ -101,6 +102,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $tipoCuenta = 'cliente';
+        if (($_POST['habilitar_empleado'] ?? '') === '1' && !$puedeHabilitarEmpleado) {
+            throw new RuntimeException('Solo RRHH y GPUFIX pueden habilitar una cuenta como empleado.');
+        }
+        $habilitarEmpleado = !empty($cuentaEditada['id_empleado']) || ($puedeHabilitarEmpleado && ($_POST['habilitar_empleado'] ?? '') === '1');
+        $idPuesto = $idPuestoActual;
+        if ($puedeHabilitarEmpleado && $habilitarEmpleado) {
+            $idPuesto = filter_input(INPUT_POST, 'id_puesto', FILTER_VALIDATE_INT) ?: 0;
+            if (!in_array($idPuesto, array_map('intval', array_column($puestosDisponibles, 'id_puesto')), true)) {
+                throw new RuntimeException('Seleccioná un puesto para habilitar el acceso de empleado.');
+            }
+        }
         foreach (['nombre', 'apellido', 'correo', 'dni', 'telefono'] as $campo) {
             $cuentaEditada[$campo] = is_string($_POST[$campo] ?? null) ? trim($_POST[$campo]) : '';
         }
@@ -149,6 +161,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($tipoCuenta === 'cliente') {
             $guardar = $conexion->prepare('INSERT INTO cliente (id_correo, direccion) VALUES (?, ?)');
             $guardar->bind_param('is', $idCuenta, $cuentaEditada['direccion']);
+            $guardar->execute();
+            $guardar->close();
+        }
+        if ($habilitarEmpleado) {
+            if ($cuentaEditada['id_empleado']) {
+                $guardar = $conexion->prepare('UPDATE empleado SET nombre=?,apellido=?,dni=?,telefono=?,email=?,id_puesto=? WHERE id_correo=?');
+            } else {
+                $guardar = $conexion->prepare('INSERT INTO empleado(nombre,apellido,dni,telefono,email,id_puesto,id_correo) VALUES(?,?,?,?,?,?,?)');
+            }
+            $guardar->bind_param('sssssii', $cuentaEditada['nombre'], $cuentaEditada['apellido'], $cuentaEditada['dni'], $cuentaEditada['telefono'], $cuentaEditada['correo'], $idPuesto, $idCuenta);
             $guardar->execute();
             $guardar->close();
         }
@@ -208,6 +230,24 @@ admin_layout_inicio('Cuentas');
         <div class="col-md-6"><label class="form-label" for="cuentaCorreo">Correo</label><input id="cuentaCorreo" class="form-control" name="correo" type="email" maxlength="150" value="<?= admin_e($cuentaEditada['correo']) ?>" required <?= $principalEditada ? 'readonly' : '' ?>></div>
         <div class="col-md-3"><label class="form-label" for="cuentaDni">DNI</label><input id="cuentaDni" class="form-control" name="dni" inputmode="numeric" pattern="[0-9]{7,8}" minlength="7" maxlength="8" value="<?= admin_e($cuentaEditada['dni']) ?>" required></div>
         <div class="col-md-3"><label class="form-label" for="cuentaTelefono">Teléfono</label><input id="cuentaTelefono" class="form-control" name="telefono" type="tel" maxlength="30" value="<?= admin_e($cuentaEditada['telefono']) ?>" required></div>
+        <?php if ($puedeHabilitarEmpleado): ?>
+        <fieldset class="col-12">
+            <legend class="h6">Acceso de empleado</legend>
+            <?php if ($cuentaEditada['id_empleado']): ?>
+                <p class="small text-secondary">Esta cuenta ya tiene acceso de empleado.</p>
+            <?php else: ?>
+                <label class="form-check mb-3"><input class="form-check-input" type="checkbox" name="habilitar_empleado" value="1" <?= ($_POST['habilitar_empleado'] ?? '') === '1' ? 'checked' : '' ?>> Habilitar como empleado</label>
+            <?php endif; ?>
+            <label class="form-label" for="cuentaPuesto">Puesto del empleado</label>
+            <select class="form-select" id="cuentaPuesto" name="id_puesto">
+                <option value="">Seleccioná un puesto</option>
+                <?php foreach ($puestosDisponibles as $puesto): ?>
+                    <option value="<?= (int) $puesto['id_puesto'] ?>" <?= (int) ($_POST['id_puesto'] ?? $cuentaEditada['id_puesto']) === (int) $puesto['id_puesto'] ? 'selected' : '' ?>><?= admin_e($puesto['nombre']) ?></option>
+                <?php endforeach; ?>
+            </select>
+            <p class="small text-secondary mt-2">Podrá iniciar sesión como empleado con el correo y la contraseña de esta cuenta y acceder a los paneles habilitados para su puesto.</p>
+        </fieldset>
+        <?php endif; ?>
         <div class="col-12" id="grupoCuentaDireccion" data-tiene-cliente="<?= $cuentaEditada['id_cliente'] ? '1' : '0' ?>" <?= !$cuentaEditada['id_cliente'] && $tipoEditado !== 'cliente' ? 'hidden' : '' ?>><label class="form-label" for="cuentaDireccion">Dirección de facturación del cliente</label><input id="cuentaDireccion" class="form-control" name="direccion" maxlength="255" value="<?= admin_e($cuentaEditada['direccion']) ?>"></div>
         <fieldset class="col-12">
             <legend class="h6">Cambiar contraseña</legend>

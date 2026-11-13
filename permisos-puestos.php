@@ -22,12 +22,6 @@
         "admin-devoluciones.php",
         "admin-comprobantes.php"
     ],
-    "16": [
-        "admin-cuentas.php",
-        "admin-productos.php",
-        "admin-presupuestos.php",
-        "admin-facturacion.php"
-    ],
     "17": [
         "admin-cuentas.php",
         "admin-presupuestos.php"

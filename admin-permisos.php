@@ -13,7 +13,8 @@ function admin_secciones_permisos(): array
         'admin-componentes.php' => 'Componentes y repuestos',
         'admin-devoluciones.php' => 'Devoluciones',
         'admin-comprobantes.php' => 'Comprobantes',
-        'admin-empleos.php' => 'Empleados y permisos'
+        'admin-empleos.php' => 'Empleados y permisos',
+        'admin-asistencia.php' => 'Asistencia'
     ];
 }
 
@@ -38,7 +39,6 @@ function admin_roles_organigrama(): array
         ],
         'Comercial' => [
             'Jefe Comercial' => ['admin.php', 'admin-cuentas.php', 'admin-productos.php', 'admin-presupuestos.php', 'admin-facturacion.php', 'admin-devoluciones.php', 'admin-comprobantes.php'],
-            'Vendedores' => ['admin-cuentas.php', 'admin-productos.php', 'admin-presupuestos.php', 'admin-facturacion.php'],
             'Atención al Cliente' => ['admin-cuentas.php', 'admin-presupuestos.php'],
             'Presupuestos' => ['admin-productos.php', 'admin-presupuestos.php', 'admin-componentes.php'],
         ],
@@ -61,14 +61,28 @@ function admin_roles_organigrama(): array
 function admin_puede_ver(mysqli $conexion, string $pagina): bool
 {
     if (admin_es_cuenta_principal($conexion)) return true;
+    if ($pagina === 'admin-asistencia.php') return admin_es_cuenta_principal($conexion) || admin_es_rrhh($conexion);
+    if ($pagina === 'admin-empleos.php' && admin_es_cuenta_principal($conexion)) return true;
     if (!isset(admin_secciones_permisos()[$pagina])) return false;
-    $consulta = $conexion->prepare('SELECT id_puesto FROM empleado WHERE id_empleado = ?');
+    $consulta = $conexion->prepare('SELECT e.id_puesto,p.nombre FROM empleado e INNER JOIN puesto p ON p.id_puesto=e.id_puesto WHERE e.id_empleado = ?');
     $empleado = (int) ($_SESSION['empleado_id'] ?? 0);
     $consulta->bind_param('i', $empleado);
     $consulta->execute();
     $puesto = $consulta->get_result()->fetch_row();
     $configuracion = admin_leer_permisos();
-    return $puesto && in_array($pagina, $configuracion[(string)$puesto[0]] ?? [], true);
+    $paneles = $puesto ? ($configuracion[(string)$puesto[0]] ?? ($puesto[1] === 'Administrador' ? array_keys(admin_secciones_permisos()) : [])) : [];
+    return in_array($pagina, $paneles, true);
+}
+
+function admin_es_rrhh(mysqli $conexion): bool
+{
+    $consulta = $conexion->prepare("SELECT 1 FROM empleado e INNER JOIN puesto p ON p.id_puesto=e.id_puesto WHERE e.id_empleado=? AND LOWER(TRIM(p.nombre))='rrhh'");
+    $empleado = (int) ($_SESSION['empleado_id'] ?? 0);
+    $consulta->bind_param('i', $empleado);
+    $consulta->execute();
+    $resultado = (bool) $consulta->get_result()->fetch_row();
+    $consulta->close();
+    return $resultado;
 }
 
 function admin_puede_eliminar(mysqli $conexion): bool
@@ -125,10 +139,11 @@ function admin_puede_tabla(mysqli $conexion, string $tabla): bool
 function admin_menu_permitido(mysqli $conexion): string
 {
     if (admin_es_cuenta_principal($conexion)) {
-        return '<a class="nav-link" href="admin.php">Estadísticas</a>'
-            . '<a class="nav-link" href="admin-tablas.php">Tablas SQL</a>'
-            . '<a class="nav-link" href="admin-comprobantes.php">Comprobantes</a>'
-            . '<a class="nav-link" href="admin-empleos.php">Empleados y permisos</a>';
+        $enlaces = '<a class="nav-link" href="admin-tablas.php">Tablas SQL</a>';
+        foreach (admin_secciones_permisos() as $pagina => $nombre) {
+            if (admin_puede_ver($conexion, $pagina)) $enlaces .= '<a class="nav-link" href="' . admin_e($pagina) . '">' . admin_e($nombre) . '</a>';
+        }
+        return $enlaces;
     }
     $enlaces = '';
     foreach (admin_secciones_permisos() as $pagina => $nombre) {

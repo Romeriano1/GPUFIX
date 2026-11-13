@@ -64,9 +64,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 $empleados = $conexion->query("SELECT e.id_empleado,e.nombre,e.apellido,e.email,e.id_puesto FROM empleado e LEFT JOIN usuarios u ON u.id_correo=e.id_correo WHERE COALESCE(LOWER(TRIM(u.correo)),'') <> 'gpufixstore@gmail.com' ORDER BY e.nombre,e.apellido")->fetch_all(MYSQLI_ASSOC);
 $permisos = admin_leer_permisos();
+foreach ($puestos as $puesto) {
+    if ($puesto['nombre'] === 'Administrador' && !array_key_exists((string) $puesto['id_puesto'], $permisos)) {
+        $permisos[(string) $puesto['id_puesto']] = array_keys(admin_secciones_permisos());
+    }
+}
 $rolActual = null;
 foreach ($puestos as $puesto) if ((int)$puesto['id_puesto'] === $puestoId) $rolActual = $puesto;
 $panelesDisponibles = admin_secciones_permisos();
+unset($panelesDisponibles['admin-asistencia.php']);
 $areas = array_fill_keys(array_keys(admin_roles_organigrama()), []);
 $areaPorNombre = [];
 $ordenPorNombre = [];
@@ -105,6 +111,7 @@ $cantidadAsignados = (int) ($empleadosPorPuesto[$puestoId] ?? 0);
 $errorPuesto = $error && in_array($_POST['accion'] ?? '', ['crear_rol', 'permisos'], true);
 $nombreFormulario = $errorPuesto && is_string($_POST['nombre'] ?? null) ? $_POST['nombre'] : ($crearPuesto ? '' : ($rolActual['nombre'] ?? ''));
 $panelesFormulario = $errorPuesto && is_array($_POST['paneles'] ?? null) ? $_POST['paneles'] : ($crearPuesto ? [] : ($permisos[(string) $puestoId] ?? []));
+$panelesFormulario = array_values(array_diff($panelesFormulario, ['admin-asistencia.php']));
 $areaActual = $rolActual ? ($areaPorNombre[mb_strtolower(trim($rolActual['nombre']), 'UTF-8')] ?? 'Otros puestos') : '';
 admin_layout_inicio('Empleados y permisos');
 ?>
@@ -175,6 +182,7 @@ admin_layout_inicio('Empleados y permisos');
             <fieldset>
                 <legend class="h6">Acceso a paneles</legend>
                 <p class="text-secondary">Seleccioná los paneles que podrán utilizar los empleados de este puesto.</p>
+                <p class="small text-secondary">RRHH y GPUFIX administran las asistencias. GPUFIX conserva siempre el acceso completo a la administración.</p>
                 <div class="empleos-permisos">
                 <?php foreach ($panelesDisponibles as $pagina => $nombre): ?>
                     <label class="empleos-permiso">

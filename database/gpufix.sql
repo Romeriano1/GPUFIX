@@ -659,7 +659,7 @@ CREATE TABLE `puesto` (
 
 LOCK TABLES `puesto` WRITE;
 /*!40000 ALTER TABLE `puesto` DISABLE KEYS */;
-INSERT INTO `puesto` VALUES (1,'Administrador'),(14,'Dirección General'),(15,'Jefe Comercial'),(16,'Vendedores'),(17,'Atención al Cliente'),(18,'Presupuestos'),(19,'Jefe Técnico'),(20,'Técnicos de Diagnóstico'),(21,'Técnicos de Reparación y Mantenimiento'),(22,'Técnicos de Laboratorio'),(23,'Jefe Administrativo y RRHH'),(24,'Contabilidad'),(25,'Facturación'),(26,'Compras y Stock'),(27,'RRHH');
+INSERT INTO `puesto` VALUES (1,'Administrador'),(14,'Dirección General'),(15,'Jefe Comercial'),(17,'Atención al Cliente'),(18,'Presupuestos'),(19,'Jefe Técnico'),(20,'Técnicos de Diagnóstico'),(21,'Técnicos de Reparación y Mantenimiento'),(22,'Técnicos de Laboratorio'),(23,'Jefe Administrativo y RRHH'),(24,'Contabilidad'),(25,'Facturación'),(26,'Compras y Stock'),(27,'RRHH');
 /*!40000 ALTER TABLE `puesto` ENABLE KEYS */;
 UNLOCK TABLES;
 

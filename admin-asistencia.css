@@ -1,0 +1,16 @@
+.asistencia-mes { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 22px; }
+.asistencia-calendario { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+.asistencia-semana { text-align: center; padding: 8px 0; }
+.asistencia-dia { display: flex; flex-direction: column; justify-content: space-between; min-height: 84px; padding: 10px; border: 1px solid #dce2eb; border-radius: 8px; text-decoration: none; color: #202938; }
+.asistencia-dia small { font-size: .8rem; color: #596579; }
+.asistencia-dia:hover { background: #edf1f7; }
+.asistencia-dia.seleccionado { background: #253b80; color: #fff; }
+.asistencia-dia.seleccionado small { color: #fff; }
+.asistencia-dia:focus-visible { outline: 3px solid #6797ed; outline-offset: 2px; }
+@media (max-width: 575px) {
+    .asistencia-mes { flex-wrap: wrap; }
+    .asistencia-mes h2 { order: -1; width: 100%; text-align: center; }
+    .asistencia-calendario { gap: 3px; }
+    .asistencia-dia { padding: 6px; min-height: 58px; }
+    .asistencia-texto-registros { display: none; }
+}
