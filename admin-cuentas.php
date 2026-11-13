@@ -110,6 +110,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             || mb_strlen($cuentaEditada['nombre'], 'UTF-8') > 100 || mb_strlen($cuentaEditada['apellido'], 'UTF-8') > 100) {
             throw new RuntimeException('Completá el nombre y apellido, con hasta 100 caracteres cada uno.');
         }
+        foreach (['nombre', 'apellido'] as $campoNombre) {
+            if (!preg_match("/^[\p{L}\p{M}]+(?:[ '\x{2019}-][\p{L}\p{M}]+)*$/uD", $cuentaEditada[$campoNombre])) throw new RuntimeException('Nombre y apellido solo admiten letras, espacios, apóstrofes y guiones.');
+        }
         if (strlen($cuentaEditada['correo']) > 150 || !filter_var($cuentaEditada['correo'], FILTER_VALIDATE_EMAIL)) throw new RuntimeException('El correo no es válido.');
         if ($esPrincipal && $cuentaEditada['correo'] !== 'gpufixstore@gmail.com') throw new RuntimeException('El correo de la cuenta principal debe seguir siendo gpufixstore@gmail.com.');
         if (!preg_match('/^[0-9]{7,8}$/D', $cuentaEditada['dni'])) throw new RuntimeException('El DNI debe tener 7 u 8 números.');

@@ -249,13 +249,13 @@ $soloLectura = $columnaElegida === $clavePrimaria;
 <option value="">Seleccionar columna</option>
 <?php foreach ($columnas as $opcion): ?><option value="<?= admin_e($opcion['Field']) ?>" <?= $columnaElegida === $opcion['Field'] ? 'selected' : '' ?>><?= admin_e(admin_etiqueta_dato($opcion['Field']) . ' · ' . $opcion['Field']) ?></option><?php endforeach; ?>
 </select></label><button class="btn btn-primary">Ver columna</button></form>
+<?php if ($error): ?><div class="alert alert-danger" role="alert"><?= admin_e($error) ?></div><?php endif; ?>
+<?php if ($mensaje): ?><div class="alert alert-success" role="status"><?= admin_e($mensaje) ?></div><?php endif; ?>
 <?php if ($columnaElegida === '' && !$crear && !$registro): ?>
 <p>Seleccioná una columna para mostrar sus valores, o agregá un registro completo.</p><a class="btn btn-primary" href="admin-tablas.php?tabla=<?= rawurlencode($tabla) ?>&amp;nuevo=1">Agregar registro</a>
 <?php if ($paginaOrigen === 'admin-tablas.php') echo '</div></div>'; admin_layout_fin(); exit; endif; ?>
 <?php if ($soloLectura): ?><p>Este campo se conserva como identificador del registro y se muestra para consulta.</p><?php endif; ?>
 <p class="text-secondary">Agregá, editá o eliminá registros. Los ID se generan automáticamente y se conservan al editar. Esta edición actúa directamente sobre las tablas: no recalcula ventas ni stock de otras tablas ni envía correos.</p>
-<?php if ($error): ?><div class="alert alert-danger" role="alert"><?= admin_e($error) ?></div><?php endif; ?>
-<?php if ($mensaje): ?><div class="alert alert-success" role="status"><?= admin_e($mensaje) ?></div><?php endif; ?>
 <p><a href="<?= admin_e($paginaOrigen) ?>">← <?= $paginaOrigen === 'admin-tablas.php' ? 'Ver todas las secciones' : 'Volver a ' . admin_e($tituloSeccion) ?></a></p>
 <?php if (!$crear): ?><section class="panel"><form method="get" class="row g-3 align-items-end"><input type="hidden" name="modo" value="datos"><input type="hidden" name="operacion" value="<?= admin_e($operacion) ?>"><input type="hidden" name="columna" value="<?= admin_e($columnaElegida) ?>">
 <?php if ($paginaOrigen === 'admin-tablas.php'): ?><input type="hidden" name="tabla" value="<?= admin_e($tabla) ?>"><?php else: ?>
