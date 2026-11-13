@@ -14,7 +14,8 @@ function admin_secciones_permisos(): array
         'admin-devoluciones.php' => 'Devoluciones',
         'admin-comprobantes.php' => 'Comprobantes',
         'admin-empleos.php' => 'Empleados y permisos',
-        'admin-asistencia.php' => 'Asistencia'
+        'admin-asistencia.php' => 'Asistencia',
+        'admin-personal.php' => 'Empleados'
     ];
 }
 
@@ -62,6 +63,7 @@ function admin_puede_ver(mysqli $conexion, string $pagina): bool
 {
     if (admin_es_cuenta_principal($conexion)) return true;
     if ($pagina === 'admin-asistencia.php') return admin_es_cuenta_principal($conexion) || admin_es_rrhh($conexion);
+    if ($pagina === 'admin-personal.php') return admin_es_rrhh($conexion);
     if ($pagina === 'admin-empleos.php' && admin_es_cuenta_principal($conexion)) return true;
     if (!isset(admin_secciones_permisos()[$pagina])) return false;
     $consulta = $conexion->prepare('SELECT e.id_puesto,p.nombre FROM empleado e INNER JOIN puesto p ON p.id_puesto=e.id_puesto WHERE e.id_empleado = ?');

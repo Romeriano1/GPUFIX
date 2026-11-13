@@ -10,15 +10,14 @@ if (!defined('GPUFIX_TABLA_ACCIONES')) {
 }
 require_once __DIR__ . '/admin-edicion-datos.php';
 $esAdministradorPrincipal = admin_es_cuenta_principal($conexion);
-$puedeHabilitarEmpleado = $esAdministradorPrincipal || admin_es_rrhh($conexion);
 
 function buscarCuentaAdmin(mysqli $conexion, int $id, bool $bloquear = false): ?array
 {
     $consulta = $conexion->prepare('SELECT u.id_correo, u.nombre, u.apellido, u.correo, u.dni, u.telefono,
-        (u.correo = "gpufixstore@gmail.com") AS es_principal,
-        c.id_cliente, c.direccion, e.id_empleado, e.id_puesto, p.nombre AS puesto
+        0 AS es_principal,
+        c.id_cliente, c.direccion
         FROM usuarios u LEFT JOIN cliente c ON c.id_correo = u.id_correo
-        LEFT JOIN empleado e ON e.id_correo = u.id_correo LEFT JOIN puesto p ON p.id_puesto = e.id_puesto
+
         WHERE u.id_correo = ?' . ($bloquear ? ' FOR UPDATE' : ''));
     $consulta->bind_param('i', $id);
     $consulta->execute();
@@ -49,7 +48,6 @@ $tipoFiltro = is_string($_GET['tipo'] ?? null) && in_array($_GET['tipo'], ['clie
 $ordenCuentas = ($_GET['orden'] ?? '') === 'desc' ? 'desc' : 'asc';
 $parametrosFiltro = ['buscar' => $busquedaCuentas, 'tipo' => $tipoFiltro, 'orden' => $ordenCuentas];
 $urlListado = '' . admin_url_panel('cuentas') . '&' . http_build_query($parametrosFiltro);
-$puestosDisponibles = $conexion->query('SELECT id_puesto, nombre FROM puesto ORDER BY nombre')->fetch_all(MYSQLI_ASSOC);
 $idCuenta = filter_input(INPUT_GET, 'editar', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     admin_validar_csrf();
@@ -61,24 +59,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $transaccionActiva = true;
         $cuentaEditada = buscarCuentaAdmin($conexion, $idCuenta, true);
         if (!$cuentaEditada) throw new RuntimeException('La cuenta seleccionada ya no existe.');
-        $esPrincipal = strtolower($cuentaEditada['correo']) === 'gpufixstore@gmail.com';
-        $idPuestoActual = (int) ($cuentaEditada['id_puesto'] ?? 0);
+        $esPrincipal = false;
         if ($esPrincipal && !$esAdministradorPrincipal) throw new RuntimeException('Solo GPUFIX puede modificar la cuenta principal.');
         if ($accion === 'eliminar') {
-            if ($cuentaEditada['id_empleado']) throw new RuntimeException('Este usuario tiene un vínculo anterior con un empleado. Administrá ambos registros por separado desde Tablas SQL.');
             if ($esPrincipal) throw new RuntimeException('La cuenta principal de GPUFIX no se puede eliminar.');
-            if ($cuentaEditada['id_empleado'] && !$esAdministradorPrincipal) throw new RuntimeException('Solo GPUFIX puede eliminar cuentas de empleados.');
             if ($cuentaEditada['id_cliente']) {
                 foreach (['gpu_ventas', 'factura', 'envios', 'presupuesto', 'gpu_cliente'] as $tabla) {
                     if (cuentaTieneReferencias($conexion, $tabla, 'id_cliente', (int) $cuentaEditada['id_cliente'])) {
                         throw new RuntimeException('Esta cuenta tiene compras, facturas, presupuestos o equipos registrados y no se puede eliminar para conservar su historial.');
-                    }
-                }
-            }
-            if ($cuentaEditada['id_empleado']) {
-                foreach (['orden_compra' => 'id_empleado_recepcion', 'orden_reparacion' => 'id_empleado_recepcion', 'diagnostico' => 'id_tecnico', 'reparacion' => 'id_tecnico'] as $tabla => $columna) {
-                    if (cuentaTieneReferencias($conexion, $tabla, $columna, (int) $cuentaEditada['id_empleado'])) {
-                        throw new RuntimeException('Este empleado tiene operaciones o reparaciones asignadas y no se puede eliminar para conservar su historial.');
                     }
                 }
             }
@@ -96,23 +84,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $conexion->commit();
             $transaccionActiva = false;
-            $_SESSION['mensaje_cuentas_admin'] = 'Cuenta eliminada junto con sus datos de cliente, empleado y carrito.';
+            $_SESSION['mensaje_cuentas_admin'] = 'Cuenta eliminada junto con sus datos de cliente y carrito.';
             header('Location: ' . $urlListado . '#lista-cuentas', true, 303);
             exit;
         }
 
         $tipoCuenta = 'cliente';
-        if (($_POST['habilitar_empleado'] ?? '') === '1' && !$puedeHabilitarEmpleado) {
-            throw new RuntimeException('Solo RRHH y GPUFIX pueden habilitar una cuenta como empleado.');
-        }
-        $habilitarEmpleado = !empty($cuentaEditada['id_empleado']) || ($puedeHabilitarEmpleado && ($_POST['habilitar_empleado'] ?? '') === '1');
-        $idPuesto = $idPuestoActual;
-        if ($puedeHabilitarEmpleado && $habilitarEmpleado) {
-            $idPuesto = filter_input(INPUT_POST, 'id_puesto', FILTER_VALIDATE_INT) ?: 0;
-            if (!in_array($idPuesto, array_map('intval', array_column($puestosDisponibles, 'id_puesto')), true)) {
-                throw new RuntimeException('Seleccioná un puesto para habilitar el acceso de empleado.');
-            }
-        }
         foreach (['nombre', 'apellido', 'correo', 'dni', 'telefono'] as $campo) {
             $cuentaEditada[$campo] = is_string($_POST[$campo] ?? null) ? trim($_POST[$campo]) : '';
         }
@@ -126,7 +103,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!preg_match("/^[\p{L}\p{M}]+(?:[ '\x{2019}-][\p{L}\p{M}]+)*$/uD", $cuentaEditada[$campoNombre])) throw new RuntimeException('Nombre y apellido solo admiten letras, espacios, apóstrofes y guiones.');
         }
         if (strlen($cuentaEditada['correo']) > 150 || !filter_var($cuentaEditada['correo'], FILTER_VALIDATE_EMAIL)) throw new RuntimeException('El correo no es válido.');
-        if ($esPrincipal && $cuentaEditada['correo'] !== 'gpufixstore@gmail.com') throw new RuntimeException('El correo de la cuenta principal debe seguir siendo gpufixstore@gmail.com.');
         if (!preg_match('/^[0-9]{7,8}$/D', $cuentaEditada['dni'])) throw new RuntimeException('El DNI debe tener 7 u 8 números.');
         if ($cuentaEditada['telefono'] === '' || mb_strlen($cuentaEditada['telefono'], 'UTF-8') > 30) throw new RuntimeException('Completá el teléfono, con hasta 30 caracteres.');
         if (mb_strlen((string) ($cuentaEditada['direccion'] ?? ''), 'UTF-8') > 255) throw new RuntimeException('La dirección admite hasta 255 caracteres.');
@@ -164,16 +140,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $guardar->execute();
             $guardar->close();
         }
-        if ($habilitarEmpleado) {
-            if ($cuentaEditada['id_empleado']) {
-                $guardar = $conexion->prepare('UPDATE empleado SET nombre=?,apellido=?,dni=?,telefono=?,email=?,id_puesto=? WHERE id_correo=?');
-            } else {
-                $guardar = $conexion->prepare('INSERT INTO empleado(nombre,apellido,dni,telefono,email,id_puesto,id_correo) VALUES(?,?,?,?,?,?,?)');
-            }
-            $guardar->bind_param('sssssii', $cuentaEditada['nombre'], $cuentaEditada['apellido'], $cuentaEditada['dni'], $cuentaEditada['telefono'], $cuentaEditada['correo'], $idPuesto, $idCuenta);
-            $guardar->execute();
-            $guardar->close();
-        }
         $conexion->commit();
         $transaccionActiva = false;
         $_SESSION['mensaje_cuentas_admin'] = 'Datos de la cuenta actualizados.';
@@ -183,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($transaccionActiva) $conexion->rollback();
         error_log('Error al administrar cuenta: ' . $fallo->getMessage());
         $error = $fallo instanceof mysqli_sql_exception
-            ? ($fallo->getCode() === 1062 ? 'El correo o DNI de empleado ya está en uso.' : 'No pudimos guardar el cambio. Intentá nuevamente.')
+            ? ($fallo->getCode() === 1062 ? 'El correo ya está en uso.' : 'No pudimos guardar el cambio. Intentá nuevamente.')
             : $fallo->getMessage();
         if ($accion !== 'editar') $cuentaEditada = null;
     }
@@ -200,8 +166,8 @@ if ($cuentaEditada && $cuentaEditada['es_principal'] && !$esAdministradorPrincip
 $patronBusqueda = '%' . str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $busquedaCuentas) . '%';
 $condicionTipo = '';
 $direccionOrden = $ordenCuentas === 'desc' ? 'DESC' : 'ASC';
-$consultaCuentas = $conexion->prepare('SELECT u.id_correo, u.nombre, u.apellido, u.correo, u.dni, e.id_empleado, p.nombre AS puesto, c.id_cliente
-    FROM usuarios u LEFT JOIN empleado e ON e.id_correo = u.id_correo LEFT JOIN puesto p ON p.id_puesto = e.id_puesto
+$consultaCuentas = $conexion->prepare('SELECT u.id_correo, u.nombre, u.apellido, u.correo, u.dni, c.id_cliente
+    FROM usuarios u
     LEFT JOIN cliente c ON c.id_correo = u.id_correo
     WHERE (CONCAT(u.nombre, " ", u.apellido) LIKE ? ESCAPE "!" OR u.correo LIKE ? ESCAPE "!" OR u.dni LIKE ? ESCAPE "!")'
     . $condicionTipo . ' ORDER BY u.nombre ' . $direccionOrden . ', u.apellido ' . $direccionOrden . ', u.id_correo ASC');
@@ -211,13 +177,12 @@ $cuentas = $consultaCuentas->get_result();
 admin_layout_inicio('Cuentas');
 ?>
 <h1 class="h3 mt-3">Cuentas de clientes</h1>
-<p class="text-secondary">Podés editar cuentas. Las jefaturas y administración pueden eliminar clientes sin historial asociado. Solo GPUFIX puede eliminar empleados. La cuenta principal está protegida.</p>
+<p class="text-secondary">Podés editar cuentas. Las jefaturas y administración pueden eliminar clientes sin historial asociado.</p>
 <?php if ($mensaje !== ''): ?><div class="alert alert-success" role="status"><?= admin_e($mensaje) ?></div><?php endif; ?>
 <?php if ($error !== ''): ?><div class="alert alert-danger" role="alert"><?= admin_e($error) ?></div><?php endif; ?>
 <?php if ($cuentaEditada):
-    $tipoEditado = $cuentaEditada['tipo_cuenta'] ?? ($cuentaEditada['id_empleado'] ? 'empleado' : 'cliente');
+    $tipoEditado = $cuentaEditada['tipo_cuenta'] ?? 'cliente';
     $principalEditada = (bool) $cuentaEditada['es_principal'];
-    $tipoProtegido = $principalEditada || (!$esAdministradorPrincipal && $cuentaEditada['id_empleado']);
 ?>
 <section class="panel" id="editar-cuenta" aria-labelledby="tituloEditarCuenta">
     <h2 class="h5 mb-3" id="tituloEditarCuenta">Editar cuenta #<?= (int) $cuentaEditada['id_correo'] ?></h2>
@@ -230,24 +195,6 @@ admin_layout_inicio('Cuentas');
         <div class="col-md-6"><label class="form-label" for="cuentaCorreo">Correo</label><input id="cuentaCorreo" class="form-control" name="correo" type="email" maxlength="150" value="<?= admin_e($cuentaEditada['correo']) ?>" required <?= $principalEditada ? 'readonly' : '' ?>></div>
         <div class="col-md-3"><label class="form-label" for="cuentaDni">DNI</label><input id="cuentaDni" class="form-control" name="dni" inputmode="numeric" pattern="[0-9]{7,8}" minlength="7" maxlength="8" value="<?= admin_e($cuentaEditada['dni']) ?>" required></div>
         <div class="col-md-3"><label class="form-label" for="cuentaTelefono">Teléfono</label><input id="cuentaTelefono" class="form-control" name="telefono" type="tel" maxlength="30" value="<?= admin_e($cuentaEditada['telefono']) ?>" required></div>
-        <?php if ($puedeHabilitarEmpleado): ?>
-        <fieldset class="col-12">
-            <legend class="h6">Acceso de empleado</legend>
-            <?php if ($cuentaEditada['id_empleado']): ?>
-                <p class="small text-secondary">Esta cuenta ya tiene acceso de empleado.</p>
-            <?php else: ?>
-                <label class="form-check mb-3"><input class="form-check-input" type="checkbox" name="habilitar_empleado" value="1" <?= ($_POST['habilitar_empleado'] ?? '') === '1' ? 'checked' : '' ?>> Habilitar como empleado</label>
-            <?php endif; ?>
-            <label class="form-label" for="cuentaPuesto">Puesto del empleado</label>
-            <select class="form-select" id="cuentaPuesto" name="id_puesto">
-                <option value="">Seleccioná un puesto</option>
-                <?php foreach ($puestosDisponibles as $puesto): ?>
-                    <option value="<?= (int) $puesto['id_puesto'] ?>" <?= (int) ($_POST['id_puesto'] ?? $cuentaEditada['id_puesto']) === (int) $puesto['id_puesto'] ? 'selected' : '' ?>><?= admin_e($puesto['nombre']) ?></option>
-                <?php endforeach; ?>
-            </select>
-            <p class="small text-secondary mt-2">Podrá iniciar sesión como empleado con el correo y la contraseña de esta cuenta y acceder a los paneles habilitados para su puesto.</p>
-        </fieldset>
-        <?php endif; ?>
         <div class="col-12" id="grupoCuentaDireccion" data-tiene-cliente="<?= $cuentaEditada['id_cliente'] ? '1' : '0' ?>" <?= !$cuentaEditada['id_cliente'] && $tipoEditado !== 'cliente' ? 'hidden' : '' ?>><label class="form-label" for="cuentaDireccion">Dirección de facturación del cliente</label><input id="cuentaDireccion" class="form-control" name="direccion" maxlength="255" value="<?= admin_e($cuentaEditada['direccion']) ?>"></div>
         <fieldset class="col-12">
             <legend class="h6">Cambiar contraseña</legend>
@@ -281,23 +228,23 @@ admin_layout_inicio('Cuentas');
         <thead><tr><th>ID</th><th>Nombre y apellido</th><th>Tipo de cuenta</th><th>Correo</th><th>DNI</th><th>Acciones</th></tr></thead>
         <tbody>
         <?php if ($cuentas->num_rows === 0): ?><tr><td colspan="6" class="text-secondary py-4">No se encontraron usuarios con esos filtros.</td></tr><?php endif; ?>
-        <?php while ($cuenta = $cuentas->fetch_assoc()): $esPrincipal = strtolower($cuenta['correo']) === 'gpufixstore@gmail.com'; ?>
+        <?php while ($cuenta = $cuentas->fetch_assoc()): $esPrincipal = false; ?>
             <tr>
                 <td><?= (int) $cuenta['id_correo'] ?></td>
                 <td><?= admin_e($cuenta['nombre'] . ' ' . $cuenta['apellido']) ?></td>
-                <td><span class="badge <?= $cuenta['id_empleado'] ? 'text-bg-primary' : 'text-bg-secondary' ?>"><?= $cuenta['id_empleado'] ? 'Empleado' : 'Cliente' ?></span><?php if ($esPrincipal): ?><div class="small mt-1">Administrador principal</div><?php elseif ($cuenta['id_empleado']): ?><div class="small text-secondary mt-1"><?= admin_e($cuenta['puesto']) ?></div><?php endif; ?></td>
+                <td><span class="badge <?= 'text-bg-secondary' ?>"><?= 'Cliente' ?></span><?php if ($esPrincipal): ?><div class="small mt-1">Administrador principal</div><?php endif; ?></td>
                 <td><?= admin_e($cuenta['correo']) ?></td>
                 <td><?= admin_e($cuenta['dni']) ?></td>
                 <td><div class="d-flex flex-wrap gap-2">
                     <?php if (!$esPrincipal || $esAdministradorPrincipal): ?><a class="btn btn-sm btn-outline-primary" href="<?= admin_e($urlListado . '&editar=' . (int) $cuenta['id_correo']) ?>#editar-cuenta">Editar datos</a><?php endif; ?>
-                    <?php if (admin_puede_eliminar($conexion) && !$esPrincipal && (!$cuenta['id_empleado'] || $esAdministradorPrincipal)): ?>
+                    <?php if (admin_puede_eliminar($conexion) && !$esPrincipal): ?>
                     <form method="post" action="<?= admin_e($urlListado) ?>#lista-cuentas">
                         <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">
                         <input type="hidden" name="accion" value="eliminar">
                         <input type="hidden" name="id_correo" value="<?= (int) $cuenta['id_correo'] ?>">
                         <button class="btn btn-sm btn-danger" type="submit" aria-label="<?= admin_e('Eliminar cuenta de ' . $cuenta['correo']) ?>">Eliminar cuenta</button>
                     </form>
-                    <?php else: ?><span class="small text-secondary align-self-center"><?= $esPrincipal ? 'Cuenta protegida' : ($cuenta['id_empleado'] ? 'Solo GPUFIX puede eliminar' : 'Solo jefaturas y administración pueden eliminar') ?></span><?php endif; ?>
+                    <?php else: ?><span class="small text-secondary align-self-center"><?= $esPrincipal ? 'Cuenta protegida' : 'Solo jefaturas y administración pueden eliminar' ?></span><?php endif; ?>
                 </div></td>
             </tr>
         <?php endwhile; ?>

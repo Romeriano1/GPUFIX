@@ -2,7 +2,7 @@
 function admin_funciones_tablas(): array
 {
     return [
-        'usuarios' => 'cuentas', 'cliente' => 'cuentas', 'empleado' => 'cuentas',
+        'usuarios' => 'cuentas', 'cliente' => 'cuentas', 'empleado' => 'personal',
         'puesto' => 'cuentas', 'carrito' => 'cuentas', 'detalle_carrito' => 'cuentas',
         'gpu' => 'productos', 'stock_gpu' => 'productos',
         'proveedor' => 'proveedores',

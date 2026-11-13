@@ -30,7 +30,7 @@ CREATE TABLE `carrito` (
   PRIMARY KEY (`id_carrito`),
   UNIQUE KEY `uq_carrito_cliente` (`id_cliente`),
   CONSTRAINT `fk_carrito_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -57,7 +57,7 @@ CREATE TABLE `cliente` (
   PRIMARY KEY (`id_cliente`),
   UNIQUE KEY `uq_cliente_correo` (`id_correo`),
   CONSTRAINT `fk_cliente_usuarios` FOREIGN KEY (`id_correo`) REFERENCES `usuarios` (`id_correo`)
-) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=56 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -82,7 +82,7 @@ CREATE TABLE `componente` (
   `nombre` varchar(150) NOT NULL,
   `descripcion` text DEFAULT NULL,
   PRIMARY KEY (`id_componente`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -111,7 +111,7 @@ CREATE TABLE `detalle_carrito` (
   KEY `ix_detalle_carrito_gpu` (`id_gpu`),
   CONSTRAINT `fk_detalle_carrito_carrito` FOREIGN KEY (`id_carrito`) REFERENCES `carrito` (`id_carrito`) ON DELETE CASCADE,
   CONSTRAINT `fk_detalle_carrito_gpu` FOREIGN KEY (`id_gpu`) REFERENCES `gpu` (`id_gpu`)
-) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -147,7 +147,7 @@ CREATE TABLE `detalle_compra` (
   CONSTRAINT `fk_detalle_compra_componente` FOREIGN KEY (`id_componente`) REFERENCES `componente` (`id_componente`),
   CONSTRAINT `fk_detalle_compra_gpu` FOREIGN KEY (`id_gpu`) REFERENCES `gpu` (`id_gpu`),
   CONSTRAINT `fk_detalle_compra_orden` FOREIGN KEY (`id_orden_compra`) REFERENCES `orden_compra` (`id_orden_compra`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -176,7 +176,7 @@ CREATE TABLE `detalle_factura` (
   PRIMARY KEY (`id_detalle_factura`),
   KEY `fk_detalle_factura_factura` (`id_factura`),
   CONSTRAINT `fk_detalle_factura_factura` FOREIGN KEY (`id_factura`) REFERENCES `factura` (`id_factura`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -208,7 +208,7 @@ CREATE TABLE `detalle_presupuesto` (
   KEY `fk_det_presupuesto_componente` (`id_componente`),
   CONSTRAINT `fk_det_presupuesto_componente` FOREIGN KEY (`id_componente`) REFERENCES `componente` (`id_componente`),
   CONSTRAINT `fk_det_presupuesto_presupuesto` FOREIGN KEY (`id_presupuesto`) REFERENCES `presupuesto` (`id_presupuesto`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -237,7 +237,7 @@ CREATE TABLE `detalle_reparacion` (
   KEY `fk_det_reparacion_componente` (`id_componente`),
   CONSTRAINT `fk_det_reparacion_componente` FOREIGN KEY (`id_componente`) REFERENCES `componente` (`id_componente`),
   CONSTRAINT `fk_det_reparacion_reparacion` FOREIGN KEY (`id_reparacion`) REFERENCES `reparacion` (`id_reparacion`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -268,7 +268,7 @@ CREATE TABLE `detalle_venta` (
   KEY `fk_detalle_venta_gpu` (`id_gpu`),
   CONSTRAINT `fk_detalle_venta_gpu` FOREIGN KEY (`id_gpu`) REFERENCES `gpu` (`id_gpu`),
   CONSTRAINT `fk_detalle_venta_venta` FOREIGN KEY (`id_gpu_ventas`) REFERENCES `gpu_ventas` (`id_gpu_ventas`)
-) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -299,7 +299,7 @@ CREATE TABLE `diagnostico` (
   KEY `fk_diagnostico_tecnico` (`id_tecnico`),
   CONSTRAINT `fk_diagnostico_orden` FOREIGN KEY (`id_orden_reparacion`) REFERENCES `orden_reparacion` (`id_orden_reparacion`),
   CONSTRAINT `fk_diagnostico_tecnico` FOREIGN KEY (`id_tecnico`) REFERENCES `empleado` (`id_empleado`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -324,17 +324,15 @@ CREATE TABLE `empleado` (
   `apellido` varchar(100) NOT NULL,
   `dni` varchar(20) NOT NULL,
   `telefono` varchar(30) DEFAULT NULL,
-  `email` varchar(150) DEFAULT NULL,
+  `email` varchar(150) NOT NULL,
   `id_puesto` int(11) NOT NULL,
-  `id_correo` int(11) DEFAULT NULL,
+  `contraseña` varchar(255) NOT NULL,
   PRIMARY KEY (`id_empleado`),
   UNIQUE KEY `uq_empleado_dni` (`dni`),
-  UNIQUE KEY `uq_empleado_usuario` (`id_correo`),
   UNIQUE KEY `uq_empleado_email` (`email`),
   KEY `fk_empleado_puesto` (`id_puesto`),
-  CONSTRAINT `fk_empleado_puesto` FOREIGN KEY (`id_puesto`) REFERENCES `puesto` (`id_puesto`),
-  CONSTRAINT `fk_empleado_usuario` FOREIGN KEY (`id_correo`) REFERENCES `usuarios` (`id_correo`)
-) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+  CONSTRAINT `fk_empleado_puesto` FOREIGN KEY (`id_puesto`) REFERENCES `puesto` (`id_puesto`)
+) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -343,7 +341,7 @@ CREATE TABLE `empleado` (
 
 LOCK TABLES `empleado` WRITE;
 /*!40000 ALTER TABLE `empleado` DISABLE KEYS */;
-INSERT INTO `empleado` VALUES (1,'Admin','GpuFix','12341234','1158390537','gpufixstore@gmail.com',1,24);
+INSERT INTO `empleado` VALUES (1,'Admin','GpuFix','12341234','1158390537','gpufixstore@gmail.com',1,'$2y$10$ow9ZPHNC2IyfyDxj1cDNn.rcha4pkvVpUt.z0HLsqCxdH29vCLtqu');
 /*!40000 ALTER TABLE `empleado` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -367,7 +365,7 @@ CREATE TABLE `envios` (
   KEY `fk_envios_venta` (`id_gpu_ventas`),
   CONSTRAINT `fk_envios_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`),
   CONSTRAINT `fk_envios_venta` FOREIGN KEY (`id_gpu_ventas`) REFERENCES `gpu_ventas` (`id_gpu_ventas`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -402,7 +400,7 @@ CREATE TABLE `factura` (
   CONSTRAINT `fk_factura_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`),
   CONSTRAINT `fk_factura_reparacion` FOREIGN KEY (`id_reparacion`) REFERENCES `reparacion` (`id_reparacion`),
   CONSTRAINT `fk_factura_venta` FOREIGN KEY (`id_gpu_ventas`) REFERENCES `gpu_ventas` (`id_gpu_ventas`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -431,7 +429,7 @@ CREATE TABLE `gpu` (
   `pagina` varchar(100) DEFAULT NULL,
   `imagen` varchar(500) DEFAULT NULL,
   PRIMARY KEY (`id_gpu`)
-) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=46 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -464,7 +462,7 @@ CREATE TABLE `gpu_cliente` (
   UNIQUE KEY `uq_gpu_cliente_serie` (`numero_serie`),
   KEY `fk_gpu_cliente_cliente` (`id_cliente`),
   CONSTRAINT `fk_gpu_cliente_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -499,7 +497,7 @@ CREATE TABLE `gpu_ventas` (
   PRIMARY KEY (`id_gpu_ventas`),
   KEY `fk_gpu_ventas_cliente` (`id_cliente`),
   CONSTRAINT `fk_gpu_ventas_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -531,7 +529,7 @@ CREATE TABLE `orden_compra` (
   KEY `fk_orden_compra_empleado` (`id_empleado_recepcion`),
   CONSTRAINT `fk_orden_compra_empleado` FOREIGN KEY (`id_empleado_recepcion`) REFERENCES `empleado` (`id_empleado`),
   CONSTRAINT `fk_orden_compra_proveedor` FOREIGN KEY (`id_proveedor`) REFERENCES `proveedor` (`id_proveedor`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -563,7 +561,7 @@ CREATE TABLE `orden_reparacion` (
   KEY `fk_orden_rep_empleado` (`id_empleado_recepcion`),
   CONSTRAINT `fk_orden_rep_empleado` FOREIGN KEY (`id_empleado_recepcion`) REFERENCES `empleado` (`id_empleado`),
   CONSTRAINT `fk_orden_rep_gpu_cliente` FOREIGN KEY (`id_gpu_cliente`) REFERENCES `gpu_cliente` (`id_gpu_cliente`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -599,7 +597,7 @@ CREATE TABLE `presupuesto` (
   KEY `fk_presupuesto_cliente` (`id_cliente`),
   CONSTRAINT `fk_presupuesto_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`),
   CONSTRAINT `fk_presupuesto_orden` FOREIGN KEY (`id_orden_reparacion`) REFERENCES `orden_reparacion` (`id_orden_reparacion`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -626,7 +624,7 @@ CREATE TABLE `proveedor` (
   `email` varchar(150) DEFAULT NULL,
   `direccion` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id_proveedor`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -650,7 +648,7 @@ CREATE TABLE `puesto` (
   `id_puesto` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(100) NOT NULL,
   PRIMARY KEY (`id_puesto`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -683,7 +681,7 @@ CREATE TABLE `reparacion` (
   KEY `fk_reparacion_tecnico` (`id_tecnico`),
   CONSTRAINT `fk_reparacion_orden` FOREIGN KEY (`id_orden_reparacion`) REFERENCES `orden_reparacion` (`id_orden_reparacion`),
   CONSTRAINT `fk_reparacion_tecnico` FOREIGN KEY (`id_tecnico`) REFERENCES `empleado` (`id_empleado`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -706,12 +704,14 @@ CREATE TABLE `stock` (
   `id_stock` int(11) NOT NULL AUTO_INCREMENT,
   `id_componente` int(11) NOT NULL,
   `cantidad` int(11) NOT NULL DEFAULT 0,
-  `ubicacion` varchar(150) DEFAULT NULL,
   `estado` varchar(50) DEFAULT NULL,
+  `id_sucursal` int(11) NOT NULL,
   PRIMARY KEY (`id_stock`),
   KEY `fk_stock_componente` (`id_componente`),
-  CONSTRAINT `fk_stock_componente` FOREIGN KEY (`id_componente`) REFERENCES `componente` (`id_componente`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  KEY `fk_stock_sucursal` (`id_sucursal`),
+  CONSTRAINT `fk_stock_componente` FOREIGN KEY (`id_componente`) REFERENCES `componente` (`id_componente`),
+  CONSTRAINT `fk_stock_sucursal` FOREIGN KEY (`id_sucursal`) REFERENCES `sucursales` (`id_sucursal`)
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -734,12 +734,14 @@ CREATE TABLE `stock_gpu` (
   `id_stock_gpu` int(11) NOT NULL AUTO_INCREMENT,
   `id_gpu` int(11) NOT NULL,
   `estado` varchar(50) DEFAULT NULL,
-  `ubicacion` varchar(150) DEFAULT NULL,
   `cantidad` int(11) NOT NULL DEFAULT 0,
+  `id_sucursal` int(11) NOT NULL,
   PRIMARY KEY (`id_stock_gpu`),
   KEY `fk_stock_gpu_gpu` (`id_gpu`),
-  CONSTRAINT `fk_stock_gpu_gpu` FOREIGN KEY (`id_gpu`) REFERENCES `gpu` (`id_gpu`)
-) ENGINE=InnoDB AUTO_INCREMENT=100 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  KEY `fk_stock_gpu_sucursal` (`id_sucursal`),
+  CONSTRAINT `fk_stock_gpu_gpu` FOREIGN KEY (`id_gpu`) REFERENCES `gpu` (`id_gpu`),
+  CONSTRAINT `fk_stock_gpu_sucursal` FOREIGN KEY (`id_sucursal`) REFERENCES `sucursales` (`id_sucursal`)
+) ENGINE=InnoDB AUTO_INCREMENT=112 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -748,8 +750,34 @@ CREATE TABLE `stock_gpu` (
 
 LOCK TABLES `stock_gpu` WRITE;
 /*!40000 ALTER TABLE `stock_gpu` DISABLE KEYS */;
-INSERT INTO `stock_gpu` VALUES (39,1,'Disponible','Sucursal Florida',1),(40,1,'Disponible','Sucursal Rivadavia',2),(41,2,'Disponible','Sucursal Florida',1),(42,2,'Disponible','Sucursal Rivadavia',1),(43,3,'Disponible','Sucursal Florida',1),(44,3,'Disponible','Sucursal Rivadavia',2),(45,4,'Disponible','Sucursal Florida',2),(46,4,'Disponible','Sucursal Rivadavia',3),(47,5,'Disponible','Sucursal Florida',2),(48,5,'Disponible','Sucursal Rivadavia',2),(49,6,'Disponible','Sucursal Florida',1),(50,6,'Disponible','Sucursal Rivadavia',1),(51,7,'Disponible','Sucursal Florida',1),(52,7,'Disponible','Sucursal Rivadavia',2),(53,8,'Disponible','Sucursal Florida',2),(54,8,'Disponible','Sucursal Rivadavia',2),(55,9,'Sin stock','Sucursal Florida',0),(56,9,'Sin stock','Sucursal Rivadavia',0),(57,10,'Disponible','Sucursal Florida',2),(58,10,'Disponible','Sucursal Rivadavia',2),(59,11,'Disponible','Sucursal Florida',1),(60,11,'Disponible','Sucursal Rivadavia',2),(61,12,'Disponible','Sucursal Florida',2),(62,12,'Disponible','Sucursal Rivadavia',2),(63,13,'Disponible','Sucursal Florida',1),(64,13,'Disponible','Sucursal Rivadavia',1),(65,14,'Disponible','Sucursal Florida',2),(66,14,'Disponible','Sucursal Rivadavia',3),(67,15,'Disponible','Sucursal Florida',1),(68,15,'Disponible','Sucursal Rivadavia',2),(69,16,'Disponible','Sucursal Florida',1),(70,16,'Disponible','Sucursal Rivadavia',1),(71,17,'Disponible','Sucursal Florida',2),(72,17,'Disponible','Sucursal Rivadavia',3),(73,18,'Disponible','Sucursal Florida',1),(74,18,'Disponible','Sucursal Rivadavia',2),(75,19,'Disponible','Sucursal Florida',2),(76,19,'Disponible','Sucursal Rivadavia',2),(77,20,'Disponible','Sucursal Florida',1),(78,20,'Disponible','Sucursal Rivadavia',1),(79,21,'Disponible','Sucursal Florida',2),(80,21,'Disponible','Sucursal Rivadavia',3),(81,22,'Disponible','Sucursal Florida',1),(82,22,'Disponible','Sucursal Rivadavia',2),(83,23,'Disponible','Sucursal Florida',2),(84,23,'Disponible','Sucursal Rivadavia',2),(85,24,'Disponible','Sucursal Florida',1),(86,24,'Disponible','Sucursal Rivadavia',1),(87,25,'Disponible','Sucursal Florida',3),(88,25,'Disponible','Sucursal Rivadavia',3);
+INSERT INTO `stock_gpu` VALUES (39,1,'Disponible',1,1),(40,1,'Disponible',2,2),(41,2,'Disponible',1,1),(42,2,'Disponible',1,2),(43,3,'Disponible',1,1),(44,3,'Disponible',2,2),(45,4,'Disponible',2,1),(46,4,'Disponible',3,2),(47,5,'Disponible',2,1),(48,5,'Disponible',2,2),(49,6,'Disponible',1,1),(50,6,'Disponible',1,2),(51,7,'Disponible',1,1),(52,7,'Disponible',2,2),(53,8,'Disponible',2,1),(54,8,'Disponible',2,2),(55,9,'Sin stock',0,1),(56,9,'Sin stock',0,2),(57,10,'Disponible',2,1),(58,10,'Disponible',2,2),(59,11,'Disponible',1,1),(60,11,'Disponible',2,2),(61,12,'Disponible',2,1),(62,12,'Disponible',2,2),(63,13,'Disponible',1,1),(64,13,'Disponible',1,2),(65,14,'Disponible',2,1),(66,14,'Disponible',3,2),(67,15,'Disponible',1,1),(68,15,'Disponible',2,2),(69,16,'Disponible',1,1),(70,16,'Disponible',1,2),(71,17,'Disponible',2,1),(72,17,'Disponible',3,2),(73,18,'Disponible',1,1),(74,18,'Disponible',2,2),(75,19,'Disponible',2,1),(76,19,'Disponible',2,2),(77,20,'Disponible',1,1),(78,20,'Disponible',1,2),(79,21,'Disponible',2,1),(80,21,'Disponible',3,2),(81,22,'Disponible',1,1),(82,22,'Disponible',2,2),(83,23,'Disponible',2,1),(84,23,'Disponible',2,2),(85,24,'Disponible',1,1),(86,24,'Disponible',1,2),(87,25,'Disponible',3,1),(88,25,'Disponible',3,2);
 /*!40000 ALTER TABLE `stock_gpu` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `sucursales`
+--
+
+DROP TABLE IF EXISTS `sucursales`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `sucursales` (
+  `id_sucursal` int(11) NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(150) NOT NULL,
+  `direccion` varchar(255) NOT NULL,
+  PRIMARY KEY (`id_sucursal`),
+  UNIQUE KEY `uq_sucursales_nombre` (`nombre`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sucursales`
+--
+
+LOCK TABLES `sucursales` WRITE;
+/*!40000 ALTER TABLE `sucursales` DISABLE KEYS */;
+INSERT INTO `sucursales` VALUES (1,'Sucursal Florida','Florida 537'),(2,'Sucursal Rivadavia','Av Rivadavia 5376, local 1');
+/*!40000 ALTER TABLE `sucursales` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -769,7 +797,7 @@ CREATE TABLE `usuarios` (
   `telefono` varchar(30) DEFAULT NULL,
   PRIMARY KEY (`id_correo`),
   UNIQUE KEY `uq_usuarios_correo` (`correo`)
-) ENGINE=InnoDB AUTO_INCREMENT=60 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=80 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -781,10 +809,6 @@ LOCK TABLES `usuarios` WRITE;
 INSERT INTO `usuarios` VALUES (24,'gpufixstore@gmail.com','$2y$10$ow9ZPHNC2IyfyDxj1cDNn.rcha4pkvVpUt.z0HLsqCxdH29vCLtqu','Admin','GpuFix','12341234','1158390537'),(28,'lucasnicolas2002@gmail.com','$2y$10$CZvFncnrBYmDpAmV4QTyAeZ4WIWNFyJCeQGIdsj2Wi0r2eGy2Mx0C','lucas','calvano','43434343','+541160209263');
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Dumping routines for database 'if0_43068954_gpufix'
---
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -795,4 +819,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-11-06 21:17:58
+-- Dump completed on 2026-11-13 12:12:28

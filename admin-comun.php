@@ -3,6 +3,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 require_once __DIR__ . '/admin-permisos.php';
+require_once __DIR__ . '/admin-identidad.php';
 require_once __DIR__ . '/admin-tablas-funciones.php';
 function admin_requerir_acceso(): void {
     if (empty($_SESSION['empleado_id'])) {
@@ -46,9 +47,10 @@ function admin_requerir_acceso(): void {
 
 }
 function admin_es_cuenta_principal(mysqli $conexion): bool {
-    $consulta = $conexion->prepare("SELECT e.id_empleado FROM empleado e INNER JOIN usuarios u ON u.id_correo=e.id_correo WHERE e.id_empleado=? AND LOWER(TRIM(u.correo))='gpufixstore@gmail.com' LIMIT 1");
+    $consulta = $conexion->prepare('SELECT id_empleado FROM empleado WHERE id_empleado=? AND id_empleado=? LIMIT 1');
     $idEmpleado = (int) ($_SESSION['empleado_id'] ?? 0);
-    $consulta->bind_param('i', $idEmpleado);
+    $principalId = admin_id_principal();
+    $consulta->bind_param('ii', $idEmpleado, $principalId);
     $consulta->execute();
     $principal = (bool) $consulta->get_result()->fetch_assoc();
     $consulta->close();

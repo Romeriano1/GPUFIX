@@ -1,4 +1,3 @@
-
 <?php
 session_start();
 
@@ -20,10 +19,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             require_once __DIR__ . "/conexion.php";
 
             $consulta = $conexion->prepare(
-                "SELECT e.id_empleado, e.nombre, e.apellido, u.id_correo, u.contraseña
+                "SELECT e.id_empleado, e.nombre, e.apellido, e.contraseña
                  FROM empleado e
-                 INNER JOIN usuarios u ON u.id_correo = e.id_correo
-                 WHERE u.correo = ?
+                 WHERE e.email = ?
                  LIMIT 1"
             );
 
@@ -33,7 +31,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $empleadoId,
                 $nombre,
                 $apellido,
-                $idCorreo,
                 $contrasenaGuardada
             );
 

@@ -65,7 +65,7 @@ function compras_registrar_recepcion(mysqli $db, int $proveedor, int $empleado, 
         $producto = $buscar->get_result()->fetch_assoc();
         $buscar->close();
         if (!$producto) throw new RuntimeException('Uno de los productos seleccionados ya no existe. Revisá la compra.');
-        $buscar = $db->prepare("SELECT $campoStock AS id, cantidad FROM $tablaStock WHERE $campoProducto = ? AND ubicacion = ? ORDER BY $campoStock FOR UPDATE");
+        $buscar = $db->prepare("SELECT $campoStock AS id, cantidad FROM $tablaStock WHERE $campoProducto = ? AND id_sucursal = ? ORDER BY $campoStock FOR UPDATE");
         $buscar->bind_param('is', $idProducto, $idSucursal);
         $buscar->execute();
         $stocks = $buscar->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -79,7 +79,7 @@ function compras_registrar_recepcion(mysqli $db, int $proveedor, int $empleado, 
             $actualizar = $db->prepare("UPDATE $tablaStock SET cantidad = cantidad + ?, estado = 'Disponible' WHERE $campoStock = ?");
             $actualizar->bind_param('ii', $cantidad, $stock['id']);
         } else {
-            $actualizar = $db->prepare("INSERT INTO $tablaStock ($campoProducto, cantidad, estado, ubicacion) VALUES (?, ?, 'Disponible', ?)");
+            $actualizar = $db->prepare("INSERT INTO $tablaStock ($campoProducto, cantidad, estado, id_sucursal) VALUES (?, ?, 'Disponible', ?)");
             $actualizar->bind_param('iis', $idProducto, $cantidad, $idSucursal);
         }
         $actualizar->execute();

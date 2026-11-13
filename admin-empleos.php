@@ -19,8 +19,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$crearPuesto && !in_array($puestoId, array_map('intval', array_column($puestos,'id_puesto')), true)) throw new RuntimeException('Seleccioná un puesto válido.');
         if ($accion === 'asignar') {
             $empleadoId = filter_input(INPUT_POST, 'empleado', FILTER_VALIDATE_INT) ?: 0;
-            $buscar = $conexion->prepare("SELECT e.id_empleado FROM empleado e LEFT JOIN usuarios u ON u.id_correo=e.id_correo WHERE e.id_empleado=? AND COALESCE(LOWER(TRIM(u.correo)),'') <> 'gpufixstore@gmail.com'");
-            $buscar->bind_param('i',$empleadoId); $buscar->execute();
+            $buscar = $conexion->prepare("SELECT id_empleado FROM empleado WHERE id_empleado=? AND id_empleado<>?");
+            $principalId = admin_id_principal();
+            $buscar->bind_param('ii',$empleadoId,$principalId); $buscar->execute();
             if (!$buscar->get_result()->fetch_row()) throw new RuntimeException('Seleccioná un empleado válido.');
             $guardar = $conexion->prepare('UPDATE empleado SET id_puesto=? WHERE id_empleado=?');
             $guardar->bind_param('ii',$puestoId,$empleadoId); $guardar->execute();
@@ -62,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: ' . $destino,true,303); exit;
     } catch (Throwable $fallo) { error_log($fallo->getMessage()); $error = $fallo instanceof mysqli_sql_exception ? 'No se pudo guardar el cambio.' : $fallo->getMessage(); }
 }
-$empleados = $conexion->query("SELECT e.id_empleado,e.nombre,e.apellido,e.email,e.id_puesto FROM empleado e LEFT JOIN usuarios u ON u.id_correo=e.id_correo WHERE COALESCE(LOWER(TRIM(u.correo)),'') <> 'gpufixstore@gmail.com' ORDER BY e.nombre,e.apellido")->fetch_all(MYSQLI_ASSOC);
+$empleados = $conexion->query("SELECT id_empleado,nombre,apellido,email,id_puesto FROM empleado WHERE id_empleado<>".admin_id_principal()." ORDER BY nombre,apellido")->fetch_all(MYSQLI_ASSOC);
 $permisos = admin_leer_permisos();
 foreach ($puestos as $puesto) {
     if ($puesto['nombre'] === 'Administrador' && !array_key_exists((string) $puesto['id_puesto'], $permisos)) {
@@ -73,6 +74,7 @@ $rolActual = null;
 foreach ($puestos as $puesto) if ((int)$puesto['id_puesto'] === $puestoId) $rolActual = $puesto;
 $panelesDisponibles = admin_secciones_permisos();
 unset($panelesDisponibles['admin-asistencia.php']);
+unset($panelesDisponibles['admin-personal.php']);
 $areas = array_fill_keys(array_keys(admin_roles_organigrama()), []);
 $areaPorNombre = [];
 $ordenPorNombre = [];
@@ -83,6 +85,8 @@ foreach (admin_roles_organigrama() as $area => $roles) {
         $ordenPorNombre[$clave] = count($ordenPorNombre);
     }
 }
+$areaPorNombre['jefe administrativo'] = $areaPorNombre['jefe administrativo y rrhh'];
+$ordenPorNombre['jefe administrativo'] = $ordenPorNombre['jefe administrativo y rrhh'];
 foreach ($puestos as $puesto) {
     $area = $areaPorNombre[mb_strtolower(trim($puesto['nombre']), 'UTF-8')] ?? 'Otros puestos';
     $areas[$area][] = $puesto;
@@ -111,7 +115,7 @@ $cantidadAsignados = (int) ($empleadosPorPuesto[$puestoId] ?? 0);
 $errorPuesto = $error && in_array($_POST['accion'] ?? '', ['crear_rol', 'permisos'], true);
 $nombreFormulario = $errorPuesto && is_string($_POST['nombre'] ?? null) ? $_POST['nombre'] : ($crearPuesto ? '' : ($rolActual['nombre'] ?? ''));
 $panelesFormulario = $errorPuesto && is_array($_POST['paneles'] ?? null) ? $_POST['paneles'] : ($crearPuesto ? [] : ($permisos[(string) $puestoId] ?? []));
-$panelesFormulario = array_values(array_diff($panelesFormulario, ['admin-asistencia.php']));
+$panelesFormulario = array_values(array_diff($panelesFormulario, ['admin-asistencia.php', 'admin-personal.php']));
 $areaActual = $rolActual ? ($areaPorNombre[mb_strtolower(trim($rolActual['nombre']), 'UTF-8')] ?? 'Otros puestos') : '';
 admin_layout_inicio('Empleados y permisos');
 ?>
@@ -182,7 +186,7 @@ admin_layout_inicio('Empleados y permisos');
             <fieldset>
                 <legend class="h6">Acceso a paneles</legend>
                 <p class="text-secondary">Seleccioná los paneles que podrán utilizar los empleados de este puesto.</p>
-                <p class="small text-secondary">RRHH y GPUFIX administran las asistencias. GPUFIX conserva siempre el acceso completo a la administración.</p>
+                <p class="small text-secondary">RRHH y GPUFIX administran el personal y las asistencias. GPUFIX conserva siempre el acceso completo a la administración.</p>
                 <div class="empleos-permisos">
                 <?php foreach ($panelesDisponibles as $pagina => $nombre): ?>
                     <label class="empleos-permiso">
@@ -207,7 +211,7 @@ admin_layout_inicio('Empleados y permisos');
 <?php else: ?>
 <section class="panel empleos-empleados">
     <div class="empleos-encabezado-lista">
-        <div><h2>Empleados</h2><p>Asigná un puesto a cada empleado para definir sus accesos.</p></div>
+        <div><h2>Empleados</h2><p>Asigná un puesto a cada empleado para definir sus accesos.</p><?php if (admin_puede_ver($conexion,'admin-personal.php')): ?><a href="admin-personal.php">Administrar cuentas de empleados</a><?php endif; ?></div>
         <?php if ($empleados): ?><div class="empleos-busqueda"><label class="form-label" for="buscarEmpleado">Buscar empleado</label><input class="form-control" id="buscarEmpleado" type="search" autocomplete="off"></div><?php endif; ?>
     </div>
     <?php if ($empleados): ?>

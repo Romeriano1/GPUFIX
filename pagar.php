@@ -167,7 +167,7 @@ try {
     require_once __DIR__ . "/conexion.php";
     require_once __DIR__ . '/sucursales.php';
     foreach (sucursales_listar($conexion) as $local) {
-        $sucursalesRetiro[(string)$local['ubicacion']] = $local['nombre'] . ' (' . $local['direccion'] . ')';
+        $sucursalesRetiro[(string)$local['id_sucursal']] = $local['nombre'] . ' (' . $local['direccion'] . ')';
     }
     $consultaCliente = $conexion->prepare(
         "SELECT c.id_cliente, c.direccion, u.nombre, u.apellido, u.correo, u.dni, u.telefono " .
@@ -301,7 +301,7 @@ try {
             $stockPorProducto = [];
             foreach ($itemsPago as $item) {
                 $idGpu = (int) $item["id_gpu"];
-                $consultaStock = $conexion->prepare("SELECT id_stock_gpu, cantidad FROM stock_gpu WHERE id_gpu = ? AND ubicacion = ? ORDER BY id_stock_gpu FOR UPDATE");
+                $consultaStock = $conexion->prepare("SELECT id_stock_gpu, cantidad FROM stock_gpu WHERE id_gpu = ? AND id_sucursal = ? ORDER BY id_stock_gpu FOR UPDATE");
                 $consultaStock->bind_param("is", $idGpu, $idSucursalVenta);
                 $consultaStock->execute();
                 $filasStock = $consultaStock->get_result()->fetch_all(MYSQLI_ASSOC);

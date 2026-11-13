@@ -68,17 +68,17 @@ function textoEspecificacionesProducto(array $nombres, array $valores): string
     return $texto;
 }
 
-function guardarStockProducto(mysqli $conexion, int $idProducto, int $cantidadNueva, string $ubicacion): void
+function guardarStockProducto(mysqli $conexion, int $idProducto, int $cantidadNueva, string $idSucursal): void
 {
-    sucursal_validar($conexion, $ubicacion);
-    $buscar = $conexion->prepare('SELECT id_stock_gpu FROM stock_gpu WHERE id_gpu=? AND ubicacion=? ORDER BY id_stock_gpu FOR UPDATE');
-    $buscar->bind_param('is', $idProducto, $ubicacion);
+    sucursal_validar($conexion, $idSucursal);
+    $buscar = $conexion->prepare('SELECT id_stock_gpu FROM stock_gpu WHERE id_gpu=? AND id_sucursal=? ORDER BY id_stock_gpu FOR UPDATE');
+    $buscar->bind_param('is', $idProducto, $idSucursal);
     $buscar->execute();
     $filas = $buscar->get_result()->fetch_all(MYSQLI_ASSOC);
     $estado = $cantidadNueva > 0 ? 'Disponible' : 'Sin stock';
     if (!$filas) {
-        $guardar = $conexion->prepare('INSERT INTO stock_gpu(id_gpu,ubicacion,cantidad,estado) VALUES(?,?,?,?)');
-        $guardar->bind_param('isis', $idProducto, $ubicacion, $cantidadNueva, $estado);
+        $guardar = $conexion->prepare('INSERT INTO stock_gpu(id_gpu,id_sucursal,cantidad,estado) VALUES(?,?,?,?)');
+        $guardar->bind_param('isis', $idProducto, $idSucursal, $cantidadNueva, $estado);
         $guardar->execute();
         return;
     }
@@ -93,8 +93,8 @@ function guardarStockProducto(mysqli $conexion, int $idProducto, int $cantidadNu
 
 require_once __DIR__ . '/sucursales.php';
 $sucursalesProducto = sucursales_listar($conexion);
-$idSucursalProducto = (is_string($_GET['sucursal'] ?? null) ? $_GET['sucursal'] : ($sucursalesProducto[0]['ubicacion'] ?? ''));
-if ($_SERVER['REQUEST_METHOD'] === 'POST') $idSucursalProducto = is_string($_POST['ubicacion'] ?? null) ? $_POST['ubicacion'] : '';
+$idSucursalProducto = (is_string($_GET['sucursal'] ?? null) ? $_GET['sucursal'] : ($sucursalesProducto[0]['id_sucursal'] ?? ''));
+if ($_SERVER['REQUEST_METHOD'] === 'POST') $idSucursalProducto = is_string($_POST['id_sucursal'] ?? null) ? $_POST['id_sucursal'] : '';
 $marcasDisponibles = opcionesMarcaProducto($conexion);
 $marcaActualProducto = null;
 $mensaje = (string) ($_SESSION['mensaje_producto_admin'] ?? '');
@@ -225,7 +225,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mostrarFormulario = false;
     } else {
         $datos = ['marca' => $producto['marca'], 'modelo' => $producto['modelo'], 'precio' => (string) ($producto['precio_especial'] ?? ''), 'imagen' => (string) ($producto['imagen'] ?? ''), 'cantidad' => '0'];
-        $cantidadSucursal = $conexion->prepare('SELECT cantidad FROM stock_gpu WHERE id_gpu=? AND ubicacion=?');
+        $cantidadSucursal = $conexion->prepare('SELECT cantidad FROM stock_gpu WHERE id_gpu=? AND id_sucursal=?');
         $cantidadSucursal->bind_param('is', $idProducto, $idSucursalProducto);
         $cantidadSucursal->execute();
         $datos['cantidad'] = (string)($cantidadSucursal->get_result()->fetch_row()[0] ?? 0);
@@ -268,7 +268,7 @@ admin_layout_inicio('Productos y stock');
         <div class="col-md-8"><label for="productoModelo" class="form-label">Modelo y nombre del producto</label><input id="productoModelo" class="form-control" name="modelo" maxlength="150" value="<?= admin_e($datos['modelo']) ?>" required></div>
         <div class="col-md-4"><label for="productoPrecio" class="form-label">Precio ($)</label><input id="productoPrecio" class="form-control" name="precio" type="text" inputmode="decimal" maxlength="15" pattern="[0-9]+([.,][0-9]{1,2})?" value="<?= admin_e($datos['precio']) ?>" required></div>
         <div class="col-md-4"><label for="productoCantidad" class="form-label">Stock disponible</label><input id="productoCantidad" class="form-control" name="cantidad" type="number" min="0" max="2147483647" step="1" value="<?= admin_e($datos['cantidad']) ?>" required></div>
-        <div class="col-12"><label class="form-label" for="sucursalProducto">Sucursal del stock</label><select class="form-select" id="sucursalProducto" name="ubicacion" required><?php foreach ($sucursalesProducto as $local): ?><option value="<?= admin_e($local['ubicacion']) ?>" <?= $local['ubicacion'] === $idSucursalProducto ? 'selected' : '' ?>><?= admin_e($local['nombre']) ?></option><?php endforeach; ?></select><small>La cantidad indicada reemplaza el stock de esta sucursal.</small></div>
+        <div class="col-12"><label class="form-label" for="sucursalProducto">Sucursal del stock</label><select class="form-select" id="sucursalProducto" name="id_sucursal" required><?php foreach ($sucursalesProducto as $local): ?><option value="<?= admin_e($local['id_sucursal']) ?>" <?= (string)$local['id_sucursal'] === (string)$idSucursalProducto ? 'selected' : '' ?>><?= admin_e($local['nombre']) ?></option><?php endforeach; ?></select><small>La cantidad indicada reemplaza el stock de esta sucursal.</small></div>
         <div class="col-12"><label for="productoImagen" class="form-label">Enlace directo de la imagen</label><input id="productoImagen" class="form-control" name="imagen" type="url" maxlength="500" value="<?= admin_e($datos['imagen']) ?>" required><div class="form-text">Usá el enlace que abre la imagen, no la página de presentación de ImgBB.</div></div>
         <fieldset class="col-12">
             <legend class="h6 mt-2">Especificaciones técnicas</legend>

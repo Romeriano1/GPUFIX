@@ -1,23 +1,13 @@
 <?php
 function sucursales_listar(mysqli $conexion): array
 {
-    $direcciones = [
-        'Sucursal Florida' => 'Florida 537',
-        'Sucursal Rivadavia' => 'Av Rivadavia 5376, local 1'
-    ];
-    $resultado = $conexion->query("SELECT DISTINCT ubicacion FROM stock_gpu WHERE ubicacion IS NOT NULL AND TRIM(ubicacion) <> '' UNION SELECT DISTINCT ubicacion FROM stock WHERE ubicacion IS NOT NULL AND TRIM(ubicacion) <> ''");
-    foreach ($resultado as $fila) {
-        if (!isset($direcciones[$fila['ubicacion']])) $direcciones[$fila['ubicacion']] = '';
-    }
-    $sucursales = [];
-    foreach ($direcciones as $nombre => $direccion) $sucursales[] = ['ubicacion'=>$nombre, 'nombre'=>$nombre, 'direccion'=>$direccion];
-    return $sucursales;
+    return $conexion->query('SELECT id_sucursal,nombre,direccion FROM sucursales ORDER BY nombre')->fetch_all(MYSQLI_ASSOC);
 }
 
-function sucursal_validar(mysqli $conexion, string $ubicacion): array
+function sucursal_validar(mysqli $conexion, string $idSucursal): array
 {
     foreach (sucursales_listar($conexion) as $sucursal) {
-        if ($sucursal['ubicacion'] === $ubicacion) return $sucursal;
+        if ((string)$sucursal['id_sucursal'] === $idSucursal) return $sucursal;
     }
     throw new RuntimeException('Seleccioná una sucursal existente.');
 }
@@ -26,19 +16,19 @@ function sucursales_para_carrito(mysqli $conexion, array $articulos): array
 {
     if (!$articulos) return [];
     $stock = [];
-    foreach ($conexion->query('SELECT ubicacion,id_gpu,SUM(cantidad) cantidad FROM stock_gpu WHERE ubicacion IS NOT NULL GROUP BY ubicacion,id_gpu') as $fila) {
-        $stock[$fila['ubicacion']][$fila['id_gpu']] = (int)$fila['cantidad'];
+    foreach ($conexion->query('SELECT id_sucursal,id_gpu,SUM(cantidad) cantidad FROM stock_gpu GROUP BY id_sucursal,id_gpu') as $fila) {
+        $stock[$fila['id_sucursal']][$fila['id_gpu']] = (int)$fila['cantidad'];
     }
     $disponibles = [];
     foreach (sucursales_listar($conexion) as $sucursal) {
         $alcanza = true;
         foreach ($articulos as $articulo) {
-            if (($stock[$sucursal['ubicacion']][$articulo['id_gpu']] ?? 0) < (int)$articulo['cantidad']) {
+            if (($stock[$sucursal['id_sucursal']][$articulo['id_gpu']] ?? 0) < (int)$articulo['cantidad']) {
                 $alcanza = false;
                 break;
             }
         }
-        if ($alcanza) $disponibles[(string)$sucursal['ubicacion']] = $sucursal['nombre'] . ' (' . $sucursal['direccion'] . ')';
+        if ($alcanza) $disponibles[(string)$sucursal['id_sucursal']] = $sucursal['nombre'] . ' (' . $sucursal['direccion'] . ')';
     }
     return $disponibles;
 }

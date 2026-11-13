@@ -1,6 +1,6 @@
-
 <?php
 session_start();
+require_once __DIR__ . '/admin-identidad.php';
 $error = '';
 
 if (!empty($_SESSION['gpufix_admin'])) {
@@ -12,19 +12,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $correo = strtolower(trim($_POST['correo'] ?? ''));
     $clave = $_POST['contrasena'] ?? '';
 
-    if ($correo !== 'gpufixstore@gmail.com') {
-        $error = 'Acceso exclusivo para el administrador.';
+    if ($correo === '') {
+        $error = 'Ingresá el correo del administrador.';
     } else {
         try {
             require_once __DIR__ . '/conexion.php';
 
             $consulta = $conexion->prepare(
-                "SELECT u.id_correo, u.`contraseña`, e.nombre, e.apellido, e.id_empleado
-                 FROM usuarios u
-                 INNER JOIN empleado e ON e.id_correo = u.id_correo
-                 WHERE u.correo = ? LIMIT 1"
+                "SELECT e.id_empleado, e.`contraseña`, e.nombre, e.apellido, e.id_empleado
+                 FROM empleado e
+                 WHERE e.email = ? AND e.id_empleado = ? LIMIT 1"
             );
-            $consulta->bind_param('s', $correo);
+            $principalId = admin_id_principal();
+            $consulta->bind_param('si', $correo, $principalId);
             $consulta->execute();
             $consulta->bind_result($id, $hash, $nombre, $apellido, $empleadoId);
 

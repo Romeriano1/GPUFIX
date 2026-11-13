@@ -32,17 +32,6 @@ if (($_GET['vista'] ?? '') === 'acciones') {
         if ($seleccion !== 'gpu_ventas' || !admin_puede_ver($conexion, 'admin-devoluciones.php')) { http_response_code(403); exit('Acceso restringido.'); }
         $funcion = 'devoluciones';
     }
-    if ($funcion === 'componentes') {
-        admin_layout_inicio(admin_etiqueta_dato($seleccion));
-        admin_menu_tablas($seleccion);
-        echo '<h1 class="h3">' . admin_e(admin_etiqueta_dato($seleccion)) . '</h1>';
-        $filas = $conexion->query('SELECT * FROM `' . $seleccion . '` LIMIT 100')->fetch_all(MYSQLI_ASSOC);
-        echo '<div class="table-responsive"><table class="table"><tbody>';
-        foreach ($filas as $fila) { echo '<tr>'; foreach ($fila as $campo => $valor) echo '<td><strong>' . admin_e($campo) . '</strong><br>' . admin_e($valor) . '</td>'; echo '</tr>'; }
-        echo '</tbody></table></div></div></div>';
-        admin_layout_fin();
-        exit;
-    }
     if (!in_array($funcion, array_values(admin_funciones_tablas()), true) && $funcion !== 'devoluciones') { http_response_code(404); exit('Funciones no disponibles.'); }
     define('GPUFIX_TABLA_ACCIONES', true);
     $GLOBALS['tabla_funciones_actual'] = $seleccion;

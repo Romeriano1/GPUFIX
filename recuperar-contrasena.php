@@ -28,8 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['recuperar_proximo_envio'] = time() + 60;
             unset($_SESSION['recuperacion']);
             require_once __DIR__ . '/conexion.php';
-            $sql = 'SELECT u.id_correo,u.correo,u.`contraseña` FROM usuarios u WHERE u.correo=? AND u.dni=?'
-                . ($acceso === 'empleado' ? ' AND EXISTS (SELECT 1 FROM empleado e WHERE e.id_correo=u.id_correo)' : '') . ' LIMIT 1';
+            $sql = $acceso === 'empleado'
+                ? 'SELECT id_empleado AS id_correo,email AS correo,`contraseña` FROM empleado WHERE email=? AND dni=? LIMIT 1'
+                : 'SELECT id_correo,correo,`contraseña` FROM usuarios WHERE correo=? AND dni=? LIMIT 1';
             $consulta = $conexion->prepare($sql);
             $consulta->bind_param('ss', $correo, $dni);
             $consulta->execute();
@@ -64,8 +65,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             require_once __DIR__ . '/conexion.php';
             $hash = password_hash($clave, PASSWORD_DEFAULT);
             // Comparar el hash anterior también invalida códigos de otras sesiones tras un cambio.
-            $sql = 'UPDATE usuarios u SET u.`contraseña`=? WHERE u.id_correo=? AND u.correo=? AND BINARY u.`contraseña`=?'
-                . ($acceso === 'empleado' ? ' AND EXISTS (SELECT 1 FROM empleado e WHERE e.id_correo=u.id_correo)' : '');
+            $sql = $acceso === 'empleado'
+                ? 'UPDATE empleado SET `contraseña`=? WHERE id_empleado=? AND email=? AND BINARY `contraseña`=?'
+                : 'UPDATE usuarios SET `contraseña`=? WHERE id_correo=? AND correo=? AND BINARY `contraseña`=?';
             $actualizar = $conexion->prepare($sql);
             $actualizar->bind_param('siss', $hash, $pendiente['id'], $pendiente['correo'], $pendiente['anterior']);
             $actualizar->execute();

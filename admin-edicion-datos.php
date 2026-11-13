@@ -2,7 +2,7 @@
 require_once __DIR__ . '/admin-relaciones.php';
 // Formularios de edición compartidos por las secciones de administración.
 function admin_etiqueta_dato(string $campo): string {
-    $etiquetas = ['usuarios' => 'Usuarios', 'cliente' => 'Clientes', 'empleado' => 'Empleados', 'puesto' => 'Puestos', 'carrito' => 'Carritos', 'detalle_carrito' => 'Productos de los carritos', 'gpu' => 'Placas de video', 'stock_gpu' => 'Stock de placas', 'proveedor' => 'Proveedores', 'presupuesto' => 'Presupuestos', 'detalle_presupuesto' => 'Componentes de los presupuestos', 'gpu_cliente' => 'Placas de clientes', 'orden_reparacion' => 'Órdenes de reparación', 'diagnostico' => 'Diagnósticos', 'reparacion' => 'Trabajos de reparación', 'detalle_reparacion' => 'Componentes utilizados', 'gpu_ventas' => 'Ventas', 'detalle_venta' => 'Productos vendidos', 'factura' => 'Facturas', 'detalle_factura' => 'Conceptos facturados', 'envios' => 'Envíos', 'orden_compra' => 'Órdenes de compra', 'detalle_compra' => 'Productos comprados', 'componente' => 'Componentes', 'stock' => 'Stock de componentes', 'id_correo' => 'Usuario', 'id_cliente' => 'Cliente', 'id_empleado' => 'Empleado', 'id_tecnico' => 'Técnico', 'id_puesto' => 'Puesto', 'id_carrito' => 'Carrito', 'id_gpu' => 'Placa de video', 'id_gpu_cliente' => 'Placa del cliente', 'id_componente' => 'Componente', 'id_orden_reparacion' => 'Orden de reparación', 'id_reparacion' => 'Trabajo de reparación', 'id_presupuesto' => 'Presupuesto', 'id_gpu_ventas' => 'Venta', 'id_factura' => 'Factura', 'id_proveedor' => 'Proveedor', 'id_orden_compra' => 'Orden de compra', 'correo' => 'Correo electrónico', 'email' => 'Correo de contacto', 'contraseña' => 'Nueva contraseña', 'dni' => 'DNI', 'precio_especial' => 'Precio de venta', 'pagina' => 'Página del producto', 'imagen' => 'Enlace de la imagen', 'tarjeta_ultimos4' => 'Últimos cuatro dígitos', 'tarjeta_longitud' => 'Cantidad de dígitos de la tarjeta', 'tarjeta_dni' => 'DNI del titular', 'mano_obra' => 'Mano de obra'];
+    $etiquetas = ['usuarios' => 'Usuarios', 'cliente' => 'Clientes', 'empleado' => 'Empleados', 'puesto' => 'Puestos', 'sucursales' => 'Sucursales', 'id_sucursal' => 'Sucursal', 'carrito' => 'Carritos', 'detalle_carrito' => 'Productos de los carritos', 'gpu' => 'Placas de video', 'stock_gpu' => 'Stock de placas', 'proveedor' => 'Proveedores', 'presupuesto' => 'Presupuestos', 'detalle_presupuesto' => 'Componentes de los presupuestos', 'gpu_cliente' => 'Placas de clientes', 'orden_reparacion' => 'Órdenes de reparación', 'diagnostico' => 'Diagnósticos', 'reparacion' => 'Trabajos de reparación', 'detalle_reparacion' => 'Componentes utilizados', 'gpu_ventas' => 'Ventas', 'detalle_venta' => 'Productos vendidos', 'factura' => 'Facturas', 'detalle_factura' => 'Conceptos facturados', 'envios' => 'Envíos', 'orden_compra' => 'Órdenes de compra', 'detalle_compra' => 'Productos comprados', 'componente' => 'Componentes', 'stock' => 'Stock de componentes', 'id_correo' => 'Usuario', 'id_cliente' => 'Cliente', 'id_empleado' => 'Empleado', 'id_tecnico' => 'Técnico', 'id_puesto' => 'Puesto', 'id_carrito' => 'Carrito', 'id_gpu' => 'Placa de video', 'id_gpu_cliente' => 'Placa del cliente', 'id_componente' => 'Componente', 'id_orden_reparacion' => 'Orden de reparación', 'id_reparacion' => 'Trabajo de reparación', 'id_presupuesto' => 'Presupuesto', 'id_gpu_ventas' => 'Venta', 'id_factura' => 'Factura', 'id_proveedor' => 'Proveedor', 'id_orden_compra' => 'Orden de compra', 'correo' => 'Correo electrónico', 'email' => 'Correo de contacto', 'contraseña' => 'Nueva contraseña', 'dni' => 'DNI', 'precio_especial' => 'Precio de venta', 'pagina' => 'Página del producto', 'imagen' => 'Enlace de la imagen', 'tarjeta_ultimos4' => 'Últimos cuatro dígitos', 'tarjeta_longitud' => 'Cantidad de dígitos de la tarjeta', 'tarjeta_dni' => 'DNI del titular', 'mano_obra' => 'Mano de obra'];
     return $etiquetas[$campo] ?? ucfirst(str_replace('_', ' ', $campo));
 }
 
@@ -92,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header('Location: ' . $paginaOrigen . '?modo=datos&operacion=eliminar&tabla=' . rawurlencode($tabla) . $filtroColumna, true, 303);
                 exit;
             }
-            if (($tabla === 'empleado' && $registro['email'] === 'gpufixstore@gmail.com') || ($tabla === 'usuarios' && $registro['correo'] === 'gpufixstore@gmail.com') || ($tabla === 'empleado' && (int)$registro['id_empleado'] === (int)$_SESSION['empleado_id']) || ($tabla === 'puesto' && $registro['nombre'] === 'Administrador')) throw new RuntimeException('No se puede eliminar la cuenta principal, su empleado o su puesto desde el panel.');
+            if (($tabla === 'empleado' && (int)$registro['id_empleado'] === admin_id_principal()) || ($tabla === 'empleado' && (int)$registro['id_empleado'] === (int)$_SESSION['empleado_id']) || ($tabla === 'puesto' && $registro['nombre'] === 'Administrador')) throw new RuntimeException('No se puede eliminar la cuenta principal, su empleado o su puesto desde el panel.');
             $dependencias = tablas_consultar($conexion, 'SELECT TABLE_NAME, COLUMN_NAME, REFERENCED_COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = DATABASE() AND REFERENCED_TABLE_NAME = ?', [$tabla])->get_result()->fetch_all(MYSQLI_ASSOC);
             foreach ($dependencias as $dependencia) {
                 $cantidad = tablas_consultar($conexion, 'SELECT COUNT(*) FROM ' . tablas_identificador($dependencia['TABLE_NAME']) . ' WHERE ' . tablas_identificador($dependencia['COLUMN_NAME']) . ' = ?', [$registro[$dependencia['REFERENCED_COLUMN_NAME']]])->get_result()->fetch_row()[0];
@@ -111,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!isset($_POST['datos']) || !is_array($_POST['datos']) || !array_key_exists($campo, $_POST['datos']) || !is_string($_POST['datos'][$campo])) throw new RuntimeException('Falta el campo ' . $campo . '.');
             $valor = $_POST['datos'][$campo];
             if ($crear && isset($_POST['predeterminados'][$campo]) && $columna['Default'] !== null) continue;
-            if ($tabla === 'usuarios' && $campo === 'contraseña') {
+            if (in_array($tabla, ['usuarios','empleado'], true) && $campo === 'contraseña') {
                 if ($valor === '' && !$crear) continue;
                 if (strlen($valor) < 8 || strlen($valor) > 72) throw new RuntimeException('La contraseña debe tener entre 8 y 72 bytes.');
                 $valor = password_hash($valor, PASSWORD_DEFAULT);
@@ -119,20 +119,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (isset($_POST['nulos']) && is_array($_POST['nulos']) && ($_POST['nulos'][$campo] ?? '') === '1') $valor = null;
                 tablas_validar_campo($columna, $valor);
             }
-            if ($tabla === 'empleado' && $campo === 'id_correo' && ($valor === null || trim($valor) === '')) throw new RuntimeException('Seleccioná el usuario con el que iniciará sesión el empleado.');
             if (in_array($tabla, ['usuarios', 'empleado'], true) && in_array($campo, ['nombre', 'apellido', 'dni', 'telefono'], true)) {
                 if ($valor === null || trim($valor) === '') throw new RuntimeException('El campo ' . admin_etiqueta_dato($campo) . ' es obligatorio y no puede quedar vacío.');
                 $valor = trim($valor);
             }
             if (in_array($campo, ['cantidad','precio_unitario','subtotal','total','precio_total','precio_especial','mano_obra'], true) && $valor !== null && (float)$valor < 0) throw new RuntimeException('El campo ' . $campo . ' no puede ser negativo.');
             if ($campo === 'dni' && $valor !== null && !preg_match('/^[0-9]{7,8}$/D', $valor)) throw new RuntimeException('El DNI debe tener 7 u 8 números.');
+            if ($tabla === 'sucursales' && in_array($campo, ['nombre','direccion'], true)) {
+                if ($valor === null || trim($valor) === '') throw new RuntimeException('Completá el nombre y la dirección de la sucursal.');
+                $valor = trim($valor);
+            }
             if (in_array($tabla, ['usuarios','empleado'], true) && in_array($campo, ['nombre','apellido'], true) && !preg_match("/^[\\p{L}\\p{M}]+(?:[ '\x{2019}-][\\p{L}\\p{M}]+)*$/uD", $valor)) throw new RuntimeException('Nombre y apellido solo admiten letras, espacios, apóstrofes y guiones.');
             if (in_array($campo, ['correo','email'], true) && $valor !== null && $valor !== '' && !filter_var($valor,FILTER_VALIDATE_EMAIL)) throw new RuntimeException('El correo no es válido.');
-            if (!$crear && $tabla === 'usuarios' && $registro['correo'] === 'gpufixstore@gmail.com' && $campo === 'correo' && $valor !== $registro['correo']) throw new RuntimeException('El correo de la cuenta principal está protegido.');
             if ($tabla === 'empleado' && $campo === 'email') {
                 if ($valor === null || !filter_var($valor, FILTER_VALIDATE_EMAIL)) throw new RuntimeException('Ingresá el correo del empleado.');
                 $valor = strtolower(trim($valor));
-                if (!$crear && $registro['email'] === 'gpufixstore@gmail.com' && $valor !== $registro['email']) throw new RuntimeException('El correo principal está protegido.');
             }
             if (!$crear && $tabla === 'puesto' && $registro['nombre'] === 'Administrador' && $campo === 'nombre' && $valor !== 'Administrador') throw new RuntimeException('El puesto de la cuenta principal está protegido.');
             $campos[] = tablas_identificador($campo) . ' = ?'; $valores[] = $valor;
@@ -145,8 +146,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             tablas_consultar($conexion, 'UPDATE ' . $nombreTabla . ' SET ' . implode(', ', $campos) . ' WHERE ' . tablas_identificador($clavePrimaria) . ' = ?', $valores);
         }
         if (in_array($tabla, ['stock', 'stock_gpu'], true)) {
-            $estadoStock = tablas_consultar($conexion, 'SELECT cantidad,ubicacion FROM ' . $nombreTabla . ' WHERE ' . tablas_identificador($clavePrimaria) . '=?', [$idRegistro])->get_result()->fetch_assoc();
-            if (trim((string)$estadoStock['ubicacion']) === '') throw new RuntimeException('Seleccioná la sucursal del stock.');
+            $estadoStock = tablas_consultar($conexion, 'SELECT cantidad,id_sucursal FROM ' . $nombreTabla . ' WHERE ' . tablas_identificador($clavePrimaria) . '=?', [$idRegistro])->get_result()->fetch_assoc();
+            if ((int)$estadoStock['id_sucursal'] < 1) throw new RuntimeException('Seleccioná la sucursal del stock.');
             $estadoAutomatico = (int)$estadoStock['cantidad'] > 0 ? 'Disponible' : 'Sin stock';
             tablas_consultar($conexion, 'UPDATE ' . $nombreTabla . ' SET estado=? WHERE ' . tablas_identificador($clavePrimaria) . '=?', [$estadoAutomatico, $idRegistro]);
         }
@@ -173,7 +174,7 @@ if ($crear) {
 }
 $relaciones = tablas_consultar($conexion, 'SELECT COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND REFERENCED_TABLE_NAME IS NOT NULL', [$tabla])->get_result()->fetch_all(MYSQLI_ASSOC);
 $relacionesPorCampo = array_column($relaciones,null,'COLUMN_NAME');
-$vinculosObligatorios = ['presupuesto'=>['id_cliente'], 'empleado'=>['email','id_correo'], 'stock_gpu'=>['ubicacion'], 'stock'=>['ubicacion']];
+$vinculosObligatorios = ['presupuesto'=>['id_cliente'], 'empleado'=>['email'], 'stock_gpu'=>['id_sucursal'], 'stock'=>['id_sucursal']];
 $referenciasReparacion = [];
 foreach ($relaciones as $relacion) {
     $destino = $relacion['REFERENCED_TABLE_NAME'];
@@ -189,6 +190,7 @@ foreach ($relaciones as $relacion) {
     }
 }
 $consultasPersonas = [
+    'sucursales' => "SELECT id_sucursal id, CONCAT(nombre, ' · ', direccion) etiqueta FROM sucursales ORDER BY nombre",
     'cliente' => "SELECT c.id_cliente id, CONCAT('Cliente #',c.id_cliente,' · ',u.nombre,' ',u.apellido,' · ',u.correo) etiqueta FROM cliente c JOIN usuarios u ON u.id_correo=c.id_correo",
     'empleado' => "SELECT e.id_empleado id, CONCAT('Empleado #',e.id_empleado,' · ',e.nombre,' ',e.apellido,' · ',COALESCE(e.email,'')) etiqueta FROM empleado e",
     'gpu_ventas' => "SELECT v.id_gpu_ventas id, CONCAT('Venta #',v.id_gpu_ventas,' · ',u.nombre,' ',u.apellido,' · ',u.correo) etiqueta FROM gpu_ventas v JOIN cliente c ON c.id_cliente=v.id_cliente JOIN usuarios u ON u.id_correo=c.id_correo",
@@ -270,7 +272,7 @@ $soloLectura = $columnaElegida === $clavePrimaria;
 <?php if (isset($referenciasReparacion[$tabla][$idRegistro])): ?><p class="border rounded p-3 bg-light"><?= admin_e($referenciasReparacion[$tabla][$idRegistro]) ?></p><?php endif; ?>
 <?php if (!$eliminar && !$soloLectura): ?><form method="post" action="<?= admin_e($paginaOrigen) ?>?modo=datos&amp;tabla=<?= rawurlencode($tabla) ?>&amp;<?= $crear ? "nuevo=1" : "editar=" . rawurlencode($idRegistro) ?><?= admin_e($crear ? '' : $filtroColumna) ?>" class="row g-3">
 <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>"><input type="hidden" name="version" value="<?= admin_e(tablas_version($registro)) ?>">
-<?php foreach ($columnas as $indice=>$columna): $campo=$columna['Field']; if ($crear && $campo === $clavePrimaria) continue; if (!$crear && $columnaElegida !== '' && $campo !== $columnaElegida) continue; $esClave=$campo===$clavePrimaria; $esSecreto=$tabla === 'usuarios' && $campo==='contraseña'; $valor=$esSecreto ? '' : ($valoresFormulario[$campo] ?? $registro[$campo]); if ($valor!==null) $valor=is_scalar($valor) ? (string)$valor : ''; $esTexto=str_contains($columna['Type'],'text'); $esObligatorioCuenta=(in_array($tabla, ['usuarios','empleado'], true) && in_array($campo, ['nombre','apellido','dni','telefono'], true)) || in_array($campo, $vinculosObligatorios[$tabla] ?? [], true); ?>
+<?php foreach ($columnas as $indice=>$columna): $campo=$columna['Field']; if ($crear && $campo === $clavePrimaria) continue; if (!$crear && $columnaElegida !== '' && $campo !== $columnaElegida) continue; $esClave=$campo===$clavePrimaria; $esSecreto=in_array($tabla, ['usuarios','empleado'], true) && $campo==='contraseña'; $valor=$esSecreto ? '' : ($valoresFormulario[$campo] ?? $registro[$campo]); if ($valor!==null) $valor=is_scalar($valor) ? (string)$valor : ''; $esTexto=str_contains($columna['Type'],'text'); $esObligatorioCuenta=(in_array($tabla, ['usuarios','empleado'], true) && in_array($campo, ['nombre','apellido','dni','telefono'], true)) || in_array($campo, $vinculosObligatorios[$tabla] ?? [], true); ?>
 <div class="<?= $esTexto ? 'col-12' : 'col-md-6' ?>"><label class="form-label" for="campo-<?= $indice ?>"><?= admin_e($esSecreto && $crear ? 'Contraseña' : admin_etiqueta_dato($campo)) ?><?= $esClave ? ' · ID' : '' ?></label>
 <?php $opcionesRelacion = isset($relacionesPorCampo[$campo]) ? ($referenciasReparacion[$relacionesPorCampo[$campo]['REFERENCED_TABLE_NAME']] ?? null) : null; ?>
 <?php if (!$esClave && $opcionesRelacion !== null): ?>
@@ -294,7 +296,7 @@ $soloLectura = $columnaElegida === $clavePrimaria;
 </section><?php endif; ?>
 <?php if (!$crear): ?><section class="panel"><h2 class="h5"><?= admin_e(admin_etiqueta_dato($tabla)) ?> · <?= $total ?> registros</h2>
 <div class="table-responsive" tabindex="0" aria-label="Registros de <?= admin_e($tabla) ?>"><table class="table table-striped"><thead><tr><th>Acción</th><?php foreach ($columnasVisibles as $columna): ?><th scope="col"><?= admin_e(admin_etiqueta_dato($columna['Field'])) ?></th><?php endforeach; ?></tr></thead><tbody>
-<?php foreach ($registros as $fila): ?><tr><td><?php if (!$soloLectura || $eliminar): ?><a class="btn btn-sm <?= $eliminar ? 'btn-outline-danger' : 'btn-outline-primary' ?>" href="<?= admin_e($paginaOrigen) ?>?modo=datos&amp;tabla=<?= rawurlencode($tabla) ?>&amp;operacion=<?= admin_e($operacion) ?>&amp;editar=<?= rawurlencode($fila[$clavePrimaria]) ?><?= admin_e($filtroColumna) ?>#editar-registro"><?= $eliminar ? "Eliminar registro" : ($columnaElegida === '' ? "Editar registro" : "Editar valor") ?></a><?php else: ?>ID<?php endif; ?></td><?php foreach ($columnasVisibles as $columna): $campo=$columna['Field']; $contenido=$fila[$campo]; $etiquetaRelacion = isset($relacionesPorCampo[$campo]) ? ($referenciasReparacion[$relacionesPorCampo[$campo]['REFERENCED_TABLE_NAME']][$contenido ?? ''] ?? null) : null; ?><td><?php if ($tabla === 'usuarios' && $campo==='contraseña'): ?>Contraseña guardada<?php elseif ($campo==='imagen' && is_string($contenido) && preg_match('~^https?://~i', $contenido)): ?><a href="<?= admin_e($contenido) ?>" target="_blank" rel="noopener noreferrer"><img src="<?= admin_e($contenido) ?>" alt="Imagen del producto" loading="lazy" class="img-thumbnail" style="width:100px;height:80px;object-fit:contain"></a><?php elseif ($contenido===null): ?><span class="text-secondary">Sin valor</span><?php elseif ($etiquetaRelacion !== null): ?><?= admin_e($etiquetaRelacion) ?><?php else: ?><?= admin_e(mb_strimwidth((string)$contenido,0,160,'…','UTF-8')) ?><?php endif; ?></td><?php endforeach; ?></tr><?php endforeach; ?>
+<?php foreach ($registros as $fila): ?><tr><td><?php if (!$soloLectura || $eliminar): ?><a class="btn btn-sm <?= $eliminar ? 'btn-outline-danger' : 'btn-outline-primary' ?>" href="<?= admin_e($paginaOrigen) ?>?modo=datos&amp;tabla=<?= rawurlencode($tabla) ?>&amp;operacion=<?= admin_e($operacion) ?>&amp;editar=<?= rawurlencode($fila[$clavePrimaria]) ?><?= admin_e($filtroColumna) ?>#editar-registro"><?= $eliminar ? "Eliminar registro" : ($columnaElegida === '' ? "Editar registro" : "Editar valor") ?></a><?php else: ?>ID<?php endif; ?></td><?php foreach ($columnasVisibles as $columna): $campo=$columna['Field']; $contenido=$fila[$campo]; $etiquetaRelacion = isset($relacionesPorCampo[$campo]) ? ($referenciasReparacion[$relacionesPorCampo[$campo]['REFERENCED_TABLE_NAME']][$contenido ?? ''] ?? null) : null; ?><td><?php if (in_array($tabla, ['usuarios','empleado'], true) && $campo==='contraseña'): ?>Contraseña guardada<?php elseif ($campo==='imagen' && is_string($contenido) && preg_match('~^https?://~i', $contenido)): ?><a href="<?= admin_e($contenido) ?>" target="_blank" rel="noopener noreferrer"><img src="<?= admin_e($contenido) ?>" alt="Imagen del producto" loading="lazy" class="img-thumbnail" style="width:100px;height:80px;object-fit:contain"></a><?php elseif ($contenido===null): ?><span class="text-secondary">Sin valor</span><?php elseif ($etiquetaRelacion !== null): ?><?= admin_e($etiquetaRelacion) ?><?php else: ?><?= admin_e(mb_strimwidth((string)$contenido,0,160,'…','UTF-8')) ?><?php endif; ?></td><?php endforeach; ?></tr><?php endforeach; ?>
 <?php if (!$registros): ?><tr><td colspan="<?= count($columnasVisibles)+1 ?>">No hay registros para mostrar.</td></tr><?php endif; ?></tbody></table></div>
 <nav aria-label="Páginas de registros" class="d-flex flex-wrap gap-3 align-items-center"><?php foreach (['Anterior'=>$pagina-1,'Siguiente'=>$pagina+1] as $etiqueta=>$numero): if ($numero<1 || $numero>$paginas) continue; ?><a href="<?= admin_e($paginaOrigen) ?>?modo=datos&amp;<?= admin_e(http_build_query(['tabla'=>$tabla,'buscar'=>$buscar,'pagina'=>$numero,'operacion'=>$operacion,'columna'=>$columnaElegida])) ?>"><?= $etiqueta ?></a><?php endforeach; ?><span>Página <?= $pagina ?> de <?= $paginas ?></span></nav></section>
 <?php endif; if ($paginaOrigen === 'admin-tablas.php') echo '</div></div>'; admin_layout_fin(); exit; }
