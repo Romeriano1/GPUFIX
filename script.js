@@ -230,3 +230,31 @@ if (tiendaNav && tiendaMenuButton && tiendaMenu) {
         cambiarMenu(false, pantallaMovil.matches && focoDentro);
     });
 }
+document.querySelectorAll('[data-carrito-cantidad]').forEach(selector => {
+    const campo = selector.querySelector('input');
+    const menos = selector.querySelector('[data-cambio="-1"]');
+    const mas = selector.querySelector('[data-cambio="1"]');
+    let guardando = false;
+    const guardarCantidad = () => {
+        if (guardando || !campo.reportValidity()) return;
+        guardando = true;
+        campo.form.requestSubmit();
+        menos.disabled = true;
+        mas.disabled = true;
+    };
+    const actualizarBotones = () => {
+        menos.disabled = Number(campo.value) <= Number(campo.min);
+        mas.disabled = Number(campo.value) >= Number(campo.max);
+    };
+    [menos, mas].forEach(boton => {
+        boton.addEventListener('click', () => {
+            const valor = Number(campo.value) + Number(boton.dataset.cambio);
+            campo.value = String(Math.max(Number(campo.min), Math.min(Number(campo.max), valor)));
+            actualizarBotones();
+            guardarCantidad();
+        });
+    });
+    campo.addEventListener('input', actualizarBotones);
+    campo.addEventListener('change', guardarCantidad);
+    actualizarBotones();
+});

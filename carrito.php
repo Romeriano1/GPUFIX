@@ -24,14 +24,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $accion = (string) ($_POST["accion"] ?? "");
     $idGpu = filter_var($_POST["id_gpu"] ?? null, FILTER_VALIDATE_INT);
 
-    if (in_array($accion, ['quitar', 'eliminar'], true)) {
+    if (in_array($accion, ['actualizar', 'quitar', 'eliminar'], true)) {
         if (empty($_SESSION['usuario_id'])) {
             header('Location: login.php?requerido=carrito');
             exit;
         }
         $cantidadQuitar = filter_var($_POST['cantidad_quitar'] ?? null, FILTER_VALIDATE_INT);
-        if (!$idGpu || $idGpu < 1 || ($accion === 'quitar' && (!$cantidadQuitar || $cantidadQuitar < 1))) {
-            $_SESSION['mensaje_carrito'] = 'Seleccioná un producto y una cantidad válida para quitar.';
+        $cantidadElegida = filter_var($_POST['cantidad'] ?? null, FILTER_VALIDATE_INT);
+        if (!$idGpu || $idGpu < 1 || ($accion === 'quitar' && (!$cantidadQuitar || $cantidadQuitar < 1))
+            || ($accion === 'actualizar' && ($cantidadElegida === false || $cantidadElegida < 0))) {
+            $_SESSION['mensaje_carrito'] = 'Seleccioná un producto y una cantidad válida.';
             header('Location: carrito.php', true, 303);
             exit;
         }
@@ -47,6 +49,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $carritoPropio = $buscarCarrito->get_result()->fetch_assoc();
             if (!$carritoPropio) throw new RuntimeException('Tu carrito ya no está disponible.');
             $idCarrito = (int) $carritoPropio['id_carrito'];
+            if ($accion === 'actualizar') {
+                $buscarStock = $conexion->prepare('SELECT cantidad FROM stock_gpu WHERE id_gpu=? FOR UPDATE');
+                $buscarStock->bind_param('i', $idGpu);
+                $buscarStock->execute();
+                $stockDisponible = 0;
+                foreach ($buscarStock->get_result() as $stock) $stockDisponible += max(0, (int) $stock['cantidad']);
+                $buscarStock->close();
+            }
             $buscarDetalle = $conexion->prepare('SELECT id_detalle_carrito,cantidad FROM detalle_carrito WHERE id_carrito=? AND id_gpu=? FOR UPDATE');
             $buscarDetalle->bind_param('ii', $idCarrito, $idGpu);
             $buscarDetalle->execute();
@@ -54,7 +64,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             if (!$detalle) throw new RuntimeException('Ese producto ya no está en tu carrito.');
             $cantidadActual = (int) $detalle['cantidad'];
             if ($accion === 'quitar' && $cantidadQuitar > $cantidadActual) throw new RuntimeException('La cantidad del carrito cambió. Podés quitar hasta ' . $cantidadActual . ' unidades.');
-            $cantidadRestante = $accion === 'eliminar' ? 0 : $cantidadActual - $cantidadQuitar;
+            $cantidadRestante = $accion === 'actualizar' ? (int) $cantidadElegida : ($accion === 'eliminar' ? 0 : $cantidadActual - $cantidadQuitar);
+            if ($accion === 'actualizar' && $cantidadRestante > $cantidadActual && $cantidadRestante > $stockDisponible) {
+                throw new RuntimeException('No hay stock suficiente para esa cantidad. El carrito conserva la cantidad anterior.');
+            }
             $idDetalle = (int) $detalle['id_detalle_carrito'];
             if ($cantidadRestante === 0) {
                 $guardar = $conexion->prepare('DELETE FROM detalle_carrito WHERE id_detalle_carrito=?');
@@ -66,7 +79,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $guardar->execute();
             $conexion->commit();
             $transaccionActiva = false;
-            $_SESSION['mensaje_carrito'] = $cantidadRestante === 0 ? 'Producto quitado del carrito.' : 'Quitaste ' . $cantidadQuitar . ' unidades. Quedan ' . $cantidadRestante . ' en el carrito.';
+            $_SESSION['mensaje_carrito'] = $cantidadRestante === 0 ? 'Producto quitado del carrito.' : 'Cantidad actualizada a ' . $cantidadRestante . ' unidades.';
         } catch (Throwable $error) {
             if ($transaccionActiva) $conexion->rollback();
             error_log('Error al quitar unidades del carrito: ' . $error->getMessage());
@@ -318,7 +331,7 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Carrito - GPU FIX &amp; STORE</title>
-    <link rel="stylesheet" href="style.css?v=20261106-navbar">
+    <link rel="stylesheet" href="style.css?v=20261113-cantidad">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
@@ -357,17 +370,16 @@ try {
                             <div class="carrito-item-detalle">
                                 <p class="producto-marca"><?= $escapar($item["marca"]) ?></p>
                                 <h3><?= $escapar($item["modelo"]) ?></h3>
-                                <p>Cantidad: <?= (int) $item["cantidad"] ?></p>
                                 <p><?= $item["stock"] > 0 ? "Hay stock" : "No hay stock" ?></p>
                                 <form action="carrito.php" method="post" class="carrito-item-accion">
                                     <input type="hidden" name="id_gpu" value="<?= (int) $item["id"] ?>">
                                     <input type="hidden" name="csrf_carrito" value="<?= $escapar($csrfCarrito) ?>">
-                                    <label class="carrito-quitar-cantidad" for="quitar-<?= (int)$item['id'] ?>">Cantidad a quitar
-                                        <input id="quitar-<?= (int)$item['id'] ?>" type="number" name="cantidad_quitar" value="1" min="1" max="<?= (int)$item['cantidad'] ?>" step="1" required>
-                                    </label>
-                                    <div class="carrito-quitar-botones">
-                                        <button type="submit" name="accion" value="quitar" class="boton-eliminar-carrito">Quitar cantidad</button>
-                                        <button type="submit" name="accion" value="eliminar" class="boton-eliminar-carrito" formnovalidate>Quitar todo</button>
+                                    <input type="hidden" name="accion" value="actualizar">
+                                    <label class="carrito-cantidad-label" for="cantidad-<?= (int)$item['id'] ?>">Cantidad</label>
+                                    <div class="selector-cantidad" data-carrito-cantidad>
+                                        <button type="button" data-cambio="-1" aria-label="Reducir cantidad">−</button>
+                                        <input id="cantidad-<?= (int)$item['id'] ?>" type="number" name="cantidad" value="<?= (int)$item['cantidad'] ?>" min="0" max="<?= max((int)$item['stock'], (int)$item['cantidad']) ?>" step="1" required>
+                                        <button type="button" data-cambio="1" aria-label="Aumentar cantidad">+</button>
                                     </div>
                                 </form>
                             </div>
@@ -396,7 +408,7 @@ try {
     </main>
 
     <footer><p>GPU FIX &amp; STORE - Reparación y venta de GPUs</p></footer>
-    <script src="script.js?v=20261104-responsive"></script>
+    <script src="script.js?v=20261113-cantidad-directa"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
