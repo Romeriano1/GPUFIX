@@ -28,6 +28,74 @@ function admin_leer_permisos(): array
     return json_decode(substr($contenido, strlen($prefijo)), true, 512, JSON_THROW_ON_ERROR);
 }
 
+function admin_roles_organigrama(): array
+{
+    return [
+        'Dirección' => [
+            'Dirección General' => array_keys(admin_secciones_permisos()),
+        ],
+        'Comercial' => [
+            'Jefe Comercial' => ['admin.php', 'admin-cuentas.php', 'admin-productos.php', 'admin-presupuestos.php', 'admin-facturacion.php', 'admin-devoluciones.php', 'admin-comprobantes.php'],
+            'Vendedores' => ['admin-cuentas.php', 'admin-productos.php', 'admin-presupuestos.php', 'admin-facturacion.php'],
+            'Atención al Cliente' => ['admin-cuentas.php', 'admin-presupuestos.php'],
+            'Presupuestos' => ['admin-productos.php', 'admin-presupuestos.php', 'admin-componentes.php'],
+        ],
+        'Técnica' => [
+            'Jefe Técnico' => ['admin.php', 'admin-productos.php', 'admin-presupuestos.php', 'admin-reparaciones.php', 'admin-componentes.php'],
+            'Técnicos de Diagnóstico' => ['admin-reparaciones.php'],
+            'Técnicos de Reparación y Mantenimiento' => ['admin-reparaciones.php', 'admin-componentes.php'],
+            'Técnicos de Laboratorio' => ['admin-reparaciones.php'],
+        ],
+        'Administración y RRHH' => [
+            'Jefe Administrativo y RRHH' => ['admin.php', 'admin-cuentas.php', 'admin-productos.php', 'admin-proveedores.php', 'admin-facturacion.php', 'admin-compras.php', 'admin-componentes.php', 'admin-devoluciones.php', 'admin-comprobantes.php'],
+            'Contabilidad' => ['admin.php', 'admin-facturacion.php', 'admin-compras.php', 'admin-comprobantes.php'],
+            'Facturación' => ['admin-facturacion.php', 'admin-devoluciones.php', 'admin-comprobantes.php'],
+            'Compras y Stock' => ['admin-productos.php', 'admin-proveedores.php', 'admin-compras.php', 'admin-componentes.php'],
+            'RRHH' => ['admin-cuentas.php'],
+        ],
+    ];
+}
+
+function admin_cargar_roles_organigrama(mysqli $conexion): int
+{
+    $conexion->begin_transaction();
+    $transaccionActiva = true;
+    try {
+        $puestos = $conexion->query('SELECT id_puesto,nombre FROM puesto ORDER BY id_puesto FOR UPDATE')->fetch_all(MYSQLI_ASSOC);
+        $existentes = [];
+        foreach ($puestos as $puesto) {
+            $nombre = mb_strtolower(trim($puesto['nombre']), 'UTF-8');
+            $existentes[$nombre] = (int) $puesto['id_puesto'];
+        }
+        $permisos = admin_leer_permisos();
+        $nuevosPermisos = [];
+        $creados = 0;
+        $insertar = $conexion->prepare('INSERT INTO puesto(nombre) VALUES(?)');
+        foreach (admin_roles_organigrama() as $roles) {
+            foreach ($roles as $nombre => $paneles) {
+                $clave = mb_strtolower($nombre, 'UTF-8');
+                $id = $existentes[$clave] ?? null;
+                if ($id === null) {
+                    $insertar->bind_param('s', $nombre);
+                    $insertar->execute();
+                    $id = (int) $conexion->insert_id;
+                    $existentes[$clave] = $id;
+                    $creados++;
+                }
+                if (!array_key_exists((string) $id, $permisos)) $nuevosPermisos[$id] = $paneles;
+            }
+        }
+        $conexion->commit();
+        $transaccionActiva = false;
+        // Los roles sin permisos guardados quedan sin acceso y se completan al reintentar.
+        if ($nuevosPermisos) admin_guardar_permisos_puestos($nuevosPermisos);
+        return $creados;
+    } catch (Throwable $error) {
+        if ($transaccionActiva) $conexion->rollback();
+        throw $error;
+    }
+}
+
 function admin_puede_ver(mysqli $conexion, string $pagina): bool
 {
     if (admin_es_cuenta_principal($conexion)) return true;
@@ -43,8 +111,16 @@ function admin_puede_ver(mysqli $conexion, string $pagina): bool
 
 function admin_guardar_paneles_puesto(int $puestoId, array $seleccion): void
 {
-    foreach ($seleccion as $panel) {
-        if (!is_string($panel) || !isset(admin_secciones_permisos()[$panel])) throw new RuntimeException('Panel no disponible.');
+    admin_guardar_permisos_puestos([$puestoId => $seleccion]);
+}
+
+function admin_guardar_permisos_puestos(array $cambios): void
+{
+    foreach ($cambios as $puestoId => $seleccion) {
+        if ((int) $puestoId < 1 || !is_array($seleccion)) throw new RuntimeException('Rol no válido.');
+        foreach ($seleccion as $panel) {
+            if (!is_string($panel) || !isset(admin_secciones_permisos()[$panel])) throw new RuntimeException('Panel no disponible.');
+        }
     }
     $archivo = __DIR__ . '/permisos-puestos.php';
     $candado = fopen($archivo . '.lock', 'c');
@@ -52,7 +128,9 @@ function admin_guardar_paneles_puesto(int $puestoId, array $seleccion): void
     try {
         if (!flock($candado, LOCK_EX)) throw new RuntimeException('No se pudo guardar la configuración de permisos.');
         $permisos = admin_leer_permisos();
-        $permisos[(string) $puestoId] = array_values(array_unique($seleccion));
+        foreach ($cambios as $puestoId => $seleccion) {
+            $permisos[(string) $puestoId] = array_values(array_unique($seleccion));
+        }
         $contenido = "<?php exit; ?>\n" . json_encode($permisos, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR);
         $temporal = tempnam(__DIR__, '.permisos-');
         if (!$temporal) throw new RuntimeException('No se pudo preparar el archivo.');
