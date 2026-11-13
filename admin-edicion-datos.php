@@ -54,9 +54,6 @@ $tabla = is_string($_GET['tabla'] ?? null) ? $_GET['tabla'] : $tablasPermitidas[
 if (!in_array($tabla, $tablasPermitidas, true)) { http_response_code(404); exit('Tabla no disponible.'); }
 $nombreTabla = tablas_identificador($tabla);
 $columnas = $conexion->query('SHOW FULL COLUMNS FROM ' . $nombreTabla)->fetch_all(MYSQLI_ASSOC);
-if ($tabla === 'empleado') {
-    $columnas = array_values(array_filter($columnas, static fn ($columna) => $columna['Field'] !== 'contraseña'));
-}
 $clavePrimaria = '';
 foreach ($columnas as $columna) if ($columna['Key'] === 'PRI') $clavePrimaria = $columna['Field'];
 if ($clavePrimaria === '') throw new RuntimeException('La tabla necesita una clave primaria.');
@@ -128,8 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $valor = trim($valor);
             }
             if (in_array($campo, ['cantidad','precio_unitario','subtotal','total','precio_total','precio_especial','mano_obra'], true) && $valor !== null && (float)$valor < 0) throw new RuntimeException('El campo ' . $campo . ' no puede ser negativo.');
-            $tipoDocumento = strtoupper(trim((string)($_POST['datos']['tipo_documento'] ?? $registro['tipo_documento'] ?? 'DNI')));
-            if ($campo === 'dni' && $tipoDocumento === 'DNI' && $valor !== null && !preg_match('/^[0-9]{7,8}$/D', $valor)) throw new RuntimeException('El DNI debe tener 7 u 8 números.');
+            if ($campo === 'dni' && $valor !== null && !preg_match('/^[0-9]{7,8}$/D', $valor)) throw new RuntimeException('El DNI debe tener 7 u 8 números.');
             if (in_array($tabla, ['usuarios','empleado'], true) && in_array($campo, ['nombre','apellido'], true) && !preg_match("/^[\\p{L}\\p{M}]+(?:[ '\x{2019}-][\\p{L}\\p{M}]+)*$/uD", $valor)) throw new RuntimeException('Nombre y apellido solo admiten letras, espacios, apóstrofes y guiones.');
             if (in_array($campo, ['correo','email'], true) && $valor !== null && $valor !== '' && !filter_var($valor,FILTER_VALIDATE_EMAIL)) throw new RuntimeException('El correo no es válido.');
             if (!$crear && $tabla === 'usuarios' && $registro['correo'] === 'gpufixstore@gmail.com' && $campo === 'correo' && $valor !== $registro['correo']) throw new RuntimeException('El correo de la cuenta principal está protegido.');

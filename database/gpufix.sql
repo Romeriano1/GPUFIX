@@ -322,12 +322,11 @@ CREATE TABLE `empleado` (
   `id_empleado` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(100) NOT NULL,
   `apellido` varchar(100) NOT NULL,
-  `dni` varchar(40) NOT NULL,
+  `dni` varchar(20) NOT NULL,
   `telefono` varchar(30) DEFAULT NULL,
   `email` varchar(150) DEFAULT NULL,
   `id_puesto` int(11) NOT NULL,
   `id_correo` int(11) DEFAULT NULL,
-  `contraseña` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id_empleado`),
   UNIQUE KEY `uq_empleado_dni` (`dni`),
   UNIQUE KEY `uq_empleado_usuario` (`id_correo`),
@@ -344,7 +343,7 @@ CREATE TABLE `empleado` (
 
 LOCK TABLES `empleado` WRITE;
 /*!40000 ALTER TABLE `empleado` DISABLE KEYS */;
-INSERT INTO `empleado` VALUES (1,'Admin','GpuFix','12341234','1158390537','gpufixstore@gmail.com',1,24,'$2y$10$ow9ZPHNC2IyfyDxj1cDNn.rcha4pkvVpUt.z0HLsqCxdH29vCLtqu');
+INSERT INTO `empleado` VALUES (1,'Admin','GpuFix','12341234','1158390537','gpufixstore@gmail.com',1,24);
 /*!40000 ALTER TABLE `empleado` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -766,8 +765,7 @@ CREATE TABLE `usuarios` (
   `contraseña` varchar(255) NOT NULL,
   `nombre` varchar(100) NOT NULL,
   `apellido` varchar(100) NOT NULL,
-  `tipo_documento` varchar(40) NOT NULL DEFAULT 'DNI',
-  `dni` varchar(40) NOT NULL,
+  `dni` varchar(8) NOT NULL,
   `telefono` varchar(30) DEFAULT NULL,
   PRIMARY KEY (`id_correo`),
   UNIQUE KEY `uq_usuarios_correo` (`correo`)
@@ -780,7 +778,7 @@ CREATE TABLE `usuarios` (
 
 LOCK TABLES `usuarios` WRITE;
 /*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
-INSERT INTO `usuarios` VALUES (24,'gpufixstore@gmail.com','$2y$10$ow9ZPHNC2IyfyDxj1cDNn.rcha4pkvVpUt.z0HLsqCxdH29vCLtqu','Admin','GpuFix','DNI','12341234','1158390537'),(28,'lucasnicolas2002@gmail.com','$2y$10$CZvFncnrBYmDpAmV4QTyAeZ4WIWNFyJCeQGIdsj2Wi0r2eGy2Mx0C','lucas','calvano','DNI','43434343','+541160209263');
+INSERT INTO `usuarios` VALUES (24,'gpufixstore@gmail.com','$2y$10$ow9ZPHNC2IyfyDxj1cDNn.rcha4pkvVpUt.z0HLsqCxdH29vCLtqu','Admin','GpuFix','12341234','1158390537'),(28,'lucasnicolas2002@gmail.com','$2y$10$CZvFncnrBYmDpAmV4QTyAeZ4WIWNFyJCeQGIdsj2Wi0r2eGy2Mx0C','lucas','calvano','43434343','+541160209263');
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
 
