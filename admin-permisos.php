@@ -56,46 +56,6 @@ function admin_roles_organigrama(): array
     ];
 }
 
-function admin_cargar_roles_organigrama(mysqli $conexion): int
-{
-    $conexion->begin_transaction();
-    $transaccionActiva = true;
-    try {
-        $puestos = $conexion->query('SELECT id_puesto,nombre FROM puesto ORDER BY id_puesto FOR UPDATE')->fetch_all(MYSQLI_ASSOC);
-        $existentes = [];
-        foreach ($puestos as $puesto) {
-            $nombre = mb_strtolower(trim($puesto['nombre']), 'UTF-8');
-            $existentes[$nombre] = (int) $puesto['id_puesto'];
-        }
-        $permisos = admin_leer_permisos();
-        $nuevosPermisos = [];
-        $creados = 0;
-        $insertar = $conexion->prepare('INSERT INTO puesto(nombre) VALUES(?)');
-        foreach (admin_roles_organigrama() as $roles) {
-            foreach ($roles as $nombre => $paneles) {
-                $clave = mb_strtolower($nombre, 'UTF-8');
-                $id = $existentes[$clave] ?? null;
-                if ($id === null) {
-                    $insertar->bind_param('s', $nombre);
-                    $insertar->execute();
-                    $id = (int) $conexion->insert_id;
-                    $existentes[$clave] = $id;
-                    $creados++;
-                }
-                if (!array_key_exists((string) $id, $permisos)) $nuevosPermisos[$id] = $paneles;
-            }
-        }
-        $conexion->commit();
-        $transaccionActiva = false;
-        // Los roles sin permisos guardados quedan sin acceso y se completan al reintentar.
-        if ($nuevosPermisos) admin_guardar_permisos_puestos($nuevosPermisos);
-        return $creados;
-    } catch (Throwable $error) {
-        if ($transaccionActiva) $conexion->rollback();
-        throw $error;
-    }
-}
-
 function admin_puede_ver(mysqli $conexion, string $pagina): bool
 {
     if (admin_es_cuenta_principal($conexion)) return true;
@@ -152,7 +112,7 @@ function admin_menu_permitido(mysqli $conexion): string
         return '<a class="nav-link" href="admin.php">Estadísticas</a>'
             . '<a class="nav-link" href="admin-tablas.php">Tablas SQL</a>'
             . '<a class="nav-link" href="admin-comprobantes.php">Comprobantes</a>'
-            . '<a class="nav-link" href="admin-empleos.php">Implementación de Empleos</a>';
+            . '<a class="nav-link" href="admin-empleos.php">Empleados y permisos</a>';
     }
     $enlaces = '';
     foreach (admin_secciones_permisos() as $pagina => $nombre) {

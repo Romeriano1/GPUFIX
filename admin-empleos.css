@@ -1,0 +1,78 @@
+.empleos-cabecera {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin: 16px 0 24px;
+}
+
+.empleos-cabecera h1 { margin: 0 0 8px; font-size: 1.9rem; font-weight: 650; }
+.empleos-cabecera p, .empleos-encabezado-lista p { margin: 0; color: #667085; }
+.empleos-botones { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.empleos-vistas { display: flex; gap: 24px; border-bottom: 1px solid #d9dfe8; margin-bottom: 24px; }
+.empleos-vistas a { padding: 12px 2px; color: #596579; text-decoration: none; font-weight: 600; border-bottom: 3px solid transparent; }
+.empleos-vistas a[aria-current="page"] { color: #253b80; border-bottom-color: #253b80; }
+.empleos-vistas a:hover { color: #253b80; }
+.empleos-distribucion { display: grid; grid-template-columns: 285px minmax(0, 1fr); gap: 24px; align-items: start; }
+.empleos-distribucion > .panel, .empleos-empleados.panel { margin: 0; }
+.empleos-puestos.panel { padding: 20px 14px; }
+.empleos-puestos > .form-label, .empleos-puestos > .form-control { margin-left: 6px; width: calc(100% - 12px); }
+.empleos-lista { max-height: 600px; overflow-y: auto; margin-top: 20px; padding-right: 3px; }
+.empleos-area + .empleos-area { margin-top: 22px; }
+.empleos-area h2 { color: #6a7586; font-size: .8rem; font-weight: 700; margin: 0 10px 8px; }
+.empleos-puesto { display: block; padding: 10px 12px; margin: 2px 0; border-radius: 7px; color: #354156; line-height: 1.4; text-decoration: none; }
+.empleos-puesto:hover { background: #f1f4f9; color: #253b80; }
+.empleos-puesto[aria-current="page"] { background: #e9eefb; color: #253b80; font-weight: 650; box-shadow: inset 3px 0 #253b80; }
+.empleos-puesto:focus-visible, .empleos-vistas a:focus-visible { outline: 3px solid #8eb1ee; outline-offset: 2px; }
+.empleos-titulo-editor { padding-bottom: 20px; margin-bottom: 22px; border-bottom: 1px solid #e5e9ef; }
+.empleos-titulo-editor h2, .empleos-encabezado-lista h2 { font-size: 1.35rem; font-weight: 650; margin: 0 0 8px; }
+.empleos-titulo-editor p { color: #667085; margin: 0; font-size: .9rem; }
+.empleos-editor .form-label { font-weight: 600; }
+.empleos-permisos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.empleos-permiso { display: flex; align-items: center; gap: 12px; min-height: 58px; padding: 12px 14px; border: 1px solid #dbe1e9; border-radius: 8px; cursor: pointer; line-height: 1.4; }
+.empleos-permiso:hover { border-color: #8e9fc6; background: #fafbfe; }
+.empleos-permiso:has(input:checked) { border-color: #8299cc; background: #f0f4fd; }
+.empleos-permiso:focus-within { outline: 3px solid #c2d2f0; outline-offset: 1px; }
+.empleos-permiso input { flex: 0 0 auto; width: 18px; height: 18px; accent-color: #253b80; }
+.empleos-permiso span { min-width: 0; }
+.empleos-contador { margin: 14px 0 0; color: #667085; font-size: .9rem; }
+.empleos-aclaracion { margin: 22px 0; color: #667085; font-size: .85rem; line-height: 1.5; }
+.empleos-pie-editor { display: flex; flex-wrap: wrap; gap: 10px; border-top: 1px solid #e5e9ef; padding-top: 20px; }
+.empleos-encabezado-lista { display: flex; justify-content: space-between; align-items: end; flex-wrap: wrap; gap: 20px; margin-bottom: 24px; }
+.empleos-busqueda { width: 270px; max-width: 100%; }
+.empleos-empleados th small { display: block; color: #667085; font-size: .85rem; font-weight: 400; margin-top: 4px; }
+.empleos-empleados td { padding-top: 16px; padding-bottom: 16px; }
+.empleos-empleados select { min-width: 250px; }
+.empleos-guardar-asignacion { width: 1%; }
+.empleos-vacio { text-align: center; padding: 40px 16px; }
+.empleos-selector-movil { display: none; }
+.empleos-puesto[hidden], .empleos-area[hidden], [data-empleado][hidden] { display: none !important; }
+
+@media (max-width: 991px) {
+    .empleos-distribucion { grid-template-columns: 240px minmax(0, 1fr); gap: 16px; }
+    .empleos-permisos { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 767px) {
+    .empleos-cabecera { align-items: start; margin-top: 10px; }
+    .empleos-cabecera h1 { font-size: 1.65rem; }
+    .empleos-cabecera > .empleos-botones { width: 100%; }
+    .empleos-cabecera .btn { white-space: normal; }
+    .empleos-distribucion { display: block; }
+    .empleos-puestos { display: none; }
+    .empleos-selector-movil { display: block; margin: 0 0 16px; }
+    .empleos-selector-movil select { flex: 1 1 180px; min-width: 0; }
+    .empleos-selector-movil .empleos-botones { flex-wrap: nowrap; }
+    .empleos-vistas { gap: 22px; margin-bottom: 18px; }
+    .empleos-editor.panel, .empleos-empleados.panel { padding: 20px 16px; }
+    .empleos-encabezado-lista { align-items: start; }
+    .empleos-busqueda { width: 100%; }
+    .empleos-empleados table, .empleos-empleados tbody { display: block; width: 100%; }
+    .empleos-empleados thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    .empleos-empleados tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 14px; margin-bottom: 14px; border: 1px solid #dbe1e9; border-radius: 8px; }
+    .empleos-empleados th { grid-column: 1 / -1; }
+    .empleos-empleados td, .empleos-empleados th { padding: 0; border: 0; background: transparent; }
+    .empleos-empleados select { min-width: 0; }
+    .empleos-guardar-asignacion { width: auto; }
+}
