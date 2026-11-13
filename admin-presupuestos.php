@@ -214,7 +214,7 @@ admin_layout_inicio('Presupuestos');
                     <?php if (!$correoDisponible): ?><small class="text-secondary ms-2">Correo no configurado. La respuesta está disponible en Mi cuenta.</small><?php endif; ?>
                 </form>
             <?php endif; ?>
-            <form method="post" class="mt-4 border-top pt-3">
+            <?php if (admin_puede_eliminar($conexion)): ?><form method="post" class="mt-4 border-top pt-3">
                 <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">
                 <input type="hidden" name="accion" value="eliminar_consulta">
                 <input type="hidden" name="id_presupuesto" value="<?= $idPresupuesto ?>">
@@ -222,7 +222,7 @@ admin_layout_inicio('Presupuestos');
                 <label class="d-block mb-2"><input type="checkbox" name="confirmar_eliminar" value="1" required> Eliminar todos los registros de esta consulta y los detalles de su presupuesto.</label>
                 <p class="small text-secondary">Si existe una orden antigua usada solo para esta consulta, también se elimina. Se conservan clientes, placas e historiales de reparación.</p>
                 <button class="btn btn-outline-danger" type="submit">Eliminar consulta completa</button>
-            </form>
+            </form><?php endif; ?>
             </div>
         </details>
     <?php endforeach; endif; ?>

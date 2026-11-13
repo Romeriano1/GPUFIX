@@ -1,7 +1,6 @@
 <?php
 require_once __DIR__ . '/admin-comun.php';
 admin_requerir_acceso();
-if (!admin_es_cuenta_principal($conexion)) { http_response_code(403); exit('Acceso reservado a GPUFIX.'); }
 admin_validar_csrf();
 $puestos = $conexion->query('SELECT id_puesto,nombre FROM puesto ORDER BY nombre')->fetch_all(MYSQLI_ASSOC);
 $puestoId = filter_input(INPUT_GET, 'puesto', FILTER_VALIDATE_INT) ?: 0;
@@ -20,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$crearPuesto && !in_array($puestoId, array_map('intval', array_column($puestos,'id_puesto')), true)) throw new RuntimeException('Seleccioná un puesto válido.');
         if ($accion === 'asignar') {
             $empleadoId = filter_input(INPUT_POST, 'empleado', FILTER_VALIDATE_INT) ?: 0;
-            $buscar = $conexion->prepare("SELECT id_empleado FROM empleado WHERE id_empleado=? AND COALESCE(email,'') <> 'gpufixstore@gmail.com'");
+            $buscar = $conexion->prepare("SELECT e.id_empleado FROM empleado e LEFT JOIN usuarios u ON u.id_correo=e.id_correo WHERE e.id_empleado=? AND COALESCE(LOWER(TRIM(u.correo)),'') <> 'gpufixstore@gmail.com'");
             $buscar->bind_param('i',$empleadoId); $buscar->execute();
             if (!$buscar->get_result()->fetch_row()) throw new RuntimeException('Seleccioná un empleado válido.');
             $guardar = $conexion->prepare('UPDATE empleado SET id_puesto=? WHERE id_empleado=?');
@@ -63,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: ' . $destino,true,303); exit;
     } catch (Throwable $fallo) { error_log($fallo->getMessage()); $error = $fallo instanceof mysqli_sql_exception ? 'No se pudo guardar el cambio.' : $fallo->getMessage(); }
 }
-$empleados = $conexion->query("SELECT e.id_empleado,e.nombre,e.apellido,e.email,e.id_puesto FROM empleado e WHERE COALESCE(email,'') <> 'gpufixstore@gmail.com' ORDER BY nombre,apellido")->fetch_all(MYSQLI_ASSOC);
+$empleados = $conexion->query("SELECT e.id_empleado,e.nombre,e.apellido,e.email,e.id_puesto FROM empleado e LEFT JOIN usuarios u ON u.id_correo=e.id_correo WHERE COALESCE(LOWER(TRIM(u.correo)),'') <> 'gpufixstore@gmail.com' ORDER BY e.nombre,e.apellido")->fetch_all(MYSQLI_ASSOC);
 $permisos = admin_leer_permisos();
 $rolActual = null;
 foreach ($puestos as $puesto) if ((int)$puesto['id_puesto'] === $puestoId) $rolActual = $puesto;
@@ -186,7 +185,7 @@ admin_layout_inicio('Empleados y permisos');
                 </div>
                 <p class="empleos-contador" id="cantidadPaneles" aria-live="polite"><?= count($panelesFormulario) ?> <?= count($panelesFormulario) === 1 ? 'panel seleccionado' : 'paneles seleccionados' ?></p>
             </fieldset>
-            <p class="empleos-aclaracion">Cada acceso habilita las funciones disponibles dentro del panel. La cuenta principal administra Tablas SQL y los permisos del personal.</p>
+            <p class="empleos-aclaracion">Cada acceso habilita las funciones disponibles dentro del panel. Empleados y permisos permite modificar puestos, permisos y asignaciones del personal. Tablas SQL es exclusivo de la cuenta principal.</p>
             <div class="empleos-pie-editor">
                 <button class="btn btn-primary" type="submit"><?= $crearPuesto ? 'Crear puesto' : 'Guardar cambios' ?></button>
                 <?php if ($crearPuesto): ?><a class="btn btn-outline-secondary" href="admin-empleos.php">Cancelar</a><?php endif; ?>

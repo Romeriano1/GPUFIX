@@ -12,7 +12,8 @@ function admin_secciones_permisos(): array
         'admin-compras.php' => 'Compras a proveedores',
         'admin-componentes.php' => 'Componentes y repuestos',
         'admin-devoluciones.php' => 'Devoluciones',
-        'admin-comprobantes.php' => 'Comprobantes'
+        'admin-comprobantes.php' => 'Comprobantes',
+        'admin-empleos.php' => 'Empleados y permisos'
     ];
 }
 
@@ -21,6 +22,7 @@ function admin_leer_permisos(): array
     $archivo = __DIR__ . '/permisos-puestos.php';
     if (!is_file($archivo)) return [];
     $contenido = file_get_contents($archivo);
+    if ($contenido !== false) $contenido = str_replace(["\r\n", "\r"], "\n", $contenido);
     $prefijo = "<?php exit; ?>\n";
     if ($contenido === false || !str_starts_with($contenido, $prefijo)) {
         throw new RuntimeException('No se pudo leer la configuración de permisos.');
@@ -67,6 +69,20 @@ function admin_puede_ver(mysqli $conexion, string $pagina): bool
     $puesto = $consulta->get_result()->fetch_row();
     $configuracion = admin_leer_permisos();
     return $puesto && in_array($pagina, $configuracion[(string)$puesto[0]] ?? [], true);
+}
+
+function admin_puede_eliminar(mysqli $conexion): bool
+{
+    if (admin_es_cuenta_principal($conexion)) return true;
+    $consulta = $conexion->prepare('SELECT p.nombre FROM empleado e INNER JOIN puesto p ON p.id_puesto=e.id_puesto WHERE e.id_empleado=?');
+    $empleado = (int) ($_SESSION['empleado_id'] ?? 0);
+    $consulta->bind_param('i', $empleado);
+    $consulta->execute();
+    $puesto = $consulta->get_result()->fetch_row();
+    $consulta->close();
+    $nombre = mb_strtolower(trim($puesto[0] ?? ''), 'UTF-8');
+    return in_array($nombre, ['administrador', 'dirección general'], true)
+        || preg_match('/^jefe\s+/u', $nombre) === 1;
 }
 
 function admin_guardar_paneles_puesto(int $puestoId, array $seleccion): void

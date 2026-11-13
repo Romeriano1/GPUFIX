@@ -143,12 +143,12 @@ admin_layout_inicio('Proveedores');
                 <td><?= admin_e($proveedor['razon_social']) ?></td>
                 <td><div class="d-flex flex-wrap gap-2">
                     <a class="btn btn-sm btn-outline-primary" href="<?= admin_e(admin_url_panel('proveedores')) ?>&editar=<?= (int) $proveedor['id_proveedor'] ?>#ficha-proveedor">Editar</a>
-                    <form method="post" action="<?= admin_e(admin_url_panel('proveedores')) ?>" onsubmit="return confirm('¿Eliminar este proveedor?');">
+                    <?php if (admin_puede_eliminar($conexion)): ?><form method="post" action="<?= admin_e(admin_url_panel('proveedores')) ?>" onsubmit="return confirm('¿Eliminar este proveedor?');">
                         <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">
                         <input type="hidden" name="accion" value="eliminar">
                         <input type="hidden" name="id_proveedor" value="<?= (int) $proveedor['id_proveedor'] ?>">
                         <button class="btn btn-sm btn-outline-danger" type="submit" <?= $proveedor['tiene_compras'] ? 'disabled title="Tiene compras asociadas"' : '' ?>>Eliminar</button>
-                    </form>
+                    </form><?php endif; ?>
                 </div></td>
             </tr>
         <?php endwhile; endif; ?>

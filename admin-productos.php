@@ -305,12 +305,12 @@ admin_layout_inicio('Productos y stock');
                 <td><?= (int) $productoCatalogo['cantidad'] ?></td>
                 <td><div class="d-flex flex-wrap gap-2">
                     <a class="btn btn-sm btn-outline-primary" href="<?= admin_e(admin_url_panel('productos')) ?>&editar=<?= (int) $productoCatalogo['id_gpu'] ?>#ficha-producto">Editar ficha</a>
-                    <form method="post" action="<?= admin_e(admin_url_panel('productos')) ?>#catalogo-productos">
+                    <?php if (admin_puede_eliminar($conexion)): ?><form method="post" action="<?= admin_e(admin_url_panel('productos')) ?>#catalogo-productos">
                         <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">
                         <input type="hidden" name="accion" value="eliminar">
                         <input type="hidden" name="id_gpu" value="<?= (int) $productoCatalogo['id_gpu'] ?>">
                         <button type="submit" class="btn btn-sm btn-danger" aria-label="<?= admin_e('Eliminar ' . $productoCatalogo['marca'] . ' ' . $productoCatalogo['modelo']) ?>">Eliminar producto</button>
-                    </form>
+                    </form><?php endif; ?>
                 </div></td>
             </tr>
         <?php endwhile; ?>

@@ -24,8 +24,17 @@ function admin_requerir_acceso(): void {
     }
     $_SESSION['empleado_nombre'] = $existe['nombre'];
     $_SESSION['empleado_apellido'] = $existe['apellido'];
+    if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST'
+        && in_array($_POST['accion'] ?? '', ['eliminar', 'eliminar_consulta'], true)
+        && !admin_puede_eliminar($conexion)) {
+        http_response_code(403);
+        admin_layout_inicio('Acceso restringido');
+        echo '<p>Solo las jefaturas y administración pueden eliminar registros.</p><a href="admin.php">Volver al panel</a>';
+        admin_layout_fin();
+        exit;
+    }
     $pagina = basename($_SERVER['SCRIPT_NAME'] ?? '');
-    $soloPrincipal = in_array($pagina, ['admin-tablas.php','admin-empleos.php'], true);
+    $soloPrincipal = $pagina === 'admin-tablas.php';
     $puedeAbrir = $soloPrincipal ? admin_es_cuenta_principal($conexion) : admin_puede_ver($conexion, $pagina);
     if ($pagina !== 'admin.php' && !$puedeAbrir) {
         http_response_code(403);
@@ -37,7 +46,7 @@ function admin_requerir_acceso(): void {
 
 }
 function admin_es_cuenta_principal(mysqli $conexion): bool {
-    $consulta = $conexion->prepare("SELECT id_empleado FROM empleado WHERE id_empleado=? AND email='gpufixstore@gmail.com' LIMIT 1");
+    $consulta = $conexion->prepare("SELECT e.id_empleado FROM empleado e INNER JOIN usuarios u ON u.id_correo=e.id_correo WHERE e.id_empleado=? AND LOWER(TRIM(u.correo))='gpufixstore@gmail.com' LIMIT 1");
     $idEmpleado = (int) ($_SESSION['empleado_id'] ?? 0);
     $consulta->bind_param('i', $idEmpleado);
     $consulta->execute();

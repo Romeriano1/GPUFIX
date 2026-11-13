@@ -189,7 +189,7 @@ $cuentas = $consultaCuentas->get_result();
 admin_layout_inicio('Cuentas');
 ?>
 <h1 class="h3 mt-3">Cuentas de clientes</h1>
-<p class="text-secondary">Podés editar cuentas y eliminar clientes sin historial asociado. Solo GPUFIX puede eliminar empleados. La cuenta principal está protegida.</p>
+<p class="text-secondary">Podés editar cuentas. Las jefaturas y administración pueden eliminar clientes sin historial asociado. Solo GPUFIX puede eliminar empleados. La cuenta principal está protegida.</p>
 <?php if ($mensaje !== ''): ?><div class="alert alert-success" role="status"><?= admin_e($mensaje) ?></div><?php endif; ?>
 <?php if ($error !== ''): ?><div class="alert alert-danger" role="alert"><?= admin_e($error) ?></div><?php endif; ?>
 <?php if ($cuentaEditada):
@@ -250,14 +250,14 @@ admin_layout_inicio('Cuentas');
                 <td><?= admin_e($cuenta['dni']) ?></td>
                 <td><div class="d-flex flex-wrap gap-2">
                     <?php if (!$esPrincipal || $esAdministradorPrincipal): ?><a class="btn btn-sm btn-outline-primary" href="<?= admin_e($urlListado . '&editar=' . (int) $cuenta['id_correo']) ?>#editar-cuenta">Editar datos</a><?php endif; ?>
-                    <?php if (!$esPrincipal && (!$cuenta['id_empleado'] || $esAdministradorPrincipal)): ?>
+                    <?php if (admin_puede_eliminar($conexion) && !$esPrincipal && (!$cuenta['id_empleado'] || $esAdministradorPrincipal)): ?>
                     <form method="post" action="<?= admin_e($urlListado) ?>#lista-cuentas">
                         <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">
                         <input type="hidden" name="accion" value="eliminar">
                         <input type="hidden" name="id_correo" value="<?= (int) $cuenta['id_correo'] ?>">
                         <button class="btn btn-sm btn-danger" type="submit" aria-label="<?= admin_e('Eliminar cuenta de ' . $cuenta['correo']) ?>">Eliminar cuenta</button>
                     </form>
-                    <?php else: ?><span class="small text-secondary align-self-center"><?= $esPrincipal ? 'Cuenta protegida' : 'Solo GPUFIX puede eliminar' ?></span><?php endif; ?>
+                    <?php else: ?><span class="small text-secondary align-self-center"><?= $esPrincipal ? 'Cuenta protegida' : ($cuenta['id_empleado'] ? 'Solo GPUFIX puede eliminar' : 'Solo jefaturas y administración pueden eliminar') ?></span><?php endif; ?>
                 </div></td>
             </tr>
         <?php endwhile; ?>
