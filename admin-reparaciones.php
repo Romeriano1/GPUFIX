@@ -9,7 +9,10 @@ if (!defined('GPUFIX_TABLA_ACCIONES')) {
     define('GPUFIX_TABLA_ACCIONES', true);
 }
 require_once __DIR__ . '/admin-edicion-datos.php';
+require_once __DIR__ . '/sucursales.php';
+require_once __DIR__ . '/componentes-reparacion.php';
 admin_validar_csrf();
+if (empty($_SESSION['token_componentes_reparacion'])) $_SESSION['token_componentes_reparacion'] = bin2hex(random_bytes(32));
 
 $estadosReparacion = ['Pendiente de presupuesto', 'Pendiente', 'En diagnóstico', 'Presupuestada', 'En reparación', 'Finalizada', 'Entregada', 'Cancelada'];
 $estadosIniciales = ['Pendiente', 'En diagnóstico', 'En reparación'];
@@ -27,6 +30,19 @@ function guardarEstadoPersonalizado(string $estado, array $existentes): void {
     $archivo = @fopen(__DIR__ . '/estados-reparacion.json', 'c+');
     if (!$archivo) throw new RuntimeException('No pudimos guardar el estado. Revisá el permiso de escritura de estados-reparacion.json.');
     try {
+        if ($accion === 'asignar_componente') {
+            $token = is_string($_POST['token_componentes'] ?? null) ? $_POST['token_componentes'] : '';
+            if (!hash_equals($_SESSION['token_componentes_reparacion'], $token)) throw new RuntimeException('Esta asignación ya fue procesada o el formulario venció. Revisá la lista antes de intentar otra vez.');
+            $idOrdenComponente = filter_input(INPUT_POST, 'id_orden_reparacion', FILTER_VALIDATE_INT) ?: 0;
+            $idComponente = filter_input(INPUT_POST, 'id_componente', FILTER_VALIDATE_INT) ?: 0;
+            $cantidadComponente = filter_input(INPUT_POST, 'cantidad_componente', FILTER_VALIDATE_INT) ?: 0;
+            $sucursalComponente = is_string($_POST['id_sucursal'] ?? null) ? $_POST['id_sucursal'] : '';
+            componentes_asignar_reparacion($conexion, $idOrdenComponente, $idComponente, $cantidadComponente, $sucursalComponente);
+            $_SESSION['token_componentes_reparacion'] = bin2hex(random_bytes(32));
+            $_SESSION['mensaje_reparaciones_admin'] = 'Componente asignado al trabajo. Se descontó del stock de la sucursal elegida.';
+            header('Location: ' . admin_url_panel('reparaciones') . '#orden-' . $idOrdenComponente, true, 303);
+            exit;
+        }
         if (!flock($archivo, LOCK_EX)) throw new RuntimeException('No se pudo bloquear la configuración de estados.');
         $personalizados = leerEstadosPersonalizados($archivo);
         foreach (array_merge($existentes, $personalizados) as $opcion) if (mb_strtolower($opcion, 'UTF-8') === mb_strtolower($estado, 'UTF-8')) throw new RuntimeException('Ese estado ya existe.');
@@ -246,6 +262,14 @@ if ($idConsultaOrigen && $_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 $clientesReparacion = $conexion->query('SELECT c.id_cliente, u.nombre, u.apellido, u.correo FROM cliente c INNER JOIN usuarios u ON u.id_correo = c.id_correo ORDER BY u.nombre, u.apellido')->fetch_all(MYSQLI_ASSOC);
 $placasCliente = $conexion->query('SELECT id_gpu_cliente, id_cliente, marca, modelo, numero_serie FROM gpu_cliente ORDER BY marca, modelo')->fetch_all(MYSQLI_ASSOC);
+$sucursalesComponentes = sucursales_listar($conexion);
+$catalogoComponentes = $conexion->query('SELECT id_componente,nombre,descripcion FROM componente ORDER BY nombre')->fetch_all(MYSQLI_ASSOC);
+$existenciasComponentes = [];
+foreach ($conexion->query('SELECT id_componente,id_sucursal,SUM(cantidad) cantidad FROM stock GROUP BY id_componente,id_sucursal') as $existencia) $existenciasComponentes[$existencia['id_componente']][$existencia['id_sucursal']] = (int)$existencia['cantidad'];
+$componentesPorOrden = [];
+foreach ($conexion->query('SELECT r.id_orden_reparacion,c.nombre,SUM(d.cantidad) cantidad FROM detalle_reparacion d INNER JOIN reparacion r ON r.id_reparacion=d.id_reparacion INNER JOIN componente c ON c.id_componente=d.id_componente GROUP BY r.id_orden_reparacion,c.id_componente,c.nombre ORDER BY c.nombre') as $asignacion) $componentesPorOrden[$asignacion['id_orden_reparacion']][] = $asignacion;
+$trabajosPorOrden = [];
+foreach ($conexion->query('SELECT DISTINCT id_orden_reparacion FROM reparacion') as $trabajo) $trabajosPorOrden[$trabajo['id_orden_reparacion']] = true;
 $consultasGarantia = $conexion->query("SELECT p.*, u.nombre, u.apellido, u.correo FROM presupuesto p INNER JOIN cliente c ON c.id_cliente = p.id_cliente INNER JOIN usuarios u ON u.id_correo = c.id_correo WHERE p.id_orden_reparacion IS NULL AND p.estado IN ('Consulta de garantía', 'Reparación en garantía') ORDER BY p.fecha_emision DESC, p.id_presupuesto DESC");
 $ordenesReparacion = $conexion->query("SELECT o.*, g.marca, g.modelo, g.numero_serie, u.nombre, u.apellido, u.correo, p.respuesta, p.fecha_respuesta FROM orden_reparacion o INNER JOIN gpu_cliente g ON g.id_gpu_cliente = o.id_gpu_cliente INNER JOIN cliente c ON c.id_cliente = g.id_cliente INNER JOIN usuarios u ON u.id_correo = c.id_correo LEFT JOIN presupuesto p ON p.id_presupuesto = (SELECT MAX(pg.id_presupuesto) FROM presupuesto pg WHERE pg.id_orden_reparacion = o.id_orden_reparacion AND pg.estado IN ('Consulta de garantía', 'Reparación en garantía')) ORDER BY o.fecha_ingreso DESC, o.id_orden_reparacion DESC");
 admin_layout_inicio('Reparaciones');
@@ -300,7 +324,7 @@ admin_layout_inicio('Reparaciones');
     </form>
 </section>
 
-<section class="panel" aria-labelledby="tituloOrdenesReparacion">
+<section class="panel" id="ordenes-reparacion" aria-labelledby="tituloOrdenesReparacion">
     <h2 class="h5 mb-3" id="tituloOrdenesReparacion">Órdenes de reparación</h2>
     <?php if ($ordenesReparacion->num_rows === 0): ?><p class="text-secondary mb-0">Todavía no hay reparaciones registradas.</p><?php endif; ?>
     <?php while ($orden = $ordenesReparacion->fetch_assoc()): $cerrada = in_array($orden['estado'], $estadosCerrados, true); ?>
@@ -320,6 +344,24 @@ admin_layout_inicio('Reparaciones');
             <div class="col-12"><label class="form-label" for="respuestaOrden-<?= (int) $orden['id_orden_reparacion'] ?>">Respuesta al cliente</label><textarea class="form-control" id="respuestaOrden-<?= (int) $orden['id_orden_reparacion'] ?>" name="respuesta" rows="3" maxlength="5000"><?= admin_e($orden['respuesta']) ?></textarea></div>
             <div class="col-12 d-flex flex-wrap gap-2"><button class="btn btn-primary" type="submit" name="accion" value="guardar_orden">Guardar estado y respuesta</button><?php if (!$cerrada): ?><button class="btn btn-outline-danger" type="submit" name="accion" value="cancelar">Cancelar reparación</button><?php endif; ?></div>
         </form>
+        <div class="border-top mt-4 pt-3">
+            <h4 class="h6">Componentes del trabajo</h4>
+            <?php if (empty($componentesPorOrden[$orden['id_orden_reparacion']])): ?><p class="text-secondary">No hay componentes asignados.</p><?php else: ?>
+                <ul><?php foreach ($componentesPorOrden[$orden['id_orden_reparacion']] as $asignado): ?><li><?= admin_e($asignado['nombre']) ?> · <?= (int)$asignado['cantidad'] ?> unidades</li><?php endforeach; ?></ul>
+            <?php endif; ?>
+            <?php if (!$cerrada && isset($trabajosPorOrden[$orden['id_orden_reparacion']]) && $catalogoComponentes): ?>
+                <form method="post" action="<?= admin_e(admin_url_panel('reparaciones')) ?>" class="row g-3">
+                    <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>"><input type="hidden" name="accion" value="asignar_componente"><input type="hidden" name="token_componentes" value="<?= admin_e($_SESSION['token_componentes_reparacion']) ?>"><input type="hidden" name="id_orden_reparacion" value="<?= (int)$orden['id_orden_reparacion'] ?>">
+                    <div class="col-md-6"><label class="form-label" for="componenteOrden-<?= (int)$orden['id_orden_reparacion'] ?>">Componente</label><select class="form-select" name="id_componente" id="componenteOrden-<?= (int)$orden['id_orden_reparacion'] ?>" required><option value="">Seleccionar componente</option>
+                        <?php foreach ($catalogoComponentes as $componente): $stockTexto = []; foreach ($sucursalesComponentes as $local) $stockTexto[] = $local['nombre'] . ': ' . ($existenciasComponentes[$componente['id_componente']][$local['id_sucursal']] ?? 0); ?>
+                            <option value="<?= (int)$componente['id_componente'] ?>"><?= admin_e($componente['nombre'] . ' — ' . implode(' · ', $stockTexto)) ?></option>
+                        <?php endforeach; ?></select></div>
+                    <div class="col-md-4"><label class="form-label" for="sucursalOrden-<?= (int)$orden['id_orden_reparacion'] ?>">Sucursal de origen</label><select class="form-select" name="id_sucursal" id="sucursalOrden-<?= (int)$orden['id_orden_reparacion'] ?>" required><option value="">Seleccionar sucursal</option><?php foreach ($sucursalesComponentes as $local): ?><option value="<?= (int)$local['id_sucursal'] ?>"><?= admin_e($local['nombre']) ?></option><?php endforeach; ?></select></div>
+                    <div class="col-md-2"><label class="form-label" for="cantidadOrden-<?= (int)$orden['id_orden_reparacion'] ?>">Cantidad</label><input class="form-control" type="number" name="cantidad_componente" id="cantidadOrden-<?= (int)$orden['id_orden_reparacion'] ?>" min="1" max="1000000" value="1" required></div>
+                    <div><button class="btn btn-primary">Asignar al trabajo</button><p class="form-text">Se descuenta del stock al confirmar la asignación.</p></div>
+                </form>
+            <?php elseif (!$cerrada && !isset($trabajosPorOrden[$orden['id_orden_reparacion']])): ?><p class="form-text">Cambiá el estado a En reparación para iniciar el trabajo y asignar componentes.</p><?php endif; ?>
+        </div>
     </article>
     <?php endwhile; ?>
 </section>

@@ -30,7 +30,7 @@ CREATE TABLE `carrito` (
   PRIMARY KEY (`id_carrito`),
   UNIQUE KEY `uq_carrito_cliente` (`id_cliente`),
   CONSTRAINT `fk_carrito_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -82,7 +82,7 @@ CREATE TABLE `componente` (
   `nombre` varchar(150) NOT NULL,
   `descripcion` text DEFAULT NULL,
   PRIMARY KEY (`id_componente`)
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -91,6 +91,7 @@ CREATE TABLE `componente` (
 
 LOCK TABLES `componente` WRITE;
 /*!40000 ALTER TABLE `componente` DISABLE KEYS */;
+INSERT INTO `componente` VALUES (17,'Ventilador de GPU','Repuesto del sistema de refrigeración. Registrar en la ficha el modelo compatible, tamaño, conector y tensión del ventilador.'),(18,'Memoria VRAM','Chip de memoria gráfica para reemplazar unidades defectuosas. Especificar fabricante, código, capacidad y tipo de memoria compatible con la placa.'),(19,'MOSFET / etapa de potencia','Componente del circuito de alimentación de la GPU o la memoria. Identificar el código y sus características eléctricas antes del reemplazo.'),(20,'Capacitor','Componente del circuito de alimentación y filtrado. Especificar capacitancia, tensión nominal y formato compatibles.'),(21,'Pasta térmica','Consumible para renovar el contacto térmico entre el chip gráfico y el disipador. El stock se registra por envase o jeringa.');
 /*!40000 ALTER TABLE `componente` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -111,7 +112,7 @@ CREATE TABLE `detalle_carrito` (
   KEY `ix_detalle_carrito_gpu` (`id_gpu`),
   CONSTRAINT `fk_detalle_carrito_carrito` FOREIGN KEY (`id_carrito`) REFERENCES `carrito` (`id_carrito`) ON DELETE CASCADE,
   CONSTRAINT `fk_detalle_carrito_gpu` FOREIGN KEY (`id_gpu`) REFERENCES `gpu` (`id_gpu`)
-) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=46 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -237,7 +238,7 @@ CREATE TABLE `detalle_reparacion` (
   KEY `fk_det_reparacion_componente` (`id_componente`),
   CONSTRAINT `fk_det_reparacion_componente` FOREIGN KEY (`id_componente`) REFERENCES `componente` (`id_componente`),
   CONSTRAINT `fk_det_reparacion_reparacion` FOREIGN KEY (`id_reparacion`) REFERENCES `reparacion` (`id_reparacion`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -332,7 +333,7 @@ CREATE TABLE `empleado` (
   UNIQUE KEY `uq_empleado_email` (`email`),
   KEY `fk_empleado_puesto` (`id_puesto`),
   CONSTRAINT `fk_empleado_puesto` FOREIGN KEY (`id_puesto`) REFERENCES `puesto` (`id_puesto`)
-) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=44 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -561,7 +562,7 @@ CREATE TABLE `orden_reparacion` (
   KEY `fk_orden_rep_empleado` (`id_empleado_recepcion`),
   CONSTRAINT `fk_orden_rep_empleado` FOREIGN KEY (`id_empleado_recepcion`) REFERENCES `empleado` (`id_empleado`),
   CONSTRAINT `fk_orden_rep_gpu_cliente` FOREIGN KEY (`id_gpu_cliente`) REFERENCES `gpu_cliente` (`id_gpu_cliente`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -681,7 +682,7 @@ CREATE TABLE `reparacion` (
   KEY `fk_reparacion_tecnico` (`id_tecnico`),
   CONSTRAINT `fk_reparacion_orden` FOREIGN KEY (`id_orden_reparacion`) REFERENCES `orden_reparacion` (`id_orden_reparacion`),
   CONSTRAINT `fk_reparacion_tecnico` FOREIGN KEY (`id_tecnico`) REFERENCES `empleado` (`id_empleado`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -711,7 +712,7 @@ CREATE TABLE `stock` (
   KEY `fk_stock_sucursal` (`id_sucursal`),
   CONSTRAINT `fk_stock_componente` FOREIGN KEY (`id_componente`) REFERENCES `componente` (`id_componente`),
   CONSTRAINT `fk_stock_sucursal` FOREIGN KEY (`id_sucursal`) REFERENCES `sucursales` (`id_sucursal`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -819,4 +820,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-11-13 12:12:28
+-- Dump completed

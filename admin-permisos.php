@@ -8,7 +8,8 @@ function admin_secciones_permisos(): array
         'admin-proveedores.php' => 'Proveedores',
         'admin-presupuestos.php' => 'Presupuestos',
         'admin-reparaciones.php' => 'Reparaciones',
-        'admin-facturacion.php' => 'Facturación y envíos',
+        'admin-facturacion.php' => 'Facturación',
+        'admin-envios.php' => 'Envíos',
         'admin-compras.php' => 'Compras a proveedores',
         'admin-componentes.php' => 'Componentes y repuestos',
         'admin-devoluciones.php' => 'Devoluciones',
@@ -135,6 +136,19 @@ function admin_guardar_permisos_puestos(array $cambios): void
 function admin_puede_tabla(mysqli $conexion, string $tabla): bool
 {
     return admin_es_cuenta_principal($conexion);
+}
+
+function admin_puede_gestionar_componentes(mysqli $conexion, ?int $idEmpleado = null): bool
+{
+    $idEmpleado = $idEmpleado ?? (int) ($_SESSION['empleado_id'] ?? 0);
+    if ($idEmpleado === admin_id_principal()) return true;
+    $consulta = $conexion->prepare('SELECT p.nombre FROM empleado e INNER JOIN puesto p ON p.id_puesto=e.id_puesto WHERE e.id_empleado=?');
+    $consulta->bind_param('i', $idEmpleado);
+    $consulta->execute();
+    $puesto = $consulta->get_result()->fetch_row();
+    $consulta->close();
+    $nombre = mb_strtolower(trim($puesto[0] ?? ''), 'UTF-8');
+    return in_array($nombre, ['jefe técnico', 'administrador', 'dirección general'], true);
 }
 
 

@@ -13,6 +13,11 @@ $nombre = $apellido = $correo = "";
 $facturas = [];
 $presupuestos = [];
 $reparacionesCliente = [];
+$envioSeguimiento = null;
+$errorSeguimiento = '';
+$codigoSeguimiento = is_string($_GET['seguimiento'] ?? null) ? trim($_GET['seguimiento']) : '';
+header('Cache-Control: private, no-store');
+require_once __DIR__ . '/envios-seguimiento.php';
 $mensajeCuenta = $_SESSION["mensaje_cuenta"] ?? "";
 unset($_SESSION["mensaje_cuenta"]);
 
@@ -146,6 +151,15 @@ try {
         }
     }
 
+    if (isset($_GET['seguimiento'])) {
+        if ($codigoSeguimiento === '' || mb_strlen($codigoSeguimiento, 'UTF-8') > 100) {
+            $errorSeguimiento = 'Ingresá un código de seguimiento válido.';
+        } else {
+            $envioSeguimiento = envio_consultar_cliente($conexion, (int) $clienteId, $codigoSeguimiento);
+            if (!$envioSeguimiento) $errorSeguimiento = 'No encontramos una compra de tu cuenta con ese código.';
+        }
+    }
+
     $facturas = [];
     $consultaFacturas = $conexion->prepare(
         "SELECT id_factura, numero_factura, fecha_emision, total
@@ -250,7 +264,7 @@ function formatoImporteCuenta($importe)
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi cuenta - GPU FIX & STORE</title>
-    <link rel="stylesheet" href="style.css?v=20261114-responsive">
+    <link rel="stylesheet" href="style.css?v=20261115-seguimiento">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
         crossorigin="anonymous">
@@ -280,6 +294,32 @@ function formatoImporteCuenta($importe)
     <?php endif; ?>
 
     <div class="mi-cuenta-grid">
+        <section class="mi-cuenta-seccion mi-cuenta-documentos" id="seguimiento">
+            <div class="mi-cuenta-seccion-titulo"><div><p class="mi-cuenta-etiqueta">ENTREGAS</p><h2>Seguí tu compra</h2></div></div>
+            <p>Ingresá el código que recibiste al confirmar la compra o en el correo de confirmación.</p>
+            <form action="mi-cuenta.php#seguimiento" method="get" class="presupuesto-formulario">
+                <div><label for="codigoSeguimiento">Código de seguimiento</label><input id="codigoSeguimiento" name="seguimiento" maxlength="100" required autocomplete="off" value="<?= escaparCuenta($codigoSeguimiento) ?>"></div>
+                <div><button class="pago-boton">Consultar compra</button></div>
+            </form>
+            <?php if ($errorSeguimiento !== ''): ?><p class="mi-cuenta-mensaje error" role="alert"><?= escaparCuenta($errorSeguimiento) ?></p><?php endif; ?>
+            <?php if ($envioSeguimiento): ?>
+                <div class="seguimiento-compra" role="status">
+                    <h3>Compra #<?= (int) $envioSeguimiento['id_gpu_ventas'] ?></h3>
+                    <p><strong>Estado actual:</strong> <?= escaparCuenta($envioSeguimiento['estado'] ?: 'Pendiente de actualización') ?></p>
+                    <p><strong>Fecha de compra:</strong> <?= escaparCuenta(formatoFechaCuenta($envioSeguimiento['fecha'])) ?></p>
+                    <p><strong>Entrega:</strong> <?= escaparCuenta($envioSeguimiento['direccion_envio']) ?></p>
+                    <?php $progresoEnvio = envio_progreso((string) $envioSeguimiento['estado']); ?>
+                    <?php if (!$progresoEnvio['cancelado']): ?>
+                        <ol class="seguimiento-etapas" aria-label="Proceso de entrega">
+                            <?php foreach ($progresoEnvio['etapas'] as $indiceEtapa => $etapa): ?>
+                                <?php $esActual = $progresoEnvio['actual'] !== false && $indiceEtapa === $progresoEnvio['actual']; $esCompletada = $progresoEnvio['actual'] !== false && $indiceEtapa < $progresoEnvio['actual']; ?>
+                                <li class="<?= $esActual ? 'etapa-actual' : ($esCompletada ? 'etapa-completada' : '') ?>" <?= $esActual ? 'aria-current="step"' : '' ?>><?= escaparCuenta($etapa) ?><?= $esActual ? ' — Estado actual' : '' ?></li>
+                            <?php endforeach; ?>
+                        </ol>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+        </section>
         <section class="mi-cuenta-seccion mi-cuenta-documentos">
             <div class="mi-cuenta-seccion-titulo">
                 <div>

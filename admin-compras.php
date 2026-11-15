@@ -59,7 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 $proveedores = $conexion->query('SELECT id_proveedor, razon_social FROM proveedor ORDER BY razon_social')->fetch_all(MYSQLI_ASSOC);
 $productos = $conexion->query("SELECT CONCAT('gpu:', id_gpu) AS valor, CONCAT(marca, ' ', modelo) AS nombre FROM gpu ORDER BY marca, modelo")->fetch_all(MYSQLI_ASSOC);
-$componentes = $conexion->query("SELECT CONCAT('componente:', id_componente) AS valor, nombre FROM componente ORDER BY nombre")->fetch_all(MYSQLI_ASSOC);
+$componentes = admin_puede_gestionar_componentes($conexion)
+    ? $conexion->query("SELECT CONCAT('componente:', id_componente) AS valor, nombre FROM componente ORDER BY nombre")->fetch_all(MYSQLI_ASSOC) : [];
 function compras_opciones_producto(array $productos, array $componentes, string $seleccion): void {
     echo '<option value="">Seleccionar producto</option>';
     foreach (['Placas de video' => $productos, 'Componentes' => $componentes] as $grupo => $opciones) {

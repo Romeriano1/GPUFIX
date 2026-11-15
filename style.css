@@ -1044,6 +1044,14 @@ body.light-theme .pago-error { background: #fff0f1; color: #9c2436; }
 .stock-sucursales li > * { min-width: 0; overflow-wrap: anywhere; }
 body.light-theme .stock-sucursales .stock-disponible { color: #247a35; }
 
+.seguimiento-compra { overflow-wrap: anywhere; }
+.seguimiento-compra h3 { font-size: 20px; }
+.seguimiento-etapas { display: grid; gap: 10px; margin: 20px 0 0; padding-left: 24px; }
+.seguimiento-etapas li { padding: 10px 12px; border-left: 3px solid #74818b; }
+.seguimiento-etapas .etapa-completada { border-color: #55cc66; }
+.seguimiento-etapas .etapa-actual { border-color: #00bfff; background: rgba(0, 191, 255, .12); font-weight: 700; }
+body.light-theme .seguimiento-etapas .etapa-completada { border-color: #247a35; }
+
 .stock-agotado {
     color: #ff4d4f;
     border-color: #ff4d4f;

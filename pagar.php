@@ -82,7 +82,7 @@ function prepararCarpetaComprobantes(): string
     return $directorio;
 }
 
-function enviarCorreoCompra(array $cliente, array $articulos, int $idVenta, string $numeroComprobante, int $totalCentavos, int $cargoEnvio, string $metodoPago, string $estadoVenta, string $direccion): bool
+function enviarCorreoCompra(array $cliente, array $articulos, int $idVenta, string $numeroComprobante, int $totalCentavos, int $cargoEnvio, string $metodoPago, string $estadoVenta, string $direccion, string $codigoSeguimiento): bool
 {
     try {
         if (!is_callable('gpufix_enviar_correo') && is_file(__DIR__ . '/correo-config.php')) {
@@ -104,7 +104,8 @@ function enviarCorreoCompra(array $cliente, array $articulos, int $idVenta, stri
             . "\nEnvío: " . formatoPago($cargoEnvio) . ($cargoEnvio === 0 ? " (retiro en tienda)" : " (a domicilio)")
             . "\nTotal: " . formatoPago($totalCentavos) . "\nEntrega: " . $direccion;
         if ($metodoPago === 'Transferencia') $cuerpo .= "\n\nRecibimos tu comprobante de transferencia. El pago queda pendiente de verificación.";
-        $cuerpo .= "\n\nPodés consultar tu compra desde Mi cuenta.\n\nEquipo GPUFIX";
+        $cuerpo .= "\n\nCódigo de seguimiento: " . $codigoSeguimiento
+            . "\nIngresalo en Mi cuenta, en Seguí tu compra, para consultar el estado de la entrega.\n\nEquipo GPUFIX";
         if (!gpufix_enviar_correo($cliente['correo'], 'Confirmación de compra GPUFIX #' . $idVenta, $cuerpo)) {
             throw new RuntimeException('El servicio de correo no pudo enviar el resumen de la compra.');
         }
@@ -215,7 +216,7 @@ try {
             if (!in_array($entrega, ['retiro', 'domicilio'], true)) {
                 throw new RuntimeException('Seleccioná un método de entrega.');
             }
-            if (!isset($sucursalesRetiro[$sucursal])) {
+            if ($entrega === 'retiro' && !isset($sucursalesRetiro[$sucursal])) {
                 throw new RuntimeException('Seleccioná una sucursal con stock para tu compra.');
             }
             if ($entrega === 'domicilio' && (mb_strlen($direccionFacturacion, "UTF-8") < 8 || mb_strlen($direccionFacturacion, "UTF-8") > 255)) {
@@ -297,18 +298,25 @@ try {
             }
 
             $idSucursalVenta = (string)$sucursal;
-            $sucursalElegida = sucursal_validar($conexion, $idSucursalVenta);
+            $sucursalElegida = $entrega === 'retiro' ? sucursal_validar($conexion, $idSucursalVenta) : null;
             $stockPorProducto = [];
             foreach ($itemsPago as $item) {
                 $idGpu = (int) $item["id_gpu"];
-                $consultaStock = $conexion->prepare("SELECT id_stock_gpu, cantidad FROM stock_gpu WHERE id_gpu = ? AND id_sucursal = ? ORDER BY id_stock_gpu FOR UPDATE");
-                $consultaStock->bind_param("is", $idGpu, $idSucursalVenta);
+                $consultaStock = $conexion->prepare("SELECT id_stock_gpu, cantidad FROM stock_gpu WHERE id_gpu = ? "
+                    . ($entrega === 'retiro' ? "AND id_sucursal = ? " : "")
+                    . "ORDER BY id_stock_gpu FOR UPDATE");
+                if ($entrega === 'retiro') {
+                    $consultaStock->bind_param("is", $idGpu, $idSucursalVenta);
+                } else {
+                    $consultaStock->bind_param("i", $idGpu);
+                }
                 $consultaStock->execute();
                 $filasStock = $consultaStock->get_result()->fetch_all(MYSQLI_ASSOC);
                 $consultaStock->close();
                 $stockDisponible = array_sum(array_map(static fn ($fila) => max(0, (int) $fila["cantidad"]), $filasStock));
                 if ($stockDisponible < (int) $item["cantidad"]) {
-                    throw new RuntimeException("No hay stock suficiente de " . $item["modelo"] . " en la sucursal seleccionada. Elegí otra sucursal o revisá tu carrito.");
+                    throw new RuntimeException("No hay stock suficiente de " . $item["modelo"]
+                        . ($entrega === 'retiro' ? " en la sucursal seleccionada. Elegí otra sucursal o envío a domicilio." : ". Revisá las cantidades del carrito."));
                 }
                 $stockPorProducto[$idGpu] = $filasStock;
             }
@@ -361,8 +369,9 @@ try {
             }
             $direccionEntrega = $entrega === 'retiro' ? $sucursalElegida['nombre'] . ' (' . $sucursalElegida['direccion'] . ')' : $direccionFacturacion;
             $estadoEntrega = $entrega === 'retiro' ? 'Retiro en tienda' : 'Pendiente de envío';
-            $crearEnvio = $conexion->prepare("INSERT INTO envios (id_cliente, id_gpu_ventas, estado, direccion_envio) VALUES (?, ?, ?, ?)");
-            $crearEnvio->bind_param("iiss", $idCliente, $idVenta, $estadoEntrega, $direccionEntrega);
+            $codigoSeguimiento = 'GPU-' . $idVenta . '-' . strtoupper(bin2hex(random_bytes(8)));
+            $crearEnvio = $conexion->prepare("INSERT INTO envios (id_cliente, id_gpu_ventas, estado, direccion_envio, codigo_seguimiento) VALUES (?, ?, ?, ?, ?)");
+            $crearEnvio->bind_param("iisss", $idCliente, $idVenta, $estadoEntrega, $direccionEntrega, $codigoSeguimiento);
             $crearEnvio->execute();
             $crearEnvio->close();
             if ($cargoEnvio > 0) {
@@ -402,7 +411,7 @@ try {
             unset($_SESSION["csrf_pago"], $_SESSION["resumen_pago"]);
             $_SESSION['correo_compra'] = [
                 'id_venta' => $idVenta,
-                'enviado' => enviarCorreoCompra($datosCliente, $itemsPago, $idVenta, $numeroComprobante, $totalCentavos, $cargoEnvio, $metodoPago, $estadoVenta, $direccionEntrega),
+                'enviado' => enviarCorreoCompra($datosCliente, $itemsPago, $idVenta, $numeroComprobante, $totalCentavos, $cargoEnvio, $metodoPago, $estadoVenta, $direccionEntrega, $codigoSeguimiento),
             ];
             header("Location: pagar.php?compra=" . $idVenta, true, 303);
             exit;
@@ -455,7 +464,7 @@ try {
             $consultaDetalles->execute();
             $compraConfirmada["items"] = $consultaDetalles->get_result()->fetch_all(MYSQLI_ASSOC);
             $consultaDetalles->close();
-            $consultaEntrega = $conexion->prepare("SELECT estado, direccion_envio FROM envios WHERE id_gpu_ventas = ? AND id_cliente = ? ORDER BY id_envios DESC LIMIT 1");
+            $consultaEntrega = $conexion->prepare("SELECT estado, direccion_envio, codigo_seguimiento FROM envios WHERE id_gpu_ventas = ? AND id_cliente = ? ORDER BY id_envios DESC LIMIT 1");
             $consultaEntrega->bind_param("ii", $idCompra, $idCliente);
             $consultaEntrega->execute();
             $compraConfirmada['entrega'] = $consultaEntrega->get_result()->fetch_assoc();
@@ -472,7 +481,6 @@ try {
         if (count($sucursalesRetiro) === 1) $sucursal = (string)array_key_first($sucursalesRetiro);
         try {
             $totalCentavos = validarArticulosPago($itemsPago);
-            if (!$sucursalesRetiro) $problemaCarrito = 'Ninguna sucursal tiene stock suficiente de todos los productos. Revisá las cantidades del carrito.';
             $_SESSION["resumen_pago"] = resumenPago($itemsPago);
         } catch (RuntimeException $error) {
             $problemaCarrito = $error->getMessage();
@@ -525,6 +533,10 @@ try {
                 <?php if (!empty($compraConfirmada['entrega']['direccion_envio'])): ?>
                     <p><strong>Entrega</strong> · <?= escaparPago($compraConfirmada['entrega']['direccion_envio']) ?></p>
                 <?php endif; ?>
+                <?php if (!empty($compraConfirmada['entrega']['codigo_seguimiento'])): ?>
+                    <p><strong>Código de seguimiento</strong><br><span class="pago-alias"><?= escaparPago($compraConfirmada['entrega']['codigo_seguimiento']) ?></span></p>
+                    <p><a class="pago-volver" href="mi-cuenta.php?<?= escaparPago(http_build_query(['seguimiento'=>$compraConfirmada['entrega']['codigo_seguimiento']])) ?>#seguimiento">Seguí tu compra</a></p>
+                <?php endif; ?>
                 <div class="pago-total"><span>Total</span><strong><?= formatoPago(centavosPago($compraConfirmada["total"])) ?></strong></div>
                 <div class="pago-acciones"><a href="mi-cuenta.php" class="pago-boton">Ver mi cuenta</a><a href="productos.php" class="pago-volver">Seguir comprando</a></div>
             </section>
@@ -548,12 +560,13 @@ try {
                                 <label><input type="radio" name="entrega" value="retiro" <?= $entrega === 'retiro' ? 'checked' : '' ?>> Retirar en tienda</label>
                                 <label><input type="radio" name="entrega" value="domicilio" <?= $entrega === 'domicilio' ? 'checked' : '' ?>> Enviar a domicilio (+<?= formatoPago($costoEnvioCentavos) ?>)</label>
                             </div>
-                            <div id="retiroCompra"><p>Sucursal de retiro o despacho con stock disponible</p>
+                            <div id="retiroCompra" <?= $entrega === 'domicilio' ? 'hidden' : '' ?>><p>Sucursal de retiro con stock disponible</p>
                                 <div class="pago-selector">
                                     <?php foreach ($sucursalesRetiro as $clave => $nombreSucursal): ?>
-                                        <label><input type="radio" name="sucursal" value="<?= escaparPago($clave) ?>" <?= (string)$sucursal === (string)$clave ? 'checked' : '' ?> required> <?= escaparPago($nombreSucursal) ?></label>
+                                        <label><input type="radio" name="sucursal" value="<?= escaparPago($clave) ?>" <?= (string)$sucursal === (string)$clave ? 'checked' : '' ?> <?= $entrega === 'retiro' ? 'required' : 'disabled' ?>> <?= escaparPago($nombreSucursal) ?></label>
                                     <?php endforeach; ?>
                                 </div>
+                                <?php if (!$sucursalesRetiro): ?><p>No hay una sucursal con toda la cantidad solicitada. Elegí envío a domicilio para combinar el stock disponible.</p><?php endif; ?>
                             </div>
                         </fieldset>
                         <div id="domicilioCompra" <?= $entrega !== 'domicilio' ? 'hidden' : '' ?>><label for="direccionFacturacion">Dirección de facturación</label><input type="text" id="direccionFacturacion" name="direccion" minlength="8" maxlength="255" autocomplete="billing street-address" placeholder="Calle, número, localidad y CP" value="<?= escaparPago($direccionFacturacion) ?>" <?= $entrega === 'domicilio' ? 'required' : 'disabled' ?>></div>
@@ -616,14 +629,14 @@ try {
         const formularioEntrega = document.getElementById('formularioPago');
         const actualizarEntrega = () => {
             const domicilio = formularioEntrega.elements.entrega.value === 'domicilio';
-            document.getElementById('retiroCompra').hidden = false;
+            document.getElementById('retiroCompra').hidden = domicilio;
             document.getElementById('domicilioCompra').hidden = !domicilio;
             const direccion = document.getElementById('direccionFacturacion');
             direccion.disabled = !domicilio;
             direccion.required = domicilio;
             formularioEntrega.querySelectorAll('[name="sucursal"]').forEach(opcion => {
-                opcion.disabled = false;
-                opcion.required = true;
+                opcion.disabled = domicilio;
+                opcion.required = !domicilio;
             });
             const total = document.getElementById('totalConEntrega');
             if (total) {

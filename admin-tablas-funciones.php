@@ -10,7 +10,7 @@ function admin_funciones_tablas(): array
         'gpu_cliente' => 'reparaciones', 'orden_reparacion' => 'reparaciones',
         'diagnostico' => 'reparaciones', 'reparacion' => 'reparaciones', 'detalle_reparacion' => 'reparaciones',
         'gpu_ventas' => 'facturacion', 'detalle_venta' => 'facturacion',
-        'factura' => 'facturacion', 'detalle_factura' => 'facturacion', 'envios' => 'facturacion',
+        'factura' => 'facturacion', 'detalle_factura' => 'facturacion', 'envios' => 'envios',
         'orden_compra' => 'compras', 'detalle_compra' => 'compras',
         'componente' => 'componentes', 'stock' => 'componentes'
     ];

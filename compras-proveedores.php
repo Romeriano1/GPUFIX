@@ -39,6 +39,11 @@ function compras_validar_lineas(array $productos, array $cantidades, array $cost
 
 function compras_registrar_recepcion(mysqli $db, int $proveedor, int $empleado, array $compra, string $idSucursal): int
 {
+    foreach ($compra['lineas'] as $linea) {
+        if ($linea['tipo'] === 'componente' && !admin_puede_gestionar_componentes($db, $empleado)) {
+            throw new RuntimeException('Solo el Jefe Técnico y administración pueden ingresar stock de componentes.');
+        }
+    }
     sucursal_validar($db, $idSucursal);
     $buscar = $db->prepare('SELECT id_proveedor FROM proveedor WHERE id_proveedor = ? LOCK IN SHARE MODE');
     $buscar->bind_param('i', $proveedor);

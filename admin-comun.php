@@ -217,7 +217,8 @@ function admin_layout_inicio(string $titulo): void {
         'admin-proveedores.php' => 'Proveedores',
         'admin-presupuestos.php' => 'Presupuestos',
         'admin-reparaciones.php' => 'Reparaciones',
-        'admin-facturacion.php' => 'Facturación y envíos',
+        'admin-facturacion.php' => 'Facturación',
+        'admin-envios.php' => 'Envíos',
         'admin-compras.php' => 'Compras a proveedores',
         'admin-componentes.php' => 'Componentes y repuestos'
     ];
