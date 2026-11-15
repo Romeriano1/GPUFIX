@@ -143,6 +143,8 @@ function admin_layout_inicio(string $titulo): void {
         .panel, .row > * { min-width: 0; }
         .panel { overflow-wrap: anywhere; }
         .table-responsive { max-width: 100%; }
+        .table-responsive { overscroll-behavior-x: contain; }
+        .panel img { max-width: 100%; height: auto; }
         .panel input, .panel select, .panel textarea { max-width: 100%; }
         .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 9px 16px; border-radius: 8px; font-size: .95rem; font-weight: 600; line-height: 1.35; white-space: nowrap; overflow-wrap: normal; word-break: normal; }
         .btn-sm { min-height: 36px; padding: 7px 12px; font-size: .875rem; }
@@ -159,6 +161,8 @@ function admin_layout_inicio(string $titulo): void {
         .admin-menu .nav-link:hover, .admin-menu .nav-link:focus-visible { background: #26354c; }
         .admin-menu .navbar-text { grid-column: 1 / -1; }
         @media (max-width: 575px) {
+            .btn { max-width: 100%; white-space: normal; }
+            .admin-menu .navbar-nav { grid-template-columns: minmax(0, 1fr); }
             .navbar-brand { font-size: 1rem; white-space: normal; max-width: calc(100% - 64px); }
             .panel { padding: 16px 12px; margin: 14px 0; }
             .panel h1 { font-size: 1.5rem; }

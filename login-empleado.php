@@ -65,7 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acceso de empleados - GPU FIX & STORE</title>
-    <link rel="stylesheet" href="style.css?v=20261106-navbar">
+    <link rel="stylesheet" href="style.css?v=20261114-responsive">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
           rel="stylesheet">
 </head>

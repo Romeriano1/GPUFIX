@@ -7,6 +7,7 @@ if (empty($_SESSION["csrf_carrito"])) {
 $csrfCarrito = $_SESSION["csrf_carrito"];
 
 $producto = null;
+$stockPorSucursal = [];
 $cantidadEnCarritoProducto = 0;
 $errorConsulta = false;
 $paginaProducto = basename((string) ($_SERVER["SCRIPT_NAME"] ?? ""));
@@ -56,6 +57,18 @@ try {
     }
 
     $consulta->close();
+    if ($producto !== null) {
+        $consultaSucursales = $conexion->prepare(
+            'SELECT s.nombre, COALESCE(SUM(st.cantidad), 0) AS cantidad '
+            . 'FROM sucursales s LEFT JOIN stock_gpu st '
+            . 'ON st.id_sucursal = s.id_sucursal AND st.id_gpu = ? '
+            . 'GROUP BY s.id_sucursal, s.nombre ORDER BY s.nombre'
+        );
+        $consultaSucursales->bind_param('i', $producto['id']);
+        $consultaSucursales->execute();
+        $stockPorSucursal = $consultaSucursales->get_result()->fetch_all(MYSQLI_ASSOC);
+        $consultaSucursales->close();
+    }
     if ($producto !== null && !empty($_SESSION['usuario_id'])) {
         $consultaCantidadCarrito = $conexion->prepare('SELECT COALESCE(SUM(d.cantidad), 0) FROM detalle_carrito d INNER JOIN carrito ca ON ca.id_carrito = d.id_carrito INNER JOIN cliente c ON c.id_cliente = ca.id_cliente WHERE c.id_correo = ? AND d.id_gpu = ?');
         $idUsuarioCarrito = (int) $_SESSION['usuario_id'];
@@ -139,7 +152,7 @@ if ($producto) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $escapar($producto ? $producto["modelo"] : "Producto no disponible") ?> - GPU FIX &amp; STORE</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=20261106-navbar">
+    <link rel="stylesheet" href="style.css?v=20261115-stock-sucursales">
 </head>
 <body>
     <header>
@@ -180,7 +193,18 @@ if ($producto) {
                         <?php elseif ($sinStock): ?>
                             <span>No hay stock</span>
                         <?php else: ?>
-                            <span>Hay stock — <?= (int) $stockDisponible ?> unidades disponibles</span>
+                            <span>Stock por sucursal</span>
+                        <?php endif; ?>
+                        <?php if (!$stockConsultadoError && !$stockPendiente && $stockPorSucursal): ?>
+                            <ul class="stock-sucursales">
+                                <?php foreach ($stockPorSucursal as $stockSucursal): ?>
+                                    <?php $cantidadSucursal = max(0, (int) $stockSucursal['cantidad']); ?>
+                                    <li class="<?= $cantidadSucursal > 0 ? 'stock-disponible' : 'stock-agotado' ?>">
+                                        <strong><?= $escapar($stockSucursal['nombre']) ?></strong>
+                                        <span><?= $cantidadSucursal > 0 ? $cantidadSucursal . ($cantidadSucursal === 1 ? ' unidad disponible' : ' unidades disponibles') : 'No hay stock (0 unidades)' ?></span>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
                         <?php endif; ?>
                     </div>
 

@@ -240,7 +240,7 @@ $soloLectura = $columnaElegida === $clavePrimaria;
 ?>
 <h1 class="h3 mt-3"><?= admin_e($tituloSeccion) ?></h1>
 <?php if (in_array($tabla, ['presupuesto', 'detalle_presupuesto'], true)): ?><p><a class="btn btn-primary" href="admin-tablas.php?tabla=presupuesto&amp;vista=acciones<?= $tabla === 'presupuesto' && $idRegistro !== '' ? '#solicitud-p-' . (int)$idRegistro : '' ?>">Ver presupuestos y responder consultas</a></p><?php endif; ?>
-<?php if ($tabla === 'empleado'): ?><p>El empleado inicia sesión con el correo y la contraseña del usuario vinculado. La contraseña se administra en Usuarios.</p><?php endif; ?>
+<?php if ($tabla === 'empleado'): ?><p>El empleado inicia sesión con el correo y la contraseña de su propia ficha de empleado.</p><?php endif; ?>
 <form method="get" class="panel d-flex flex-wrap gap-3 align-items-end">
 <input type="hidden" name="tabla" value="<?= admin_e($tabla) ?>">
 <label class="flex-grow-1" for="elegirColumna">Columna<select class="form-select" id="elegirColumna" name="columna" required>
