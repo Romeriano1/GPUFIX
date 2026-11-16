@@ -19,12 +19,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$crearPuesto && !in_array($puestoId, array_map('intval', array_column($puestos,'id_puesto')), true)) throw new RuntimeException('Seleccioná un puesto válido.');
         if ($accion === 'asignar') {
             $empleadoId = filter_input(INPUT_POST, 'empleado', FILTER_VALIDATE_INT) ?: 0;
-            $buscar = $conexion->prepare("SELECT id_empleado FROM empleado WHERE id_empleado=? AND id_empleado<>?");
+            $buscar = $conexion->prepare("SELECT id_sucursal FROM empleado WHERE id_empleado=? AND id_empleado<>?");
             $principalId = admin_id_principal();
             $buscar->bind_param('ii',$empleadoId,$principalId); $buscar->execute();
-            if (!$buscar->get_result()->fetch_row()) throw new RuntimeException('Seleccioná un empleado válido.');
-            $guardar = $conexion->prepare('UPDATE empleado SET id_puesto=? WHERE id_empleado=?');
-            $guardar->bind_param('ii',$puestoId,$empleadoId); $guardar->execute();
+            $empleadoActual = $buscar->get_result()->fetch_row();
+            if (!$empleadoActual) throw new RuntimeException('Seleccioná un empleado válido.');
+            $sucursalAsignada = admin_sucursal_para_puesto($conexion, $puestoId, $empleadoActual[0] === null ? null : (int)$empleadoActual[0]);
+            $guardar = $conexion->prepare('UPDATE empleado SET id_puesto=?,id_sucursal=? WHERE id_empleado=?');
+            $guardar->bind_param('iii',$puestoId,$sucursalAsignada,$empleadoId); $guardar->execute();
             $mensaje = 'Puesto asignado al empleado. Sus accesos se aplican al navegar.';
         } elseif (in_array($accion, ['crear_rol', 'permisos'], true)) {
             $seleccion = $_POST['paneles'] ?? [];
@@ -53,6 +55,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $guardar = $conexion->prepare('UPDATE puesto SET nombre=? WHERE id_puesto=?');
                     $guardar->bind_param('si', $nombreRol, $puestoId); $guardar->execute();
                 }
+                if (admin_sede_fija_puesto($nombreRol) !== null) {
+                    $central = admin_sucursal_para_puesto($conexion, $puestoId, null);
+                    $actualizarSede = $conexion->prepare('UPDATE empleado SET id_sucursal=? WHERE id_puesto=?');
+                    $actualizarSede->bind_param('ii', $central, $puestoId); $actualizarSede->execute();
+                }
                 admin_guardar_paneles_puesto($puestoId, $seleccion);
                 $conexion->commit();
             } catch (Throwable $fallo) { $conexion->rollback(); throw $fallo; }
@@ -63,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: ' . $destino,true,303); exit;
     } catch (Throwable $fallo) { error_log($fallo->getMessage()); $error = $fallo instanceof mysqli_sql_exception ? 'No se pudo guardar el cambio.' : $fallo->getMessage(); }
 }
-$empleados = $conexion->query("SELECT id_empleado,nombre,apellido,email,id_puesto FROM empleado WHERE id_empleado<>".admin_id_principal()." ORDER BY nombre,apellido")->fetch_all(MYSQLI_ASSOC);
+$empleados = $conexion->query("SELECT e.id_empleado,e.nombre,e.apellido,e.email,e.id_puesto,s.nombre sucursal FROM empleado e LEFT JOIN sucursales s ON s.id_sucursal=e.id_sucursal WHERE e.id_empleado<>".admin_id_principal()." ORDER BY e.nombre,e.apellido")->fetch_all(MYSQLI_ASSOC);
 $permisos = admin_leer_permisos();
 foreach ($puestos as $puesto) {
     if ($puesto['nombre'] === 'Administrador' && !array_key_exists((string) $puesto['id_puesto'], $permisos)) {
@@ -73,7 +80,6 @@ foreach ($puestos as $puesto) {
 $rolActual = null;
 foreach ($puestos as $puesto) if ((int)$puesto['id_puesto'] === $puestoId) $rolActual = $puesto;
 $panelesDisponibles = admin_secciones_permisos();
-unset($panelesDisponibles['admin-asistencia.php']);
 unset($panelesDisponibles['admin-personal.php']);
 $areas = array_fill_keys(array_keys(admin_roles_organigrama()), []);
 $areaPorNombre = [];
@@ -85,8 +91,8 @@ foreach (admin_roles_organigrama() as $area => $roles) {
         $ordenPorNombre[$clave] = count($ordenPorNombre);
     }
 }
-$areaPorNombre['jefe administrativo'] = $areaPorNombre['jefe administrativo y rrhh'];
-$ordenPorNombre['jefe administrativo'] = $ordenPorNombre['jefe administrativo y rrhh'];
+$areaPorNombre['jefe administrativo y rrhh'] = $areaPorNombre['jefe administrativo'];
+$ordenPorNombre['jefe administrativo y rrhh'] = $ordenPorNombre['jefe administrativo'];
 foreach ($puestos as $puesto) {
     $area = $areaPorNombre[mb_strtolower(trim($puesto['nombre']), 'UTF-8')] ?? 'Otros puestos';
     $areas[$area][] = $puesto;
@@ -115,7 +121,7 @@ $cantidadAsignados = (int) ($empleadosPorPuesto[$puestoId] ?? 0);
 $errorPuesto = $error && in_array($_POST['accion'] ?? '', ['crear_rol', 'permisos'], true);
 $nombreFormulario = $errorPuesto && is_string($_POST['nombre'] ?? null) ? $_POST['nombre'] : ($crearPuesto ? '' : ($rolActual['nombre'] ?? ''));
 $panelesFormulario = $errorPuesto && is_array($_POST['paneles'] ?? null) ? $_POST['paneles'] : ($crearPuesto ? [] : ($permisos[(string) $puestoId] ?? []));
-$panelesFormulario = array_values(array_diff($panelesFormulario, ['admin-asistencia.php', 'admin-personal.php']));
+$panelesFormulario = array_values(array_diff($panelesFormulario, ['admin-personal.php']));
 $areaActual = $rolActual ? ($areaPorNombre[mb_strtolower(trim($rolActual['nombre']), 'UTF-8')] ?? 'Otros puestos') : '';
 admin_layout_inicio('Empleados y permisos');
 ?>
@@ -186,7 +192,7 @@ admin_layout_inicio('Empleados y permisos');
             <fieldset>
                 <legend class="h6">Acceso a paneles</legend>
                 <p class="text-secondary">Seleccioná los paneles que podrán utilizar los empleados de este puesto.</p>
-                <p class="small text-secondary">RRHH y GPUFIX administran el personal y las asistencias. GPUFIX conserva siempre el acceso completo a la administración.</p>
+                <p class="small text-secondary">RRHH gestiona el personal y sus lugares de trabajo desde Rivadavia, casa central. GPUFIX conserva siempre el acceso completo a la administración.</p>
                 <div class="empleos-permisos">
                 <?php foreach ($panelesDisponibles as $pagina => $nombre): ?>
                     <label class="empleos-permiso">
@@ -221,7 +227,7 @@ admin_layout_inicio('Empleados y permisos');
             <tbody>
             <?php foreach ($empleados as $empleado): $idEmpleado = (int) $empleado['id_empleado']; ?>
                 <tr data-empleado>
-                    <th scope="row"><span><?= admin_e($empleado['nombre'] . ' ' . $empleado['apellido']) ?></span><small><?= admin_e($empleado['email']) ?></small></th>
+                    <th scope="row"><span><?= admin_e($empleado['nombre'] . ' ' . $empleado['apellido']) ?></span><small><?= admin_e($empleado['email']) ?></small><small><?= admin_e($empleado['sucursal'] ?? 'Sucursal sin asignar') ?></small></th>
                     <td>
                         <form method="post" action="admin-empleos.php?vista=empleados" id="asignar-<?= $idEmpleado ?>">
                             <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">

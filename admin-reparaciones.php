@@ -262,10 +262,11 @@ if ($idConsultaOrigen && $_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 $clientesReparacion = $conexion->query('SELECT c.id_cliente, u.nombre, u.apellido, u.correo FROM cliente c INNER JOIN usuarios u ON u.id_correo = c.id_correo ORDER BY u.nombre, u.apellido')->fetch_all(MYSQLI_ASSOC);
 $placasCliente = $conexion->query('SELECT id_gpu_cliente, id_cliente, marca, modelo, numero_serie FROM gpu_cliente ORDER BY marca, modelo')->fetch_all(MYSQLI_ASSOC);
-$sucursalesComponentes = sucursales_listar($conexion);
+$sucursalesComponentes = admin_sucursales_disponibles($conexion);
 $catalogoComponentes = $conexion->query('SELECT id_componente,nombre,descripcion FROM componente ORDER BY nombre')->fetch_all(MYSQLI_ASSOC);
 $existenciasComponentes = [];
-foreach ($conexion->query('SELECT id_componente,id_sucursal,SUM(cantidad) cantidad FROM stock GROUP BY id_componente,id_sucursal') as $existencia) $existenciasComponentes[$existencia['id_componente']][$existencia['id_sucursal']] = (int)$existencia['cantidad'];
+$idsSucursalesComponentes = implode(',', array_map('intval', array_column($sucursalesComponentes, 'id_sucursal'))) ?: '0';
+foreach ($conexion->query('SELECT id_componente,id_sucursal,SUM(cantidad) cantidad FROM stock WHERE id_sucursal IN (' . $idsSucursalesComponentes . ') GROUP BY id_componente,id_sucursal') as $existencia) $existenciasComponentes[$existencia['id_componente']][$existencia['id_sucursal']] = (int)$existencia['cantidad'];
 $componentesPorOrden = [];
 foreach ($conexion->query('SELECT r.id_orden_reparacion,c.nombre,SUM(d.cantidad) cantidad FROM detalle_reparacion d INNER JOIN reparacion r ON r.id_reparacion=d.id_reparacion INNER JOIN componente c ON c.id_componente=d.id_componente GROUP BY r.id_orden_reparacion,c.id_componente,c.nombre ORDER BY c.nombre') as $asignacion) $componentesPorOrden[$asignacion['id_orden_reparacion']][] = $asignacion;
 $trabajosPorOrden = [];
@@ -349,7 +350,7 @@ admin_layout_inicio('Reparaciones');
             <?php if (empty($componentesPorOrden[$orden['id_orden_reparacion']])): ?><p class="text-secondary">No hay componentes asignados.</p><?php else: ?>
                 <ul><?php foreach ($componentesPorOrden[$orden['id_orden_reparacion']] as $asignado): ?><li><?= admin_e($asignado['nombre']) ?> · <?= (int)$asignado['cantidad'] ?> unidades</li><?php endforeach; ?></ul>
             <?php endif; ?>
-            <?php if (!$cerrada && isset($trabajosPorOrden[$orden['id_orden_reparacion']]) && $catalogoComponentes): ?>
+            <?php if (!$cerrada && isset($trabajosPorOrden[$orden['id_orden_reparacion']]) && $catalogoComponentes && $sucursalesComponentes): ?>
                 <form method="post" action="<?= admin_e(admin_url_panel('reparaciones')) ?>" class="row g-3">
                     <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>"><input type="hidden" name="accion" value="asignar_componente"><input type="hidden" name="token_componentes" value="<?= admin_e($_SESSION['token_componentes_reparacion']) ?>"><input type="hidden" name="id_orden_reparacion" value="<?= (int)$orden['id_orden_reparacion'] ?>">
                     <div class="col-md-6"><label class="form-label" for="componenteOrden-<?= (int)$orden['id_orden_reparacion'] ?>">Componente</label><select class="form-select" name="id_componente" id="componenteOrden-<?= (int)$orden['id_orden_reparacion'] ?>" required><option value="">Seleccionar componente</option>
@@ -360,6 +361,7 @@ admin_layout_inicio('Reparaciones');
                     <div class="col-md-2"><label class="form-label" for="cantidadOrden-<?= (int)$orden['id_orden_reparacion'] ?>">Cantidad</label><input class="form-control" type="number" name="cantidad_componente" id="cantidadOrden-<?= (int)$orden['id_orden_reparacion'] ?>" min="1" max="1000000" value="1" required></div>
                     <div><button class="btn btn-primary">Asignar al trabajo</button><p class="form-text">Se descuenta del stock al confirmar la asignación.</p></div>
                 </form>
+            <?php elseif (!$cerrada && !$sucursalesComponentes): ?><p class="form-text">Necesitás una sucursal asignada para retirar componentes del stock.</p>
             <?php elseif (!$cerrada && !isset($trabajosPorOrden[$orden['id_orden_reparacion']])): ?><p class="form-text">Cambiá el estado a En reparación para iniciar el trabajo y asignar componentes.</p><?php endif; ?>
         </div>
     </article>

@@ -70,7 +70,8 @@ function textoEspecificacionesProducto(array $nombres, array $valores): string
 
 function guardarStockProducto(mysqli $conexion, int $idProducto, int $cantidadNueva, string $idSucursal): void
 {
-    sucursal_validar($conexion, $idSucursal);
+    if (!admin_puede_ajustar_stock_placas($conexion)) throw new RuntimeException('El stock ingresa mediante los pedidos al depósito.');
+    admin_validar_sucursal_empleado($conexion, $idSucursal);
     $buscar = $conexion->prepare('SELECT id_stock_gpu FROM stock_gpu WHERE id_gpu=? AND id_sucursal=? ORDER BY id_stock_gpu FOR UPDATE');
     $buscar->bind_param('is', $idProducto, $idSucursal);
     $buscar->execute();
@@ -92,9 +93,17 @@ function guardarStockProducto(mysqli $conexion, int $idProducto, int $cantidadNu
 }
 
 require_once __DIR__ . '/sucursales.php';
-$sucursalesProducto = sucursales_listar($conexion);
+$sucursalesProducto = admin_sucursales_disponibles($conexion);
 $idSucursalProducto = (is_string($_GET['sucursal'] ?? null) ? $_GET['sucursal'] : ($sucursalesProducto[0]['id_sucursal'] ?? ''));
 if ($_SERVER['REQUEST_METHOD'] === 'POST') $idSucursalProducto = is_string($_POST['id_sucursal'] ?? null) ? $_POST['id_sucursal'] : '';
+try { admin_validar_sucursal_empleado($conexion, (string)$idSucursalProducto); }
+catch (RuntimeException $falloSucursal) {
+    http_response_code(403);
+    admin_layout_inicio('Sucursal no disponible');
+    echo '<div class="alert alert-danger">' . admin_e($falloSucursal->getMessage()) . '</div>';
+    admin_layout_fin(); exit;
+}
+$esAdministracionSucursales = admin_acceso_todas_sucursales($conexion);
 $marcasDisponibles = opcionesMarcaProducto($conexion);
 $marcaActualProducto = null;
 $mensaje = (string) ($_SESSION['mensaje_producto_admin'] ?? '');
@@ -126,6 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     try {
         if ($accion === 'eliminar') {
+            if (!$esAdministracionSucursales) throw new RuntimeException('Solo administración puede eliminar una ficha compartida y el stock de todas sus sucursales.');
             if (!$idProducto) throw new RuntimeException('Seleccioná un producto válido para eliminar.');
             $conexion->begin_transaction();
             $transaccionActiva = true;
@@ -202,7 +212,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $guardar->execute();
         if (!$modoEdicion) $idProducto = (int) $conexion->insert_id;
         $guardar->close();
-        guardarStockProducto($conexion, $idProducto, $cantidad, $idSucursalProducto);
+        if (admin_puede_ajustar_stock_placas($conexion)) guardarStockProducto($conexion, $idProducto, $cantidad, $idSucursalProducto);
         $conexion->commit();
         $transaccionActiva = false;
         $_SESSION['mensaje_producto_admin'] = $modoEdicion ? 'Ficha del producto actualizada.' : 'Producto agregado al catálogo.';
@@ -214,8 +224,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = $fallo instanceof mysqli_sql_exception ? 'No pudimos completar el cambio del producto. Intentá nuevamente.' : $fallo->getMessage();
     }
 } elseif ($modoEdicion) {
-    $buscar = $conexion->prepare('SELECT g.*, (SELECT COALESCE(SUM(s.cantidad), 0) FROM stock_gpu s WHERE s.id_gpu = g.id_gpu) AS cantidad FROM gpu g WHERE g.id_gpu = ? LIMIT 1');
-    $buscar->bind_param('i', $idProducto);
+    $buscar = $conexion->prepare('SELECT g.*, (SELECT COALESCE(SUM(s.cantidad), 0) FROM stock_gpu s WHERE s.id_gpu = g.id_gpu AND s.id_sucursal=?) AS cantidad FROM gpu g WHERE g.id_gpu = ? LIMIT 1');
+    $buscar->bind_param('si', $idSucursalProducto, $idProducto);
     $buscar->execute();
     $producto = $buscar->get_result()->fetch_assoc();
     $buscar->close();
@@ -238,9 +248,11 @@ $marcasSelector = $marcasDisponibles;
 if ($marcaActualProducto !== null && buscarMarcaProducto($marcaActualProducto, $marcasSelector) === null) {
     $marcasSelector[] = $marcaActualProducto;
 }
-$catalogo = $conexion->query('SELECT g.id_gpu, g.marca, g.modelo, g.precio_especial, g.imagen, (SELECT COALESCE(SUM(s.cantidad), 0) FROM stock_gpu s WHERE s.id_gpu = g.id_gpu) AS cantidad FROM gpu g ORDER BY g.id_gpu DESC');
+$alcanceStockCatalogo = $esAdministracionSucursales ? '' : ' AND s.id_sucursal=' . (int)$idSucursalProducto;
+$catalogo = $conexion->query('SELECT g.id_gpu, g.marca, g.modelo, g.precio_especial, g.imagen, (SELECT COALESCE(SUM(s.cantidad), 0) FROM stock_gpu s WHERE s.id_gpu = g.id_gpu' . $alcanceStockCatalogo . ') AS cantidad FROM gpu g ORDER BY g.id_gpu DESC');
 admin_layout_inicio('Productos y stock');
 ?>
+<?php if (admin_puede_pedir_stock($conexion) && admin_puede_ver($conexion,'admin-solicitudes-stock.php')): ?><div class="my-3"><a class="btn btn-primary" href="admin-solicitudes-stock.php">Solicitar reposición al depósito</a></div><?php endif; ?>
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3">
     <h1 class="h3 mb-0">Productos y stock</h1>
     <a class="btn btn-primary" href="<?= admin_e(admin_url_panel('productos')) ?>#ficha-producto">Agregar producto</a>
@@ -267,8 +279,8 @@ admin_layout_inicio('Productos y stock');
         </div>
         <div class="col-md-8"><label for="productoModelo" class="form-label">Modelo y nombre del producto</label><input id="productoModelo" class="form-control" name="modelo" maxlength="150" value="<?= admin_e($datos['modelo']) ?>" required></div>
         <div class="col-md-4"><label for="productoPrecio" class="form-label">Precio ($)</label><input id="productoPrecio" class="form-control" name="precio" type="text" inputmode="decimal" maxlength="15" pattern="[0-9]+([.,][0-9]{1,2})?" value="<?= admin_e($datos['precio']) ?>" required></div>
-        <div class="col-md-4"><label for="productoCantidad" class="form-label">Stock disponible</label><input id="productoCantidad" class="form-control" name="cantidad" type="number" min="0" max="2147483647" step="1" value="<?= admin_e($datos['cantidad']) ?>" required></div>
-        <div class="col-12"><label class="form-label" for="sucursalProducto">Sucursal del stock</label><select class="form-select" id="sucursalProducto" name="id_sucursal" required><?php foreach ($sucursalesProducto as $local): ?><option value="<?= admin_e($local['id_sucursal']) ?>" <?= (string)$local['id_sucursal'] === (string)$idSucursalProducto ? 'selected' : '' ?>><?= admin_e($local['nombre']) ?></option><?php endforeach; ?></select><small>La cantidad indicada reemplaza el stock de esta sucursal.</small></div>
+        <div class="col-md-4"><label for="productoCantidad" class="form-label">Stock disponible</label><input id="productoCantidad" class="form-control" name="cantidad" type="number" min="0" max="2147483647" step="1" value="<?= admin_e($datos['cantidad']) ?>" <?= admin_puede_ajustar_stock_placas($conexion) ? 'required' : 'readonly' ?>><p class="form-text">La reposición se solicita al depósito y se incorpora al confirmar la recepción.</p></div>
+        <div class="col-12"><label class="form-label" for="sucursalProducto">Sucursal del stock</label><select class="form-select" id="sucursalProducto" name="id_sucursal" required><?php foreach ($sucursalesProducto as $local): ?><option value="<?= admin_e($local['id_sucursal']) ?>" <?= (string)$local['id_sucursal'] === (string)$idSucursalProducto ? 'selected' : '' ?>><?= admin_e($local['nombre']) ?></option><?php endforeach; ?></select><small>La reposición se incorpora al confirmar los ingresos desde el depósito.</small></div>
         <div class="col-12"><label for="productoImagen" class="form-label">Enlace directo de la imagen</label><input id="productoImagen" class="form-control" name="imagen" type="url" maxlength="500" value="<?= admin_e($datos['imagen']) ?>" required><div class="form-text">Usá el enlace que abre la imagen, no la página de presentación de ImgBB.</div></div>
         <fieldset class="col-12">
             <legend class="h6 mt-2">Especificaciones técnicas</legend>
@@ -305,9 +317,10 @@ admin_layout_inicio('Productos y stock');
                 <td><?= (int) $productoCatalogo['cantidad'] ?></td>
                 <td><div class="d-flex flex-wrap gap-2">
                     <a class="btn btn-sm btn-outline-primary" href="<?= admin_e(admin_url_panel('productos')) ?>&editar=<?= (int) $productoCatalogo['id_gpu'] ?>#ficha-producto">Editar ficha</a>
-                    <?php if (admin_puede_eliminar($conexion)): ?><form method="post" action="<?= admin_e(admin_url_panel('productos')) ?>#catalogo-productos">
+                    <?php if ($esAdministracionSucursales && admin_puede_eliminar($conexion)): ?><form method="post" action="<?= admin_e(admin_url_panel('productos')) ?>#catalogo-productos">
                         <input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>">
                         <input type="hidden" name="accion" value="eliminar">
+                        <input type="hidden" name="id_sucursal" value="<?= admin_e($idSucursalProducto) ?>">
                         <input type="hidden" name="id_gpu" value="<?= (int) $productoCatalogo['id_gpu'] ?>">
                         <button type="submit" class="btn btn-sm btn-danger" aria-label="<?= admin_e('Eliminar ' . $productoCatalogo['marca'] . ' ' . $productoCatalogo['modelo']) ?>">Eliminar producto</button>
                     </form><?php endif; ?>

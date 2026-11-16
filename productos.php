@@ -13,7 +13,7 @@ try {
         "SELECT gpu.id_gpu, gpu.marca, gpu.modelo, gpu.imagen, gpu.precio_especial, " .
         "COUNT(stock_gpu.id_stock_gpu) AS registros_stock, " .
         "COALESCE(SUM(stock_gpu.cantidad), 0) AS cantidad " .
-        "FROM gpu LEFT JOIN stock_gpu ON stock_gpu.id_gpu = gpu.id_gpu " .
+        "FROM gpu LEFT JOIN stock_gpu ON stock_gpu.id_gpu = gpu.id_gpu AND stock_gpu.id_sucursal<>" . sucursal_id_deposito() . " " .
         "GROUP BY gpu.id_gpu, gpu.marca, gpu.modelo, gpu.imagen, gpu.precio_especial " .
         "ORDER BY gpu.marca, gpu.modelo"
     );
@@ -71,10 +71,7 @@ $formatearPrecio = static fn ($precio): string => $precio === null || $precio ==
                 <div class="productos">
                     <?php foreach ($productos as $producto): ?>
                         <?php
-                        if ($producto["registros_stock"] === 0) {
-                            $estadoStockClase = "stock-pendiente";
-                            $estadoStockTexto = "Stock a confirmar";
-                        } elseif ($producto["cantidad"] === 0) {
+                        if ($producto["cantidad"] === 0) {
                             $estadoStockClase = "stock-agotado";
                             $estadoStockTexto = "No hay stock";
                         } else {

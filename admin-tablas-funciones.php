@@ -12,6 +12,7 @@ function admin_funciones_tablas(): array
         'gpu_ventas' => 'facturacion', 'detalle_venta' => 'facturacion',
         'factura' => 'facturacion', 'detalle_factura' => 'facturacion', 'envios' => 'envios',
         'orden_compra' => 'compras', 'detalle_compra' => 'compras',
+        'solicitud_stock' => 'solicitudes-stock', 'detalle_solicitud_stock' => 'solicitudes-stock',
         'componente' => 'componentes', 'stock' => 'componentes'
     ];
 }

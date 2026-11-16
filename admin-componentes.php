@@ -9,14 +9,14 @@ require_once __DIR__ . '/sucursales.php';
 admin_validar_csrf();
 $puedeGestionar = admin_puede_gestionar_componentes($conexion);
 $transaccionActiva = false;
-$sucursales = sucursales_listar($conexion);
+$sucursales = admin_sucursales_disponibles($conexion);
 $idSucursal = (string)($_GET['sucursal'] ?? $sucursales[0]['id_sucursal'] ?? '');
 $error = '';
 $mensaje = $_SESSION['mensaje_stock_componentes'] ?? '';
 unset($_SESSION['mensaje_stock_componentes']);
 try {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') $idSucursal = is_string($_POST['id_sucursal'] ?? null) ? $_POST['id_sucursal'] : '';
-    if ($idSucursal !== '') sucursal_validar($conexion, $idSucursal);
+    if ($idSucursal !== '') admin_validar_sucursal_empleado($conexion, $idSucursal);
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$puedeGestionar) { http_response_code(403); throw new RuntimeException('Solo el Jefe Técnico y administración pueden crear componentes o modificar su stock.'); }
         $accionComponente = is_string($_POST['accion'] ?? null) ? $_POST['accion'] : '';
@@ -41,7 +41,7 @@ try {
         $idComponente = filter_input(INPUT_POST,'id_componente',FILTER_VALIDATE_INT);
         $cantidad = filter_input(INPUT_POST,'cantidad',FILTER_VALIDATE_INT);
         if (!$idComponente || $cantidad === false || $cantidad === null || $cantidad < 0 || $cantidad > 2147483647) throw new RuntimeException('Indicá un componente y una cantidad válida.');
-        sucursal_validar($conexion, $idSucursal);
+        admin_validar_sucursal_empleado($conexion, $idSucursal);
         $conexion->begin_transaction();
         $transaccionActiva = true;
         $consulta = $conexion->prepare('SELECT id_componente FROM componente WHERE id_componente=? FOR UPDATE');
@@ -67,6 +67,7 @@ try {
     }
 } catch (Throwable $fallo) {
     if ($transaccionActiva) $conexion->rollback();
+    $idSucursal = (string)($sucursales[0]['id_sucursal'] ?? '');
     error_log('Stock componentes: '.$fallo->getMessage());
     $error = $fallo instanceof RuntimeException ? $fallo->getMessage() : 'No se pudo actualizar el stock.';
 }
@@ -76,6 +77,7 @@ $componentes = $consulta->get_result()->fetch_all(MYSQLI_ASSOC);
 admin_layout_inicio('Componentes y repuestos');
 ?>
 <h1 class="h3">Componentes y repuestos</h1>
+<?php if (admin_puede_pedir_stock($conexion) && admin_puede_ver($conexion,'admin-solicitudes-stock.php')): ?><a class="btn btn-primary my-3" href="admin-solicitudes-stock.php">Solicitar componentes al depósito</a><?php endif; ?>
 <?php if ($mensaje): ?><div class="alert alert-success"><?= admin_e($mensaje) ?></div><?php endif; ?>
 <?php if ($error): ?><div class="alert alert-danger"><?= admin_e($error) ?></div><?php endif; ?>
 <?php if ($puedeGestionar): ?>

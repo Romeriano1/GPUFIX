@@ -120,7 +120,7 @@ function articulosPago(mysqli $conexion, int $idCarrito, bool $bloquear = false)
 {
     $consulta = $conexion->prepare(
         "SELECT d.id_gpu, d.cantidad, g.marca, g.modelo, g.imagen, g.precio_especial, " .
-        "(SELECT COALESCE(SUM(s.cantidad), 0) FROM stock_gpu s WHERE s.id_gpu = g.id_gpu) AS stock " .
+        "(SELECT COALESCE(SUM(s.cantidad), 0) FROM stock_gpu s WHERE s.id_gpu = g.id_gpu AND s.id_sucursal<>".sucursal_id_deposito().") AS stock " .
         "FROM detalle_carrito d INNER JOIN gpu g ON g.id_gpu = d.id_gpu " .
         "WHERE d.id_carrito = ? ORDER BY d.id_gpu" . ($bloquear ? " FOR UPDATE" : "")
     );
@@ -303,7 +303,7 @@ try {
             foreach ($itemsPago as $item) {
                 $idGpu = (int) $item["id_gpu"];
                 $consultaStock = $conexion->prepare("SELECT id_stock_gpu, cantidad FROM stock_gpu WHERE id_gpu = ? "
-                    . ($entrega === 'retiro' ? "AND id_sucursal = ? " : "")
+                    . ($entrega === 'retiro' ? "AND id_sucursal = ? " : "AND id_sucursal<>".sucursal_id_deposito()." ")
                     . "ORDER BY id_stock_gpu FOR UPDATE");
                 if ($entrega === 'retiro') {
                     $consultaStock->bind_param("is", $idGpu, $idSucursalVenta);

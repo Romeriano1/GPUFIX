@@ -37,3 +37,4 @@ $conexion = new mysqli(
 );
 
 $conexion->set_charset("utf8mb4");
+require_once __DIR__ . '/sucursales.php';

@@ -35,6 +35,14 @@ function admin_requerir_acceso(): void {
         exit;
     }
     $pagina = basename($_SERVER['SCRIPT_NAME'] ?? '');
+    if (in_array($pagina, ['admin-componentes.php', 'admin-productos.php', 'admin-compras.php'], true)
+        && !admin_acceso_todas_sucursales($conexion) && admin_sucursal_empleado($conexion) === null) {
+        http_response_code(403);
+        admin_layout_inicio('Sucursal pendiente');
+        echo '<p>Necesitás una sucursal asignada para acceder al stock. Solicitá que la configuren en Empleados.</p>';
+        admin_layout_fin();
+        exit;
+    }
     $soloPrincipal = $pagina === 'admin-tablas.php';
     $puedeAbrir = $soloPrincipal ? admin_es_cuenta_principal($conexion) : admin_puede_ver($conexion, $pagina);
     if ($pagina !== 'admin.php' && !$puedeAbrir) {
@@ -76,6 +84,10 @@ function admin_e($v): string {
 function admin_layout_inicio(string $titulo): void {
     global $conexion;
     $csrf = admin_csrf();
+    $sucursalActual = '';
+    if (!admin_acceso_todas_sucursales($conexion)) {
+        foreach (admin_sucursales_disponibles($conexion) as $local) $sucursalActual = ' · ' . $local['nombre'];
+    }
     $enlaceCuentas = '<a class="nav-link" href="admin-cuentas.php">Cuentas</a>';
 
     echo '<!doctype html>
@@ -197,7 +209,7 @@ function admin_layout_inicio(string $titulo): void {
 
             <div class="collapse navbar-collapse" id="adminNav">
                 <div class="navbar-nav ms-auto">
-                    '.(!empty($_SESSION['empleado_nombre']) ? '<span class="navbar-text text-white fw-semibold me-lg-3">Hola, '.admin_e($_SESSION['empleado_nombre']).'</span>' : '').'
+                    '.(!empty($_SESSION['empleado_nombre']) ? '<span class="navbar-text text-white fw-semibold me-lg-3">Hola, '.admin_e($_SESSION['empleado_nombre'] . $sucursalActual).'</span>' : '').'
                     '.admin_menu_permitido($conexion).'
                     <a class="nav-link" href="cerrar-sesion-admin.php">Cerrar sesión</a>
                 </div>

@@ -4,7 +4,7 @@ function componentes_asignar_reparacion(mysqli $db, int $orden, int $componente,
 {
     if (!admin_puede_ver($db, 'admin-reparaciones.php')) throw new RuntimeException('No tenés acceso a Reparaciones.');
     if ($orden < 1 || $componente < 1 || $cantidad < 1 || $cantidad > 1000000) throw new RuntimeException('Seleccioná un componente y una cantidad entre 1 y 1.000.000.');
-    sucursal_validar($db, $sucursal);
+    admin_validar_sucursal_empleado($db, $sucursal);
     $db->begin_transaction();
     try {
         $consulta = $db->prepare('SELECT estado FROM orden_reparacion WHERE id_orden_reparacion=? FOR UPDATE');

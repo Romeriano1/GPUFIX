@@ -11,8 +11,11 @@ if (!defined('GPUFIX_TABLA_ACCIONES')) {
 require_once __DIR__ . '/admin-edicion-datos.php';
 require_once __DIR__ . '/compras-proveedores.php';
 admin_validar_csrf();
+if (!admin_es_compras_deposito($conexion)) {
+    header('Location: admin-solicitudes-stock.php?vista=ingresos', true, 303); exit;
+}
 $error = '';
-$sucursalesCompra = sucursales_listar($conexion);
+$sucursalesCompra = array_values(array_filter(admin_sucursales_disponibles($conexion), static fn($local)=>(int)$local['id_sucursal']===sucursal_id_deposito()));
 $mensaje = (string) ($_SESSION['mensaje_compra_proveedor'] ?? '');
 unset($_SESSION['mensaje_compra_proveedor']);
 if (empty($_SESSION['token_recepcion_compra'])) $_SESSION['token_recepcion_compra'] = bin2hex(random_bytes(32));
@@ -59,8 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 $proveedores = $conexion->query('SELECT id_proveedor, razon_social FROM proveedor ORDER BY razon_social')->fetch_all(MYSQLI_ASSOC);
 $productos = $conexion->query("SELECT CONCAT('gpu:', id_gpu) AS valor, CONCAT(marca, ' ', modelo) AS nombre FROM gpu ORDER BY marca, modelo")->fetch_all(MYSQLI_ASSOC);
-$componentes = admin_puede_gestionar_componentes($conexion)
-    ? $conexion->query("SELECT CONCAT('componente:', id_componente) AS valor, nombre FROM componente ORDER BY nombre")->fetch_all(MYSQLI_ASSOC) : [];
+$componentes = $conexion->query("SELECT CONCAT('componente:', id_componente) AS valor, nombre FROM componente ORDER BY nombre")->fetch_all(MYSQLI_ASSOC);
 function compras_opciones_producto(array $productos, array $componentes, string $seleccion): void {
     echo '<option value="">Seleccionar producto</option>';
     foreach (['Placas de video' => $productos, 'Componentes' => $componentes] as $grupo => $opciones) {
@@ -81,10 +83,11 @@ if ($compras) {
     $detalles = $conexion->query("SELECT d.*, COALESCE(d.descripcion, CONCAT(g.marca, ' ', g.modelo), c.nombre, 'Producto') AS nombre_producto FROM detalle_compra d LEFT JOIN gpu g ON g.id_gpu = d.id_gpu LEFT JOIN componente c ON c.id_componente = d.id_componente WHERE d.id_orden_compra IN ($ids) ORDER BY d.id_detalle_compra");
     while ($detalle = $detalles->fetch_assoc()) $detallesPorCompra[$detalle['id_orden_compra']][] = $detalle;
 }
-admin_layout_inicio('Compras a proveedores');
+admin_layout_inicio('Compras y Stock');
 ?>
-<h1 class="h3 mt-3">Compras a proveedores</h1>
-<p class="text-secondary">Registrá los productos que recibiste de un proveedor. Al confirmar, sus cantidades se suman al stock actual.</p>
+<h1 class="h3 mt-3">Compras y Stock</h1>
+<div class="d-flex flex-wrap gap-2 mb-3"><a class="btn btn-outline-primary" href="admin-solicitudes-stock.php">Pedidos de sucursales</a><a class="btn btn-outline-primary" href="admin-solicitudes-stock.php?vista=ingresos">Ingresos a sucursales</a></div>
+<p class="text-secondary">Registrá la mercadería recibida de proveedores. Todas las placas y componentes ingresan primero al depósito.</p>
 <?php if ($mensaje !== ''): ?><div class="alert alert-success" role="status"><?= admin_e($mensaje) ?></div><?php endif; ?>
 <?php if ($error !== ''): ?><div class="alert alert-danger" role="alert"><?= admin_e($error) ?></div><?php endif; ?>
 <section class="panel" aria-labelledby="tituloRecepcion">
@@ -99,7 +102,7 @@ admin_layout_inicio('Compras a proveedores');
             <option value="">Seleccionar proveedor</option>
             <?php foreach ($proveedores as $proveedor): ?><option value="<?= (int) $proveedor['id_proveedor'] ?>" <?= $proveedorIngresado === (string) $proveedor['id_proveedor'] ? 'selected' : '' ?>><?= admin_e($proveedor['razon_social']) ?></option><?php endforeach; ?>
         </select></div>
-        <div class="mb-3"><label class="form-label" for="sucursalCompra">Sucursal que recibe el stock</label><select class="form-select" id="sucursalCompra" name="id_sucursal" required><option value="">Seleccionar sucursal</option><?php foreach ($sucursalesCompra as $local): ?><option value="<?= admin_e($local['id_sucursal']) ?>"><?= admin_e($local['nombre']) ?></option><?php endforeach; ?></select></div>
+        <div class="mb-3"><label class="form-label" for="sucursalCompra">Lugar de recepción</label><select class="form-select" id="sucursalCompra" name="id_sucursal" required><?php foreach ($sucursalesCompra as $local): ?><option value="<?= admin_e($local['id_sucursal']) ?>"><?= admin_e($local['nombre']) ?></option><?php endforeach; ?></select></div>
         <div id="lineasCompra" class="d-grid gap-3">
             <?php foreach ($filasFormulario as $fila): ?>
             <div class="fila-compra border rounded p-3"><div class="row g-3 align-items-end">
