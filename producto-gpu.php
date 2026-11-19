@@ -21,7 +21,7 @@ try {
         "gpu.especificaciones, " .
         "COUNT(stock_gpu.id_stock_gpu) AS registros_stock, " .
         "COALESCE(SUM(stock_gpu.cantidad), 0) AS cantidad " .
-        "FROM gpu LEFT JOIN stock_gpu ON stock_gpu.id_gpu = gpu.id_gpu AND stock_gpu.id_sucursal<>" . sucursal_id_deposito() . " " .
+        "FROM gpu LEFT JOIN stock_gpu ON stock_gpu.id_gpu = gpu.id_gpu " .
         ($buscarPorId ? "WHERE gpu.id_gpu = ? " : "WHERE gpu.pagina = ? ") .
         "GROUP BY gpu.id_gpu, gpu.marca, gpu.modelo, gpu.imagen, gpu.precio_especial, " .
         "gpu.especificaciones LIMIT 1"
@@ -62,7 +62,7 @@ try {
             'SELECT s.nombre, COALESCE(SUM(st.cantidad), 0) AS cantidad '
             . 'FROM sucursales s LEFT JOIN stock_gpu st '
             . 'ON st.id_sucursal = s.id_sucursal AND st.id_gpu = ? '
-            . 'WHERE s.id_sucursal<>'.sucursal_id_deposito().' GROUP BY s.id_sucursal, s.nombre ORDER BY s.nombre'
+            . 'GROUP BY s.id_sucursal, s.nombre ORDER BY s.nombre'
         );
         $consultaSucursales->bind_param('i', $producto['id']);
         $consultaSucursales->execute();

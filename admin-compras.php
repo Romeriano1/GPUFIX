@@ -11,11 +11,9 @@ if (!defined('GPUFIX_TABLA_ACCIONES')) {
 require_once __DIR__ . '/admin-edicion-datos.php';
 require_once __DIR__ . '/compras-proveedores.php';
 admin_validar_csrf();
-if (!admin_es_compras_deposito($conexion)) {
-    header('Location: admin-solicitudes-stock.php?vista=ingresos', true, 303); exit;
-}
+$puedeRecibirCompras = admin_puede_recibir_proveedores($conexion);
 $error = '';
-$sucursalesCompra = array_values(array_filter(admin_sucursales_disponibles($conexion), static fn($local)=>(int)$local['id_sucursal']===sucursal_id_deposito()));
+$sucursalesCompra = admin_sucursales_disponibles($conexion);
 $mensaje = (string) ($_SESSION['mensaje_compra_proveedor'] ?? '');
 unset($_SESSION['mensaje_compra_proveedor']);
 if (empty($_SESSION['token_recepcion_compra'])) $_SESSION['token_recepcion_compra'] = bin2hex(random_bytes(32));
@@ -24,6 +22,7 @@ $filasFormulario = [['producto' => '', 'cantidad' => '1', 'costo' => '']];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $transaccion = false;
     try {
+        if (!$puedeRecibirCompras) { http_response_code(403); throw new RuntimeException('Solo Compras y Stock y administración pueden registrar mercadería recibida de proveedores.'); }
         $token = is_string($_POST['token_recepcion'] ?? null) ? $_POST['token_recepcion'] : '';
         if ($token !== '' && isset($_SESSION['recepciones_completadas'][$token])) {
             $_SESSION['mensaje_compra_proveedor'] = 'Esta compra ya estaba registrada. No se volvió a sumar stock.';
@@ -86,13 +85,14 @@ if ($compras) {
 admin_layout_inicio('Compras y Stock');
 ?>
 <h1 class="h3 mt-3">Compras y Stock</h1>
-<div class="d-flex flex-wrap gap-2 mb-3"><a class="btn btn-outline-primary" href="admin-solicitudes-stock.php">Pedidos de sucursales</a><a class="btn btn-outline-primary" href="admin-solicitudes-stock.php?vista=ingresos">Ingresos a sucursales</a></div>
-<p class="text-secondary">Registrá la mercadería recibida de proveedores. Todas las placas y componentes ingresan primero al depósito.</p>
+<p class="text-secondary">Las placas y componentes comprados a proveedores ingresan directamente al stock de la sucursal que los recibe.</p>
 <?php if ($mensaje !== ''): ?><div class="alert alert-success" role="status"><?= admin_e($mensaje) ?></div><?php endif; ?>
 <?php if ($error !== ''): ?><div class="alert alert-danger" role="alert"><?= admin_e($error) ?></div><?php endif; ?>
 <section class="panel" aria-labelledby="tituloRecepcion">
     <h2 class="h5 mb-3" id="tituloRecepcion">Registrar compra recibida</h2>
-    <?php if (!$proveedores || (!$productos && !$componentes)): ?>
+    <?php if (!$puedeRecibirCompras): ?>
+        <p>Podés consultar las compras. Compras y Stock de cada sucursal registra las recepciones de proveedores.</p>
+    <?php elseif (!$proveedores || (!$productos && !$componentes)): ?>
         <p>Para registrar una compra, primero cargá un <a href="<?= admin_e(admin_url_panel('proveedores')) ?>">proveedor</a> y un <a href="<?= admin_e(admin_url_panel('productos')) ?>">producto</a>.</p>
     <?php else: ?>
     <form method="post" action="<?= admin_e(admin_url_panel('compras')) ?>" id="formularioCompraProveedor">

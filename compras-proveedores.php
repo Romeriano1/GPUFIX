@@ -39,8 +39,7 @@ function compras_validar_lineas(array $productos, array $cantidades, array $cost
 
 function compras_registrar_recepcion(mysqli $db, int $proveedor, int $empleado, array $compra, string $idSucursal): int
 {
-    if (!admin_es_compras_deposito($db,$empleado)) throw new RuntimeException('Las compras a proveedores las recibe Compras y Stock desde Depósito.');
-    if ((int)$idSucursal !== sucursal_id_deposito()) throw new RuntimeException('Toda la mercadería comprada debe ingresar primero al Depósito.');
+    if (!admin_puede_recibir_proveedores($db,$empleado)) throw new RuntimeException('Las compras a proveedores las registra Compras y Stock de la sucursal.');
     admin_validar_sucursal_empleado($db, $idSucursal, $empleado);
     $buscar = $db->prepare('SELECT id_proveedor FROM proveedor WHERE id_proveedor = ? LOCK IN SHARE MODE');
     $buscar->bind_param('i', $proveedor);

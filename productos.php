@@ -13,7 +13,7 @@ try {
         "SELECT gpu.id_gpu, gpu.marca, gpu.modelo, gpu.imagen, gpu.precio_especial, " .
         "COUNT(stock_gpu.id_stock_gpu) AS registros_stock, " .
         "COALESCE(SUM(stock_gpu.cantidad), 0) AS cantidad " .
-        "FROM gpu LEFT JOIN stock_gpu ON stock_gpu.id_gpu = gpu.id_gpu AND stock_gpu.id_sucursal<>" . sucursal_id_deposito() . " " .
+        "FROM gpu LEFT JOIN stock_gpu ON stock_gpu.id_gpu = gpu.id_gpu " .
         "GROUP BY gpu.id_gpu, gpu.marca, gpu.modelo, gpu.imagen, gpu.precio_especial " .
         "ORDER BY gpu.marca, gpu.modelo"
     );

@@ -10,7 +10,7 @@ $id = filter_input(INPUT_GET, 'editar', FILTER_VALIDATE_INT) ?: 0;
 $nuevo = isset($_GET['nuevo']);
 $puestos = $conexion->query('SELECT id_puesto,nombre FROM puesto ORDER BY nombre')->fetch_all(MYSQLI_ASSOC);
 require_once __DIR__ . '/sucursales.php';
-$sucursalesPersonal = sucursales_listar($conexion, true);
+$sucursalesPersonal = sucursales_listar($conexion);
 $datos = ['nombre'=>'','apellido'=>'','dni'=>'','telefono'=>'','email'=>'','id_puesto'=>'','id_sucursal'=>''];
 if ($id) {
     $consulta = $conexion->prepare('SELECT id_empleado,nombre,apellido,dni,telefono,email,id_puesto,id_sucursal FROM empleado WHERE id_empleado=?');
@@ -105,7 +105,7 @@ admin_layout_inicio('Empleados');
 <form method="post" class="row g-3"><input type="hidden" name="admin_csrf" value="<?= admin_e(admin_csrf()) ?>"><input type="hidden" name="accion" value="guardar"><input type="hidden" name="empleado" value="<?= $nuevo ? 0 : $id ?>">
 <?php foreach (['nombre'=>'Nombre','apellido'=>'Apellido','dni'=>'DNI','telefono'=>'Teléfono','email'=>'Correo electrónico'] as $campo=>$etiqueta): ?><div class="col-md-6"><label class="form-label" for="personal-<?= $campo ?>"><?= $etiqueta ?></label><input class="form-control" id="personal-<?= $campo ?>" name="<?= $campo ?>" type="<?= $campo === 'email' ? 'email' : 'text' ?>" value="<?= admin_e($datos[$campo]) ?>" maxlength="<?= ['nombre'=>100,'apellido'=>100,'dni'=>8,'telefono'=>30,'email'=>150][$campo] ?>" <?= $campo==='dni' ? 'pattern="[0-9]{7,8}" inputmode="numeric"' : '' ?> required></div><?php endforeach; ?>
 <div class="col-md-6"><label class="form-label" for="personal-puesto">Puesto</label><select class="form-select" id="personal-puesto" name="id_puesto" required><option value="">Seleccioná un puesto</option><?php foreach ($puestos as $puesto): ?><option value="<?= (int)$puesto['id_puesto'] ?>" data-sede="<?= admin_sede_fija_puesto($puesto['nombre']) ?? '' ?>" data-admin="<?= in_array($puesto['nombre'],['Administrador','Dirección General'],true) ? '1' : '0' ?>" <?= (int)$datos['id_puesto']===(int)$puesto['id_puesto'] ? 'selected' : '' ?>><?= admin_e($puesto['nombre']) ?></option><?php endforeach; ?></select></div>
-<div class="col-md-6"><label class="form-label" for="personal-sucursal">Lugar de trabajo</label><select class="form-select" id="personal-sucursal" name="id_sucursal"><option value="">Sin asignar (solo administración)</option><?php foreach ($sucursalesPersonal as $local): ?><option value="<?= (int)$local['id_sucursal'] ?>" <?= (string)($datos['id_sucursal'] ?? '') === (string)$local['id_sucursal'] ? 'selected' : '' ?>><?= admin_e($local['nombre']) ?><?= (int)$local['id_sucursal'] === admin_id_sucursal_central() ? ' · Casa central' : '' ?></option><?php endforeach; ?></select><p class="form-text">RRHH trabaja en Rivadavia. Logística y Compras y Stock trabajan exclusivamente en Depósito. Para los demás puestos elegí una sucursal. Los trabajos son compartidos.</p></div>
+<div class="col-md-6"><label class="form-label" for="personal-sucursal">Lugar de trabajo</label><select class="form-select" id="personal-sucursal" name="id_sucursal"><option value="">Sin asignar (solo administración)</option><?php foreach ($sucursalesPersonal as $local): ?><option value="<?= (int)$local['id_sucursal'] ?>" <?= (string)($datos['id_sucursal'] ?? '') === (string)$local['id_sucursal'] ? 'selected' : '' ?>><?= admin_e($local['nombre']) ?><?= (int)$local['id_sucursal'] === admin_id_sucursal_central() ? ' · Casa central' : '' ?></option><?php endforeach; ?></select><p class="form-text">RRHH trabaja en Rivadavia. Para los demás puestos elegí la sucursal donde trabaja el empleado. Los trabajos son compartidos.</p></div>
 <div class="col-12"><p class="small text-secondary mb-0"><?= $nuevo ? 'Asigná la contraseña para el acceso de este empleado.' : 'Completá ambos campos para cambiar la contraseña.' ?></p></div>
 <div class="col-md-6"><label class="form-label" for="personal-clave">Contraseña</label><input class="form-control" id="personal-clave" name="contrasena" type="password" autocomplete="new-password" minlength="8" maxlength="72" <?= $nuevo ? 'required' : '' ?>></div>
 <div class="col-md-6"><label class="form-label" for="personal-confirmacion">Repetir contraseña</label><input class="form-control" id="personal-confirmacion" name="confirmacion" type="password" autocomplete="new-password" minlength="8" maxlength="72" <?= $nuevo ? 'required' : '' ?>></div>
@@ -123,9 +123,8 @@ admin_layout_inicio('Empleados');
     if (!puesto || !sucursal) return;
     const actualizar = () => {
         const fija = puesto.selectedOptions[0]?.dataset.sede || '';
-        const admin = puesto.selectedOptions[0]?.dataset.admin === '1';
         if (fija) sucursal.value = fija;
-        for (const opcion of sucursal.options) opcion.disabled = fija ? opcion.value !== fija : (!admin && opcion.value === '<?= sucursal_id_deposito() ?>');
+        for (const opcion of sucursal.options) opcion.disabled = fija ? opcion.value !== fija : false;
         if (sucursal.selectedOptions[0]?.disabled) sucursal.value = '';
     };
     puesto.addEventListener('change', actualizar);

@@ -1,15 +1,12 @@
 <?php
-function sucursal_id_deposito(): int { return 3; }
-
-function sucursales_listar(mysqli $conexion, bool $incluirDeposito = false): array
+function sucursales_listar(mysqli $conexion): array
 {
-    return $conexion->query('SELECT id_sucursal,nombre,direccion FROM sucursales '
-        . ($incluirDeposito ? '' : 'WHERE id_sucursal <> ' . sucursal_id_deposito() . ' ') . 'ORDER BY nombre')->fetch_all(MYSQLI_ASSOC);
+    return $conexion->query('SELECT id_sucursal,nombre,direccion FROM sucursales ORDER BY nombre')->fetch_all(MYSQLI_ASSOC);
 }
 
 function sucursal_validar(mysqli $conexion, string $idSucursal): array
 {
-    foreach (sucursales_listar($conexion, true) as $sucursal) {
+    foreach (sucursales_listar($conexion) as $sucursal) {
         if ((string)$sucursal['id_sucursal'] === $idSucursal) return $sucursal;
     }
     throw new RuntimeException('Seleccioná una sucursal existente.');

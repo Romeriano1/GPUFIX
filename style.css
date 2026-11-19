@@ -873,11 +873,11 @@ body.light-theme .mensaje-carrito {
 .pago-formulario textarea { display: block; width: 100%; min-height: 110px; padding: 13px 15px; border: 1px solid #44515a; border-radius: 10px; background: #101820; color: #ffffff; resize: vertical; }
 .pago-formulario textarea:focus { outline: 2px solid #00bfff; outline-offset: 2px; }
 .pago-formulario textarea::placeholder { color: #8d9ba6; }
-.pago-formulario input[type="text"], .pago-formulario input[type="password"], .presupuesto-formulario input, .presupuesto-formulario textarea {
+.pago-formulario input[type="text"], .pago-formulario input[type="password"], .pago-formulario select, .presupuesto-formulario input, .presupuesto-formulario textarea {
     width: 100%; padding: 11px 13px; border: 1px solid #44515a; border-radius: 9px;
     background: #101820; color: #ffffff; font: inherit;
 }
-.pago-formulario input[type="text"]:focus, .pago-formulario input[type="password"]:focus, .presupuesto-formulario input:focus, .presupuesto-formulario textarea:focus {
+.pago-formulario input[type="text"]:focus, .pago-formulario input[type="password"]:focus, .pago-formulario select:focus, .presupuesto-formulario input:focus, .presupuesto-formulario textarea:focus {
     outline: 2px solid #00bfff; outline-offset: 2px;
 }
 .pago-metodos { min-width: 0; margin: 0; padding: 0; border: 0; }
@@ -945,6 +945,7 @@ body.light-theme .pago-confirmado > p { color: #555555; }
 body.light-theme .pago-formulario textarea { background: #ffffff; color: #111111; border-color: #888888; }
 body.light-theme .pago-formulario input[type="text"],
 body.light-theme .pago-formulario input[type="password"],
+body.light-theme .pago-formulario select,
 body.light-theme .pago-metodos input[type="file"],
 body.light-theme .presupuesto-formulario input,
 body.light-theme .presupuesto-formulario textarea { background: #ffffff; color: #111111; border-color: #888888; }
@@ -1043,14 +1044,6 @@ body.light-theme .pago-error { background: #fff0f1; color: #9c2436; }
 .stock-sucursales li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; padding-top: 10px; border-top: 1px solid #555555; }
 .stock-sucursales li > * { min-width: 0; overflow-wrap: anywhere; }
 body.light-theme .stock-sucursales .stock-disponible { color: #247a35; }
-
-.seguimiento-compra { overflow-wrap: anywhere; }
-.seguimiento-compra h3 { font-size: 20px; }
-.seguimiento-etapas { display: grid; gap: 10px; margin: 20px 0 0; padding-left: 24px; }
-.seguimiento-etapas li { padding: 10px 12px; border-left: 3px solid #74818b; }
-.seguimiento-etapas .etapa-completada { border-color: #55cc66; }
-.seguimiento-etapas .etapa-actual { border-color: #00bfff; background: rgba(0, 191, 255, .12); font-weight: 700; }
-body.light-theme .seguimiento-etapas .etapa-completada { border-color: #247a35; }
 
 .stock-agotado {
     color: #ff4d4f;

@@ -43,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $actual = $buscar->get_result()->fetch_assoc();
                     if (!$actual) throw new RuntimeException('El puesto ya no existe.');
                     if ($actual['nombre'] === 'Administrador' && $nombreRol !== $actual['nombre']) throw new RuntimeException('El nombre Administrador está protegido.');
+                    if ($actual['nombre'] === 'Administrador') $seleccion = array_values(array_unique(array_merge($seleccion, ['admin-empleos.php'])));
                 }
                 $buscar = $conexion->prepare('SELECT id_puesto FROM puesto WHERE LOWER(TRIM(nombre))=LOWER(?) AND id_puesto<>? LIMIT 1');
                 $buscar->bind_param('si', $nombreRol, $puestoId); $buscar->execute();
@@ -80,7 +81,7 @@ foreach ($puestos as $puesto) {
 $rolActual = null;
 foreach ($puestos as $puesto) if ((int)$puesto['id_puesto'] === $puestoId) $rolActual = $puesto;
 $panelesDisponibles = admin_secciones_permisos();
-unset($panelesDisponibles['admin-personal.php']);
+if (!$rolActual || $rolActual['nombre'] !== 'Administrador') unset($panelesDisponibles['admin-personal.php']);
 $areas = array_fill_keys(array_keys(admin_roles_organigrama()), []);
 $areaPorNombre = [];
 $ordenPorNombre = [];
@@ -121,7 +122,6 @@ $cantidadAsignados = (int) ($empleadosPorPuesto[$puestoId] ?? 0);
 $errorPuesto = $error && in_array($_POST['accion'] ?? '', ['crear_rol', 'permisos'], true);
 $nombreFormulario = $errorPuesto && is_string($_POST['nombre'] ?? null) ? $_POST['nombre'] : ($crearPuesto ? '' : ($rolActual['nombre'] ?? ''));
 $panelesFormulario = $errorPuesto && is_array($_POST['paneles'] ?? null) ? $_POST['paneles'] : ($crearPuesto ? [] : ($permisos[(string) $puestoId] ?? []));
-$panelesFormulario = array_values(array_diff($panelesFormulario, ['admin-personal.php']));
 $areaActual = $rolActual ? ($areaPorNombre[mb_strtolower(trim($rolActual['nombre']), 'UTF-8')] ?? 'Otros puestos') : '';
 admin_layout_inicio('Empleados y permisos');
 ?>
@@ -192,11 +192,11 @@ admin_layout_inicio('Empleados y permisos');
             <fieldset>
                 <legend class="h6">Acceso a paneles</legend>
                 <p class="text-secondary">Seleccioná los paneles que podrán utilizar los empleados de este puesto.</p>
-                <p class="small text-secondary">RRHH gestiona el personal y sus lugares de trabajo desde Rivadavia, casa central. GPUFIX conserva siempre el acceso completo a la administración.</p>
+                <p class="small text-secondary">RRHH gestiona el personal desde Rivadavia. GPUFIX usa los paneles seleccionados para Administrador y conserva Tablas SQL y Empleados y permisos para recuperar sus accesos.</p>
                 <div class="empleos-permisos">
                 <?php foreach ($panelesDisponibles as $pagina => $nombre): ?>
                     <label class="empleos-permiso">
-                        <input type="checkbox" name="paneles[]" value="<?= admin_e($pagina) ?>" data-panel <?= in_array($pagina, $panelesFormulario, true) ? 'checked' : '' ?>>
+                        <input type="checkbox" name="paneles[]" value="<?= admin_e($pagina) ?>" data-panel <?= in_array($pagina, $panelesFormulario, true) || (!$crearPuesto && $rolActual['nombre'] === 'Administrador' && $pagina === 'admin-empleos.php') ? 'checked' : '' ?> <?= !$crearPuesto && $rolActual['nombre'] === 'Administrador' && $pagina === 'admin-empleos.php' ? 'disabled' : '' ?>>
                         <span><?= admin_e($nombre) ?></span>
                     </label>
                 <?php endforeach; ?>

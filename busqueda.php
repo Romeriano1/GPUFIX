@@ -17,7 +17,7 @@ if ($busqueda !== "") {
             "SELECT gpu.id_gpu, gpu.marca, gpu.modelo, gpu.imagen, gpu.precio_especial, " .
             "COUNT(stock_gpu.id_stock_gpu) AS registros_stock, " .
             "COALESCE(SUM(stock_gpu.cantidad), 0) AS cantidad " .
-            "FROM gpu LEFT JOIN stock_gpu ON stock_gpu.id_gpu = gpu.id_gpu AND stock_gpu.id_sucursal<>" . sucursal_id_deposito() . " " .
+            "FROM gpu LEFT JOIN stock_gpu ON stock_gpu.id_gpu = gpu.id_gpu " .
             "WHERE (gpu.marca LIKE ? OR gpu.modelo LIKE ? " .
             "OR REPLACE(REPLACE(REPLACE(LOWER(gpu.marca), ' ', ''), '-', ''), '.', '') LIKE ? " .
             "OR REPLACE(REPLACE(REPLACE(LOWER(gpu.modelo), ' ', ''), '-', ''), '.', '') LIKE ?) " .

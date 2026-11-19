@@ -24,7 +24,9 @@ $costoEnvioCentavos = 500000;
 $sucursalesRetiro = [];
 $entrega = ($_SESSION['entrega_pago'] ?? '') === 'retiro' ? 'retiro' : 'domicilio';
 $sucursal = (string) ($_SESSION['sucursal_pago'] ?? '');
-unset($_SESSION['entrega_pago'], $_SESSION['sucursal_pago']);
+$empresasEnvio = ['Pickit', 'Correo Argentino'];
+$empresaEnvio = (string) ($_SESSION['empresa_envio_pago'] ?? '');
+unset($_SESSION['entrega_pago'], $_SESSION['sucursal_pago'], $_SESSION['empresa_envio_pago']);
 $errorCarga = false;
 $transaccionActiva = false;
 $problemaCarrito = "";
@@ -82,7 +84,7 @@ function prepararCarpetaComprobantes(): string
     return $directorio;
 }
 
-function enviarCorreoCompra(array $cliente, array $articulos, int $idVenta, string $numeroComprobante, int $totalCentavos, int $cargoEnvio, string $metodoPago, string $estadoVenta, string $direccion, string $codigoSeguimiento): bool
+function enviarCorreoCompra(array $cliente, array $articulos, int $idVenta, string $numeroComprobante, int $totalCentavos, int $cargoEnvio, string $metodoPago, string $estadoVenta, string $direccion, ?string $empresaEnvio): bool
 {
     try {
         if (!is_callable('gpufix_enviar_correo') && is_file(__DIR__ . '/correo-config.php')) {
@@ -100,12 +102,12 @@ function enviarCorreoCompra(array $cliente, array $articulos, int $idVenta, stri
             $cuerpo .= '- ' . $articulo['marca'] . ' ' . $articulo['modelo'] . ' — Cantidad: ' . $cantidad
                 . ' — Precio unitario: ' . formatoPago($precio) . ' — Subtotal: ' . formatoPago($precio * $cantidad) . "\n";
         }
+        if ($empresaEnvio !== null) $cuerpo .= "\nEmpresa de envío: " . $empresaEnvio . " (servicio tercerizado)";
         $cuerpo .= "\nMonto bruto de los productos: " . formatoPago($totalCentavos - $cargoEnvio)
             . "\nEnvío: " . formatoPago($cargoEnvio) . ($cargoEnvio === 0 ? " (retiro en tienda)" : " (a domicilio)")
             . "\nTotal: " . formatoPago($totalCentavos) . "\nEntrega: " . $direccion;
         if ($metodoPago === 'Transferencia') $cuerpo .= "\n\nRecibimos tu comprobante de transferencia. El pago queda pendiente de verificación.";
-        $cuerpo .= "\n\nCódigo de seguimiento: " . $codigoSeguimiento
-            . "\nIngresalo en Mi cuenta, en Seguí tu compra, para consultar el estado de la entrega.\n\nEquipo GPUFIX";
+        $cuerpo .= "\n\nPodés consultar el comprobante de la compra desde Mi cuenta.\n\nEquipo GPUFIX";
         if (!gpufix_enviar_correo($cliente['correo'], 'Confirmación de compra GPUFIX #' . $idVenta, $cuerpo)) {
             throw new RuntimeException('El servicio de correo no pudo enviar el resumen de la compra.');
         }
@@ -120,7 +122,7 @@ function articulosPago(mysqli $conexion, int $idCarrito, bool $bloquear = false)
 {
     $consulta = $conexion->prepare(
         "SELECT d.id_gpu, d.cantidad, g.marca, g.modelo, g.imagen, g.precio_especial, " .
-        "(SELECT COALESCE(SUM(s.cantidad), 0) FROM stock_gpu s WHERE s.id_gpu = g.id_gpu AND s.id_sucursal<>".sucursal_id_deposito().") AS stock " .
+        "(SELECT COALESCE(SUM(s.cantidad), 0) FROM stock_gpu s WHERE s.id_gpu = g.id_gpu) AS stock " .
         "FROM detalle_carrito d INNER JOIN gpu g ON g.id_gpu = d.id_gpu " .
         "WHERE d.id_carrito = ? ORDER BY d.id_gpu" . ($bloquear ? " FOR UPDATE" : "")
     );
@@ -213,6 +215,9 @@ try {
             }
             $entrega = is_string($_POST['entrega'] ?? null) ? $_POST['entrega'] : '';
             $sucursal = is_string($_POST['sucursal'] ?? null) ? $_POST['sucursal'] : '';
+            $empresaEnvio = is_string($_POST['empresa_envio'] ?? null) ? $_POST['empresa_envio'] : '';
+            if ($entrega === 'domicilio' && !in_array($empresaEnvio, $empresasEnvio, true)) throw new RuntimeException('Seleccioná Pickit o Correo Argentino para recibir tu pedido.');
+            if ($entrega === 'retiro') $empresaEnvio = '';
             if (!in_array($entrega, ['retiro', 'domicilio'], true)) {
                 throw new RuntimeException('Seleccioná un método de entrega.');
             }
@@ -303,7 +308,7 @@ try {
             foreach ($itemsPago as $item) {
                 $idGpu = (int) $item["id_gpu"];
                 $consultaStock = $conexion->prepare("SELECT id_stock_gpu, cantidad FROM stock_gpu WHERE id_gpu = ? "
-                    . ($entrega === 'retiro' ? "AND id_sucursal = ? " : "AND id_sucursal<>".sucursal_id_deposito()." ")
+                    . ($entrega === 'retiro' ? "AND id_sucursal = ? " : "")
                     . "ORDER BY id_stock_gpu FOR UPDATE");
                 if ($entrega === 'retiro') {
                     $consultaStock->bind_param("is", $idGpu, $idSucursalVenta);
@@ -369,9 +374,9 @@ try {
             }
             $direccionEntrega = $entrega === 'retiro' ? $sucursalElegida['nombre'] . ' (' . $sucursalElegida['direccion'] . ')' : $direccionFacturacion;
             $estadoEntrega = $entrega === 'retiro' ? 'Retiro en tienda' : 'Pendiente de envío';
-            $codigoSeguimiento = 'GPU-' . $idVenta . '-' . strtoupper(bin2hex(random_bytes(8)));
-            $crearEnvio = $conexion->prepare("INSERT INTO envios (id_cliente, id_gpu_ventas, estado, direccion_envio, codigo_seguimiento) VALUES (?, ?, ?, ?, ?)");
-            $crearEnvio->bind_param("iisss", $idCliente, $idVenta, $estadoEntrega, $direccionEntrega, $codigoSeguimiento);
+            $crearEnvio = $conexion->prepare("INSERT INTO envios (id_cliente, id_gpu_ventas, estado, direccion_envio, empresa_envio) VALUES (?, ?, ?, ?, ?)");
+            $empresaGuardada = $entrega === 'domicilio' ? $empresaEnvio : null;
+            $crearEnvio->bind_param("iisss", $idCliente, $idVenta, $estadoEntrega, $direccionEntrega, $empresaGuardada);
             $crearEnvio->execute();
             $crearEnvio->close();
             if ($cargoEnvio > 0) {
@@ -411,7 +416,7 @@ try {
             unset($_SESSION["csrf_pago"], $_SESSION["resumen_pago"]);
             $_SESSION['correo_compra'] = [
                 'id_venta' => $idVenta,
-                'enviado' => enviarCorreoCompra($datosCliente, $itemsPago, $idVenta, $numeroComprobante, $totalCentavos, $cargoEnvio, $metodoPago, $estadoVenta, $direccionEntrega, $codigoSeguimiento),
+                'enviado' => enviarCorreoCompra($datosCliente, $itemsPago, $idVenta, $numeroComprobante, $totalCentavos, $cargoEnvio, $metodoPago, $estadoVenta, $direccionEntrega, $empresaGuardada),
             ];
             header("Location: pagar.php?compra=" . $idVenta, true, 303);
             exit;
@@ -431,6 +436,7 @@ try {
                 $_SESSION["direccion_pago"] = $direccionFacturacion;
                 $_SESSION['entrega_pago'] = $entrega;
                 $_SESSION['sucursal_pago'] = $sucursal;
+                $_SESSION['empresa_envio_pago'] = $empresaEnvio;
                 $_SESSION["metodo_pago_form"] = $metodoSeleccionado === "transferencia" ? "transferencia" : "tarjeta";
             }
             header("Location: pagar.php", true, 303);
@@ -464,7 +470,7 @@ try {
             $consultaDetalles->execute();
             $compraConfirmada["items"] = $consultaDetalles->get_result()->fetch_all(MYSQLI_ASSOC);
             $consultaDetalles->close();
-            $consultaEntrega = $conexion->prepare("SELECT estado, direccion_envio, codigo_seguimiento FROM envios WHERE id_gpu_ventas = ? AND id_cliente = ? ORDER BY id_envios DESC LIMIT 1");
+            $consultaEntrega = $conexion->prepare("SELECT estado, direccion_envio, empresa_envio FROM envios WHERE id_gpu_ventas = ? AND id_cliente = ? ORDER BY id_envios DESC LIMIT 1");
             $consultaEntrega->bind_param("ii", $idCompra, $idCliente);
             $consultaEntrega->execute();
             $compraConfirmada['entrega'] = $consultaEntrega->get_result()->fetch_assoc();
@@ -505,7 +511,7 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finalizar compra - GPU FIX &amp; STORE</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=20261114-responsive">
+    <link rel="stylesheet" href="style.css?v=20261119-envio-tercerizado">
 </head>
 <body>
     <header>
@@ -532,10 +538,7 @@ try {
                 </ul>
                 <?php if (!empty($compraConfirmada['entrega']['direccion_envio'])): ?>
                     <p><strong>Entrega</strong> · <?= escaparPago($compraConfirmada['entrega']['direccion_envio']) ?></p>
-                <?php endif; ?>
-                <?php if (!empty($compraConfirmada['entrega']['codigo_seguimiento'])): ?>
-                    <p><strong>Código de seguimiento</strong><br><span class="pago-alias"><?= escaparPago($compraConfirmada['entrega']['codigo_seguimiento']) ?></span></p>
-                    <p><a class="pago-volver" href="mi-cuenta.php?<?= escaparPago(http_build_query(['seguimiento'=>$compraConfirmada['entrega']['codigo_seguimiento']])) ?>#seguimiento">Seguí tu compra</a></p>
+                    <?php if (!empty($compraConfirmada['entrega']['empresa_envio'])): ?><p><strong>Empresa de envío</strong> · <?= escaparPago($compraConfirmada['entrega']['empresa_envio']) ?> (servicio tercerizado)</p><?php endif; ?>
                 <?php endif; ?>
                 <div class="pago-total"><span>Total</span><strong><?= formatoPago(centavosPago($compraConfirmada["total"])) ?></strong></div>
                 <div class="pago-acciones"><a href="mi-cuenta.php" class="pago-boton">Ver mi cuenta</a><a href="productos.php" class="pago-volver">Seguir comprando</a></div>
@@ -569,6 +572,14 @@ try {
                                 <?php if (!$sucursalesRetiro): ?><p>No hay una sucursal con toda la cantidad solicitada. Elegí envío a domicilio para combinar el stock disponible.</p><?php endif; ?>
                             </div>
                         </fieldset>
+                        <div id="empresaEnvioCompra" <?= $entrega !== 'domicilio' ? 'hidden' : '' ?> class="pago-metodos">
+                            <label for="empresaEnvio">Empresa de envío</label>
+                            <select id="empresaEnvio" name="empresa_envio" <?= $entrega === 'domicilio' ? 'required' : 'disabled' ?>>
+                                <option value="">Seleccionar empresa</option>
+                                <?php foreach ($empresasEnvio as $empresa): ?><option value="<?= escaparPago($empresa) ?>" <?= $empresaEnvio === $empresa ? 'selected' : '' ?>><?= escaparPago($empresa) ?></option><?php endforeach; ?>
+                            </select>
+                            <p>La entrega está a cargo de la empresa seleccionada. GPUFIX utiliza un servicio de envíos tercerizado.</p>
+                        </div>
                         <div id="domicilioCompra" <?= $entrega !== 'domicilio' ? 'hidden' : '' ?>><label for="direccionFacturacion">Dirección de facturación</label><input type="text" id="direccionFacturacion" name="direccion" minlength="8" maxlength="255" autocomplete="billing street-address" placeholder="Calle, número, localidad y CP" value="<?= escaparPago($direccionFacturacion) ?>" <?= $entrega === 'domicilio' ? 'required' : 'disabled' ?>></div>
                         <fieldset class="pago-metodos">
                             <legend>Métodos de pago</legend>
@@ -634,6 +645,10 @@ try {
             const direccion = document.getElementById('direccionFacturacion');
             direccion.disabled = !domicilio;
             direccion.required = domicilio;
+            document.getElementById('empresaEnvioCompra').hidden = !domicilio;
+            const empresa = document.getElementById('empresaEnvio');
+            empresa.disabled = !domicilio;
+            empresa.required = domicilio;
             formularioEntrega.querySelectorAll('[name="sucursal"]').forEach(opcion => {
                 opcion.disabled = domicilio;
                 opcion.required = !domicilio;

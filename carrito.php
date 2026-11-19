@@ -50,7 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             if (!$carritoPropio) throw new RuntimeException('Tu carrito ya no está disponible.');
             $idCarrito = (int) $carritoPropio['id_carrito'];
             if ($accion === 'actualizar') {
-                $buscarStock = $conexion->prepare('SELECT cantidad FROM stock_gpu WHERE id_gpu=? AND id_sucursal<>'.sucursal_id_deposito().' FOR UPDATE');
+                $buscarStock = $conexion->prepare('SELECT cantidad FROM stock_gpu WHERE id_gpu=? FOR UPDATE');
                 $buscarStock->bind_param('i', $idGpu);
                 $buscarStock->execute();
                 $stockDisponible = 0;
@@ -138,7 +138,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             throw new RuntimeException("carrito_no_disponible");
         }
 
-        $consultaStock = $conexion->prepare("SELECT cantidad FROM stock_gpu WHERE id_gpu = ? AND id_sucursal<>".sucursal_id_deposito()." FOR UPDATE");
+        $consultaStock = $conexion->prepare("SELECT cantidad FROM stock_gpu WHERE id_gpu = ? FOR UPDATE");
         $consultaStock->bind_param("i", $idGpu);
         $consultaStock->execute();
         $consultaStock->bind_result($cantidadEnStock);
@@ -287,7 +287,7 @@ try {
         "INNER JOIN carrito ca ON ca.id_cliente = c.id_cliente " .
         "INNER JOIN detalle_carrito d ON d.id_carrito = ca.id_carrito " .
         "INNER JOIN gpu g ON g.id_gpu = d.id_gpu " .
-        "LEFT JOIN stock_gpu s ON s.id_gpu = g.id_gpu AND s.id_sucursal<>" . sucursal_id_deposito() . " " .
+        "LEFT JOIN stock_gpu s ON s.id_gpu = g.id_gpu " .
         "WHERE c.id_correo = ? " .
         "GROUP BY d.id_gpu, d.cantidad, g.marca, g.modelo, g.imagen, g.precio_especial " .
         "ORDER BY g.marca, g.modelo"

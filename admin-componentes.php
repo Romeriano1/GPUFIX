@@ -77,7 +77,6 @@ $componentes = $consulta->get_result()->fetch_all(MYSQLI_ASSOC);
 admin_layout_inicio('Componentes y repuestos');
 ?>
 <h1 class="h3">Componentes y repuestos</h1>
-<?php if (admin_puede_pedir_stock($conexion) && admin_puede_ver($conexion,'admin-solicitudes-stock.php')): ?><a class="btn btn-primary my-3" href="admin-solicitudes-stock.php">Solicitar componentes al depósito</a><?php endif; ?>
 <?php if ($mensaje): ?><div class="alert alert-success"><?= admin_e($mensaje) ?></div><?php endif; ?>
 <?php if ($error): ?><div class="alert alert-danger"><?= admin_e($error) ?></div><?php endif; ?>
 <?php if ($puedeGestionar): ?>

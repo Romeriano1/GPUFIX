@@ -10,9 +10,8 @@ function admin_funciones_tablas(): array
         'gpu_cliente' => 'reparaciones', 'orden_reparacion' => 'reparaciones',
         'diagnostico' => 'reparaciones', 'reparacion' => 'reparaciones', 'detalle_reparacion' => 'reparaciones',
         'gpu_ventas' => 'facturacion', 'detalle_venta' => 'facturacion',
-        'factura' => 'facturacion', 'detalle_factura' => 'facturacion', 'envios' => 'envios',
+        'factura' => 'facturacion', 'detalle_factura' => 'facturacion',
         'orden_compra' => 'compras', 'detalle_compra' => 'compras',
-        'solicitud_stock' => 'solicitudes-stock', 'detalle_solicitud_stock' => 'solicitudes-stock',
         'componente' => 'componentes', 'stock' => 'componentes'
     ];
 }

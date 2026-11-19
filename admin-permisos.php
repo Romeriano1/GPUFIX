@@ -9,10 +9,7 @@ function admin_secciones_permisos(): array
         'admin-presupuestos.php' => 'Presupuestos',
         'admin-reparaciones.php' => 'Reparaciones',
         'admin-facturacion.php' => 'Facturación',
-        'admin-envios.php' => 'Envíos',
         'admin-compras.php' => 'Compras y Stock',
-        'admin-solicitudes-stock.php' => 'Pedidos e ingresos de stock',
-        'admin-logistica.php' => 'Logística y Depósito',
         'admin-componentes.php' => 'Componentes y repuestos',
         'admin-devoluciones.php' => 'Devoluciones',
         'admin-comprobantes.php' => 'Comprobantes',
@@ -52,11 +49,11 @@ function admin_roles_organigrama(): array
             'Técnicos de Laboratorio' => ['admin-reparaciones.php'],
         ],
         'Administración y RRHH' => [
-            'Jefe Administrativo' => ['admin.php', 'admin-cuentas.php', 'admin-productos.php', 'admin-proveedores.php', 'admin-facturacion.php', 'admin-compras.php', 'admin-solicitudes-stock.php', 'admin-componentes.php', 'admin-devoluciones.php', 'admin-comprobantes.php'],
+            'Jefe Administrativo' => ['admin.php', 'admin-cuentas.php', 'admin-productos.php', 'admin-proveedores.php', 'admin-facturacion.php', 'admin-compras.php', 'admin-componentes.php', 'admin-devoluciones.php', 'admin-comprobantes.php'],
             'Contabilidad' => ['admin.php', 'admin-facturacion.php', 'admin-compras.php', 'admin-comprobantes.php'],
             'Facturación' => ['admin-facturacion.php', 'admin-devoluciones.php', 'admin-comprobantes.php'],
-            'Compras y Stock' => ['admin-productos.php', 'admin-proveedores.php', 'admin-compras.php', 'admin-solicitudes-stock.php', 'admin-componentes.php'],
-            'Logística' => ['admin-logistica.php', 'admin-envios.php'],
+            'Compras y Stock' => ['admin-productos.php', 'admin-proveedores.php', 'admin-compras.php', 'admin-componentes.php'],
+            'Logística' => [],
             'RRHH' => ['admin-cuentas.php', 'admin-personal.php'],
         ],
     ];
@@ -64,7 +61,18 @@ function admin_roles_organigrama(): array
 
 function admin_puede_ver(mysqli $conexion, string $pagina): bool
 {
-    if (admin_es_cuenta_principal($conexion)) return true;
+    $esPrincipal = admin_es_cuenta_principal($conexion);
+    if ($esPrincipal && $pagina === 'admin-empleos.php') return true;
+    if ($esPrincipal && isset(admin_secciones_permisos()[$pagina])) {
+        $consulta = $conexion->prepare('SELECT id_puesto FROM empleado WHERE id_empleado=?');
+        $empleado = (int) ($_SESSION['empleado_id'] ?? 0);
+        $consulta->bind_param('i', $empleado);
+        $consulta->execute();
+        $puesto = $consulta->get_result()->fetch_row();
+        $consulta->close();
+        $configuracion = admin_leer_permisos();
+        return $puesto && in_array($pagina, $configuracion[(string)$puesto[0]] ?? array_keys(admin_secciones_permisos()), true);
+    }
     if ($pagina === 'admin-personal.php') return admin_es_rrhh($conexion);
     if ($pagina === 'admin-empleos.php' && admin_es_cuenta_principal($conexion)) return true;
     if (!isset(admin_secciones_permisos()[$pagina])) return false;
@@ -97,9 +105,8 @@ function admin_puesto_es_rrhh(string $nombre): bool
 
 function admin_sede_fija_puesto(string $nombre): ?int
 {
-    require_once __DIR__ . '/sucursales.php';
     if (admin_puesto_es_rrhh($nombre)) return admin_id_sucursal_central();
-    return in_array(mb_strtolower(trim($nombre),'UTF-8'), ['logística','logistica','compras y stock'], true) ? sucursal_id_deposito() : null;
+    return null;
 }
 
 function admin_sucursal_para_puesto(mysqli $conexion, int $idPuesto, ?int $sucursal): ?int
@@ -108,18 +115,13 @@ function admin_sucursal_para_puesto(mysqli $conexion, int $idPuesto, ?int $sucur
     $consulta->bind_param('i', $idPuesto); $consulta->execute();
     $puesto = $consulta->get_result()->fetch_row(); $consulta->close();
     if (!$puesto) throw new RuntimeException('Seleccioná un puesto existente.');
-    if (in_array(mb_strtolower(trim($puesto[0]), 'UTF-8'), ['logística', 'logistica', 'compras y stock'], true)) {
-        require_once __DIR__ . '/sucursales.php';
-        sucursal_validar($conexion, (string)sucursal_id_deposito());
-        return sucursal_id_deposito();
-    }
     if (admin_puesto_es_rrhh($puesto[0])) {
         require_once __DIR__ . '/sucursales.php';
         sucursal_validar($conexion, (string)admin_id_sucursal_central());
         return admin_id_sucursal_central();
     }
     require_once __DIR__ . '/sucursales.php';
-    if ($sucursal === sucursal_id_deposito() && !in_array(mb_strtolower(trim($puesto[0]), 'UTF-8'), ['administrador', 'dirección general'], true)) throw new RuntimeException('Este puesto debe trabajar en una sucursal.');
+    if ($sucursal !== null) sucursal_validar($conexion, (string)$sucursal);
     return $sucursal;
 }
 
@@ -208,7 +210,7 @@ function admin_sucursal_empleado(mysqli $conexion, ?int $idEmpleado = null): ?in
 function admin_sucursales_disponibles(mysqli $conexion): array
 {
     require_once __DIR__ . '/sucursales.php';
-    $sucursales = sucursales_listar($conexion, true);
+    $sucursales = sucursales_listar($conexion);
     if (admin_acceso_todas_sucursales($conexion)) return $sucursales;
     $idSucursal = admin_sucursal_empleado($conexion);
     return array_values(array_filter($sucursales, static fn($local) => (int)$local['id_sucursal'] === $idSucursal));
@@ -233,29 +235,12 @@ function admin_datos_laborales(mysqli $conexion, ?int $empleado = null): array
     return $fila ?: ['nombre'=>'', 'id_sucursal'=>null];
 }
 
-function admin_es_compras_deposito(mysqli $conexion, ?int $empleado = null): bool
+function admin_puede_recibir_proveedores(mysqli $conexion, ?int $empleado = null): bool
 {
     require_once __DIR__ . '/sucursales.php';
     if (admin_acceso_todas_sucursales($conexion, $empleado)) return true;
     $datos = admin_datos_laborales($conexion, $empleado);
-    return mb_strtolower(trim($datos['nombre']), 'UTF-8') === 'compras y stock' && (int)$datos['id_sucursal'] === sucursal_id_deposito();
-}
-
-function admin_es_logistica_deposito(mysqli $conexion): bool
-{
-    require_once __DIR__ . '/sucursales.php';
-    if (admin_acceso_todas_sucursales($conexion)) return true;
-    $datos = admin_datos_laborales($conexion);
-    return in_array(mb_strtolower(trim($datos['nombre']), 'UTF-8'), ['logística','logistica'], true) && (int)$datos['id_sucursal'] === sucursal_id_deposito();
-}
-
-function admin_puede_pedir_stock(mysqli $conexion): bool
-{
-    require_once __DIR__ . '/sucursales.php';
-    if (admin_acceso_todas_sucursales($conexion)) return true;
-    $datos = admin_datos_laborales($conexion);
-    return in_array(mb_strtolower(trim($datos['nombre']), 'UTF-8'), ['jefe administrativo','jefe administrativo y rrhh'], true)
-        && $datos['id_sucursal'] !== null && (int)$datos['id_sucursal'] !== sucursal_id_deposito();
+    return mb_strtolower(trim($datos['nombre']), 'UTF-8') === 'compras y stock' && $datos['id_sucursal'] !== null;
 }
 
 function admin_puede_ajustar_stock_placas(mysqli $conexion): bool

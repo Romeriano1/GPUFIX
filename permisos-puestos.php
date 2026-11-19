@@ -57,8 +57,7 @@
         "admin-compras.php",
         "admin-componentes.php",
         "admin-devoluciones.php",
-        "admin-comprobantes.php",
-        "admin-solicitudes-stock.php"
+        "admin-comprobantes.php"
     ],
     "24": [
         "admin.php",
@@ -75,14 +74,10 @@
         "admin-productos.php",
         "admin-proveedores.php",
         "admin-compras.php",
-        "admin-componentes.php",
-        "admin-solicitudes-stock.php"
+        "admin-componentes.php"
     ],
     "27": [
         "admin-cuentas.php"
     ],
-    "29": [
-        "admin-envios.php",
-        "admin-logistica.php"
-    ]
+    "29": []
 }

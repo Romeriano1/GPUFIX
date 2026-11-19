@@ -35,19 +35,10 @@ function admin_validar_relaciones(mysqli $db, string $tabla, string $id): void {
             $sedeFija = admin_sede_fija_puesto($empleado['nombre']);
             if ($sedeFija !== null && (int)$empleado['id_sucursal'] !== $sedeFija) {
                 $consultaSede->close();
-                throw new RuntimeException('El lugar de trabajo no corresponde al puesto: RRHH trabaja en Rivadavia; Logística y Compras y Stock trabajan en Depósito.');
+                throw new RuntimeException('Recursos Humanos debe tener asignada Sucursal Rivadavia, casa central.');
             }
-            if ($sedeFija === null && (int)$empleado['id_sucursal'] === sucursal_id_deposito() && !in_array(mb_strtolower(trim($empleado['nombre']),'UTF-8'), ['administrador','dirección general'], true)) throw new RuntimeException('Este puesto debe tener asignada una sucursal, no el Depósito.');
         }
         $consultaSede->close();
-    }
-    if ($tabla === 'detalle_solicitud_stock') {
-        $q=$db->prepare('SELECT id_gpu,id_componente,cantidad_solicitada,cantidad_enviada,cantidad_recibida FROM detalle_solicitud_stock WHERE id_detalle_solicitud_stock=? FOR UPDATE');$q->bind_param('s',$id);$q->execute();$linea=$q->get_result()->fetch_assoc();$q->close();
-        if($linea && (($linea['id_gpu']===null)===($linea['id_componente']===null) || (int)$linea['cantidad_solicitada']<1 || (int)$linea['cantidad_recibida']<0 || (int)$linea['cantidad_recibida']>(int)$linea['cantidad_enviada'] || (int)$linea['cantidad_enviada']>(int)$linea['cantidad_solicitada'] || ($linea['id_gpu']!==null && ((int)$linea['cantidad_solicitada']<2 || (int)$linea['cantidad_solicitada']>10)))) throw new RuntimeException('Revisá producto y cantidades: solicitado >= enviado >= recibido; placas entre 2 y 10.');
-    }
-    if ($tabla === 'solicitud_stock') {
-        $q=$db->prepare('SELECT id_sucursal FROM solicitud_stock WHERE id_solicitud_stock=?');$q->bind_param('s',$id);$q->execute();$pedido=$q->get_result()->fetch_row();$q->close();
-        if($pedido && (int)$pedido[0]===sucursal_id_deposito())throw new RuntimeException('El destino de una solicitud debe ser una sucursal.');
     }
     foreach (admin_reglas_relaciones() as [$mensaje, $sql, $alcance]) {
         if (!isset($alcance[$tabla])) continue;
